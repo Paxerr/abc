@@ -1,13 +1,13 @@
 package com.danasea.backend.modules.order.domain.models;
 
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.UUID;
-
 import com.danasea.backend.shared.core.domain.models.BaseDomainModel;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -17,6 +17,8 @@ public class DiscountCode extends BaseDomainModel {
     private DiscountSponsorType sponsorType = DiscountSponsorType.PLATFORM;
     private UUID vendorId;
     private UUID serviceId;
+    private UUID recipientCustomerId;
+    private UUID replacementSubOrderId;
     private DiscountType discountType;
     private BigDecimal discountValue;
     private BigDecimal minOrderAmount = BigDecimal.ZERO;

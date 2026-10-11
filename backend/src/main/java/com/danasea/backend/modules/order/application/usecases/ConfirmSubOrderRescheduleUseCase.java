@@ -9,10 +9,12 @@ import com.danasea.backend.modules.booking.infrastructure.persistence.entities.B
 import com.danasea.backend.modules.booking.infrastructure.persistence.mappers.BookingMapper;
 import com.danasea.backend.modules.booking.infrastructure.persistence.repositories.JpaBookingItemRepository;
 import com.danasea.backend.modules.checkin.infrastructure.persistence.repositories.JpaCheckinTokenRepository;
+import com.danasea.backend.modules.order.application.services.DisruptionDecisionService;
 import com.danasea.backend.modules.order.application.services.RescheduleSupport;
 import com.danasea.backend.modules.order.domain.events.SubOrderRescheduledEvent;
 import com.danasea.backend.modules.order.infrastructure.persistence.entities.SubOrderRescheduleHistoryJpaEntity;
 import com.danasea.backend.modules.order.infrastructure.persistence.entities.SubOrderRescheduleProposalJpaEntity;
+import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaSubOrderDisruptionRepository;
 import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaSubOrderRepository;
 import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaSubOrderRescheduleHistoryRepository;
 import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaSubOrderRescheduleProposalRepository;
@@ -68,6 +70,8 @@ public class ConfirmSubOrderRescheduleUseCase {
     private final ServiceSlotPort serviceSlotPort;
     private final RescheduleSupport support;
     private final BookingMapper bookingMapper;
+    private final DisruptionDecisionService decisions;
+    private final JpaSubOrderDisruptionRepository disruptions;
 
     @Transactional(timeout = 30)
     public SubOrderRescheduleResponse execute(
@@ -99,6 +103,11 @@ public class ConfirmSubOrderRescheduleUseCase {
             return response(previous.get());
         }
         RescheduleSupport.eligible(master, sub);
+        decisions.assertNoRefund(subOrderId);
+        var disruption =
+                disruptions.findBySubOrderIdAndStatus(
+                        subOrderId, DisruptionDecisionService.AWAITING);
+
         if (!Objects.equals(sub.getRescheduleVersion(), request.expectedVersion())) {
             throw RescheduleSupport.conflict("Order version has changed. Refresh before retrying.");
         }
@@ -137,6 +146,15 @@ public class ConfirmSubOrderRescheduleUseCase {
                 .isPresent()) {
             throw RescheduleSupport.conflict("Target slot has an unsafe weather assessment.");
         }
+        var decisionDeadline =
+                disruption
+                        .map(d -> d.getDecisionDeadline())
+                        .orElseGet(
+                                () ->
+                                        oldSlot.getDate()
+                                                .atTime(oldSlot.getStartTime())
+                                                .atOffset(ZoneOffset.ofHours(7))
+                                                .minusHours(12));
         SubOrderRescheduleProposalJpaEntity proposal = null;
         if (request.proposalId() != null) {
             proposal =
@@ -146,10 +164,11 @@ public class ConfirmSubOrderRescheduleUseCase {
                                     () ->
                                             RescheduleSupport.conflict(
                                                     "Reschedule proposal not found."));
-        } else if (!evaluationRepository
-                .findTopBySlotIdOrderByEvaluatedAtDesc(oldSlot.getId())
-                .map(RescheduleSupport::weatherAlert)
-                .orElse(false)) {
+        } else if (disruption.isEmpty()
+                && !evaluationRepository
+                        .findTopBySlotIdOrderByEvaluatedAtDesc(oldSlot.getId())
+                        .map(RescheduleSupport::weatherAlert)
+                        .orElse(false)) {
             proposal =
                     proposalRepository
                             .findBySubOrderIdAndStatusAndExpiresAtAfter(
@@ -171,6 +190,19 @@ public class ConfirmSubOrderRescheduleUseCase {
             throw RescheduleSupport.conflict(
                     "Reschedule proposal is expired or does not match the target.");
         }
+        boolean unsafeWeather =
+                evaluationRepository
+                        .findTopBySlotIdOrderByEvaluatedAtDesc(oldSlot.getId())
+                        .filter(
+                                a ->
+                                        RescheduleSupport.weatherAlert(a)
+                                                && (Boolean.FALSE.equals(a.getIsSafe())
+                                                        || "RED".equals(a.getAlertLevel())))
+                        .isPresent();
+        if ((disruption.isPresent() || proposal != null || unsafeWeather)
+                && !decisionDeadline.isAfter(OffsetDateTime.now()))
+            throw RescheduleSupport.conflict(
+                    "The disruption decision deadline has passed; a full refund is due.");
         var item =
                 bookingItemRepository
                         .findById(sub.getBookingItemId())
@@ -260,6 +292,7 @@ public class ConfirmSubOrderRescheduleUseCase {
             sub.setRescheduledAt(OffsetDateTime.now());
             sub.setQrSecret(UUID.randomUUID());
             subOrderRepository.save(sub);
+            decisions.completeReschedule(subOrderId);
             if (proposal != null) {
                 proposal.setStatus("ACCEPTED");
                 proposalRepository.save(proposal);
@@ -282,8 +315,20 @@ public class ConfirmSubOrderRescheduleUseCase {
                             .toBookingDate(target.getDate())
                             .toBookingTime(target.getStartTime())
                             .performedBy(userId)
-                            .reasonType(proposal == null ? "WEATHER_ALERT" : "VENDOR_PROPOSAL")
-                            .reason(proposal == null ? "Weather disruption" : proposal.getReason())
+                            .reasonType(
+                                    disruption
+                                            .map(d -> d.getReason().name())
+                                            .orElse(
+                                                    proposal == null
+                                                            ? "WEATHER_ALERT"
+                                                            : "VENDOR_PROPOSAL"))
+                            .reason(
+                                    disruption
+                                            .map(d -> d.getDetails())
+                                            .orElse(
+                                                    proposal == null
+                                                            ? "Weather disruption"
+                                                            : proposal.getReason()))
                             .idempotencyKey(key)
                             .payloadHash(hash)
                             .rescheduleVersion(sub.getRescheduleVersion())

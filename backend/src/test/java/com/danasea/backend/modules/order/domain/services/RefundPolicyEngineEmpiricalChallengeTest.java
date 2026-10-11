@@ -1,8 +1,11 @@
 package com.danasea.backend.modules.order.domain.services;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
+
+import com.danasea.backend.modules.order.application.usecases.GetCancellationPreviewUseCase;
 import com.danasea.backend.modules.order.domain.models.RefundEvaluationResult;
 import com.danasea.backend.modules.order.domain.models.RefundReason;
-import com.danasea.backend.modules.order.application.usecases.GetCancellationPreviewUseCase;
 import com.danasea.backend.modules.order.infrastructure.adapters.ServiceSlotDepartureLookupAdapter;
 import com.danasea.backend.modules.order.infrastructure.persistence.adapters.MasterOrderRepositoryAdapter;
 import com.danasea.backend.modules.order.infrastructure.persistence.adapters.SubOrderRepositoryAdapter;
@@ -16,35 +19,28 @@ import com.danasea.backend.modules.order.presentation.controllers.OrderControlle
 import com.danasea.backend.modules.order.presentation.dtos.CancellationPreviewResponse;
 import com.danasea.backend.modules.service.infrastructure.persistence.entities.ServiceSlotJpaEntity;
 import com.danasea.backend.modules.service.infrastructure.persistence.repositories.JpaServiceSlotRepository;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Empirical Challenge & Stress Test Suite: RefundPolicyEngine & OrderController")
@@ -99,7 +95,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Boundary: 48h01m before departure -> 100.0%")
         void challenge_48h01m_Yields100Percent() {
             LocalDateTime cancelTime = baseDeparture.minusHours(48).minusMinutes(1);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(100.0), res.refundPercentage());
             assertEquals(1, res.refundPercentage().scale());
@@ -110,7 +106,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Boundary: 48h00m before departure -> Exactly 70.0% (Falls into [24h, 48h])")
         void challenge_48h00m_YieldsExactly70Percent() {
             LocalDateTime cancelTime = baseDeparture.minusHours(48);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(70.0), res.refundPercentage());
             assertEquals(1, res.refundPercentage().scale());
@@ -121,7 +117,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Boundary: 47h59m before departure -> 70.0%")
         void challenge_47h59m_Yields70Percent() {
             LocalDateTime cancelTime = baseDeparture.minusHours(47).minusMinutes(59);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(70.0), res.refundPercentage());
             assertEquals(new BigDecimal("700000.00"), res.refundAmount());
@@ -131,7 +127,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Boundary: 24h01m before departure -> 70.0%")
         void challenge_24h01m_Yields70Percent() {
             LocalDateTime cancelTime = baseDeparture.minusHours(24).minusMinutes(1);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(70.0), res.refundPercentage());
             assertEquals(new BigDecimal("700000.00"), res.refundAmount());
@@ -141,7 +137,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Boundary: 24h00m before departure -> Exactly 70.0% (Falls into [24h, 48h])")
         void challenge_24h00m_YieldsExactly70Percent() {
             LocalDateTime cancelTime = baseDeparture.minusHours(24);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(70.0), res.refundPercentage());
             assertEquals(new BigDecimal("700000.00"), res.refundAmount());
@@ -151,7 +147,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Boundary: 23h59m before departure -> 30.0%")
         void challenge_23h59m_Yields30Percent() {
             LocalDateTime cancelTime = baseDeparture.minusHours(23).minusMinutes(59);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(30.0), res.refundPercentage());
             assertEquals(new BigDecimal("300000.00"), res.refundAmount());
@@ -161,7 +157,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Boundary: 2h01m before departure -> 30.0%")
         void challenge_2h01m_Yields30Percent() {
             LocalDateTime cancelTime = baseDeparture.minusHours(2).minusMinutes(1);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(30.0), res.refundPercentage());
             assertEquals(new BigDecimal("300000.00"), res.refundAmount());
@@ -171,7 +167,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Boundary: 2h00m before departure -> Exactly 30.0% (Falls into [2h, 24h])")
         void challenge_2h00m_YieldsExactly30Percent() {
             LocalDateTime cancelTime = baseDeparture.minusHours(2);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(30.0), res.refundPercentage());
             assertEquals(new BigDecimal("300000.00"), res.refundAmount());
@@ -181,7 +177,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Boundary: 1h59m before departure -> 0.0%")
         void challenge_1h59m_Yields0Percent() {
             LocalDateTime cancelTime = baseDeparture.minusHours(1).minusMinutes(59);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(0.0), res.refundPercentage());
             assertEquals(new BigDecimal("0.00"), res.refundAmount());
@@ -191,7 +187,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Boundary: 1m before departure -> 0.0%")
         void challenge_1m_Yields0Percent() {
             LocalDateTime cancelTime = baseDeparture.minusMinutes(1);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(0.0), res.refundPercentage());
             assertEquals(new BigDecimal("0.00"), res.refundAmount());
@@ -201,7 +197,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Boundary: 0m (exactly at departure time) -> 0.0%")
         void challenge_0m_Yields0Percent() {
             LocalDateTime cancelTime = baseDeparture;
-            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(0.0), res.refundPercentage());
             assertEquals(new BigDecimal("0.00"), res.refundAmount());
@@ -211,16 +207,16 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Boundary: Past departure time (+1s, +1m, +1h) -> 0.0%")
         void challenge_PastDeparture_Yields0Percent() {
             LocalDateTime cancelTimeSec = baseDeparture.plusSeconds(1);
-            RefundEvaluationResult resSec = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTimeSec, sampleAmount);
+            RefundEvaluationResult resSec = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTimeSec, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
             assertEquals(BigDecimal.valueOf(0.0), resSec.refundPercentage());
             assertEquals(new BigDecimal("0.00"), resSec.refundAmount());
 
             LocalDateTime cancelTimeMin = baseDeparture.plusMinutes(1);
-            RefundEvaluationResult resMin = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTimeMin, sampleAmount);
+            RefundEvaluationResult resMin = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTimeMin, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
             assertEquals(BigDecimal.valueOf(0.0), resMin.refundPercentage());
 
             LocalDateTime cancelTimeHour = baseDeparture.plusHours(1);
-            RefundEvaluationResult resHour = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTimeHour, sampleAmount);
+            RefundEvaluationResult resHour = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTimeHour, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
             assertEquals(BigDecimal.valueOf(0.0), resHour.refundPercentage());
         }
 
@@ -228,7 +224,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Sub-minute resolution: 48h 00m 30s before departure -> Evaluated at 2880 min -> 70.0%")
         void challenge_48h00m30s_DurationTruncatesToMinutes() {
             LocalDateTime cancelTime = baseDeparture.minusHours(48).minusSeconds(30);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.CUSTOMER_REQUEST, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             // Duration.between().toMinutes() truncates to 2880 minutes, thus strictly not > 2880
             assertEquals(BigDecimal.valueOf(70.0), res.refundPercentage());
@@ -248,7 +244,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("WEATHER: 1 minute before departure -> 100.0%")
         void challenge_Weather_1mBeforeDeparture_Yields100Percent() {
             LocalDateTime cancelTime = baseDeparture.minusMinutes(1);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.WEATHER, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.WEATHER, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(100.0), res.refundPercentage());
             assertEquals(sampleAmount, res.refundAmount());
@@ -257,7 +253,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @Test
         @DisplayName("WEATHER: Exactly at departure time (0m) -> 100.0%")
         void challenge_Weather_ExactDeparture_Yields100Percent() {
-            RefundEvaluationResult res = engine.evaluate(RefundReason.WEATHER, baseDeparture, baseDeparture, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.WEATHER, baseDeparture, baseDeparture, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(100.0), res.refundPercentage());
             assertEquals(sampleAmount, res.refundAmount());
@@ -267,7 +263,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("WEATHER: 1 minute AFTER departure (+1m) -> 100.0%")
         void challenge_Weather_1mAfterDeparture_Yields100Percent() {
             LocalDateTime cancelTime = baseDeparture.plusMinutes(1);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.WEATHER, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.WEATHER, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(100.0), res.refundPercentage());
             assertEquals(sampleAmount, res.refundAmount());
@@ -277,7 +273,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("WEATHER: 24 hours AFTER departure -> 100.0%")
         void challenge_Weather_24hAfterDeparture_Yields100Percent() {
             LocalDateTime cancelTime = baseDeparture.plusHours(24);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.WEATHER, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.WEATHER, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(100.0), res.refundPercentage());
             assertEquals(sampleAmount, res.refundAmount());
@@ -286,7 +282,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @Test
         @DisplayName("WEATHER: Null timestamps -> 100.0%")
         void challenge_Weather_NullTimestamps_Yields100Percent() {
-            RefundEvaluationResult res = engine.evaluate(RefundReason.WEATHER, null, null, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.WEATHER, null, null, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(100.0), res.refundPercentage());
             assertEquals(sampleAmount, res.refundAmount());
@@ -296,7 +292,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("VENDOR_FAULT: 1 minute before departure -> 100.0%")
         void challenge_VendorFault_1mBeforeDeparture_Yields100Percent() {
             LocalDateTime cancelTime = baseDeparture.minusMinutes(1);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.VENDOR_FAULT, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.VENDOR_FAULT, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(100.0), res.refundPercentage());
             assertEquals(sampleAmount, res.refundAmount());
@@ -305,7 +301,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @Test
         @DisplayName("VENDOR_FAULT: Exactly at departure time (0m) -> 100.0%")
         void challenge_VendorFault_ExactDeparture_Yields100Percent() {
-            RefundEvaluationResult res = engine.evaluate(RefundReason.VENDOR_FAULT, baseDeparture, baseDeparture, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.VENDOR_FAULT, baseDeparture, baseDeparture, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(100.0), res.refundPercentage());
             assertEquals(sampleAmount, res.refundAmount());
@@ -315,7 +311,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("VENDOR_FAULT: 1 minute AFTER departure (+1m) -> 100.0%")
         void challenge_VendorFault_1mAfterDeparture_Yields100Percent() {
             LocalDateTime cancelTime = baseDeparture.plusMinutes(1);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.VENDOR_FAULT, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.VENDOR_FAULT, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(100.0), res.refundPercentage());
             assertEquals(sampleAmount, res.refundAmount());
@@ -325,7 +321,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("VENDOR_FAULT: 24 hours AFTER departure -> 100.0%")
         void challenge_VendorFault_24hAfterDeparture_Yields100Percent() {
             LocalDateTime cancelTime = baseDeparture.plusHours(24);
-            RefundEvaluationResult res = engine.evaluate(RefundReason.VENDOR_FAULT, baseDeparture, cancelTime, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.VENDOR_FAULT, baseDeparture, cancelTime, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(100.0), res.refundPercentage());
             assertEquals(sampleAmount, res.refundAmount());
@@ -334,7 +330,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @Test
         @DisplayName("VENDOR_FAULT: Null timestamps -> 100.0%")
         void challenge_VendorFault_NullTimestamps_Yields100Percent() {
-            RefundEvaluationResult res = engine.evaluate(RefundReason.VENDOR_FAULT, null, null, sampleAmount);
+            RefundEvaluationResult res = engine.evaluate(RefundReason.VENDOR_FAULT, null, null, sampleAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(100.0), res.refundPercentage());
             assertEquals(sampleAmount, res.refundAmount());
@@ -355,22 +351,22 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
 
             // 100%
             RefundEvaluationResult res100 = engine.evaluate(
-                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(50), oneBillion);
+                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(50), oneBillion, null, RefundPolicyEngine.LEGACY_POLICY);
             assertEquals(new BigDecimal("1000000000.00"), res100.refundAmount());
 
             // 70%
             RefundEvaluationResult res70 = engine.evaluate(
-                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(30), oneBillion);
+                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(30), oneBillion, null, RefundPolicyEngine.LEGACY_POLICY);
             assertEquals(new BigDecimal("700000000.00"), res70.refundAmount());
 
             // 30%
             RefundEvaluationResult res30 = engine.evaluate(
-                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(10), oneBillion);
+                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(10), oneBillion, null, RefundPolicyEngine.LEGACY_POLICY);
             assertEquals(new BigDecimal("300000000.00"), res30.refundAmount());
 
             // 0%
             RefundEvaluationResult res0 = engine.evaluate(
-                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusMinutes(30), oneBillion);
+                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusMinutes(30), oneBillion, null, RefundPolicyEngine.LEGACY_POLICY);
             assertEquals(new BigDecimal("0.00"), res0.refundAmount());
         }
 
@@ -380,7 +376,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
             BigDecimal hundredBillion = new BigDecimal("100000000000.00");
 
             RefundEvaluationResult res70 = engine.evaluate(
-                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(30), hundredBillion);
+                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(30), hundredBillion, null, RefundPolicyEngine.LEGACY_POLICY);
             assertEquals(new BigDecimal("70000000000.00"), res70.refundAmount());
         }
 
@@ -388,11 +384,11 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Zero amounts: BigDecimal.ZERO (scale 0) and 0.00 (scale 2)")
         void challenge_ZeroAmounts() {
             RefundEvaluationResult resZeroScale0 = engine.evaluate(
-                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(50), BigDecimal.ZERO);
+                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(50), BigDecimal.ZERO, null, RefundPolicyEngine.LEGACY_POLICY);
             assertEquals(0, BigDecimal.ZERO.compareTo(resZeroScale0.refundAmount()));
 
             RefundEvaluationResult resZeroScale2 = engine.evaluate(
-                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(50), new BigDecimal("0.00"));
+                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(50), new BigDecimal("0.00"), null, RefundPolicyEngine.LEGACY_POLICY);
             assertEquals(0, BigDecimal.ZERO.compareTo(resZeroScale2.refundAmount()));
         }
 
@@ -400,7 +396,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Negative amounts: -500,000 VND returns zero refund amount safely")
         void challenge_NegativeAmounts() {
             RefundEvaluationResult res = engine.evaluate(
-                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(50), new BigDecimal("-500000.00"));
+                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(50), new BigDecimal("-500000.00"), null, RefundPolicyEngine.LEGACY_POLICY);
             assertEquals(0, BigDecimal.ZERO.compareTo(res.refundAmount()));
         }
 
@@ -408,7 +404,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Null amount: returns 0.00 refund amount safely without NPE")
         void challenge_NullAmount() {
             RefundEvaluationResult res = engine.evaluate(
-                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(50), null);
+                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(50), null, null, RefundPolicyEngine.LEGACY_POLICY);
             assertNotNull(res);
             assertEquals(BigDecimal.valueOf(100.0), res.refundPercentage());
             assertEquals(new BigDecimal("0.00"), res.refundAmount());
@@ -419,7 +415,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         void challenge_OddAmount_70PercentOf999999() {
             BigDecimal oddAmount = new BigDecimal("999999.00");
             RefundEvaluationResult res = engine.evaluate(
-                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(30), oddAmount);
+                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(30), oddAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(70.0), res.refundPercentage());
             // 999999 * 0.70 = 699999.30
@@ -432,7 +428,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         void challenge_OddAmount_30PercentOf999999() {
             BigDecimal oddAmount = new BigDecimal("999999.00");
             RefundEvaluationResult res = engine.evaluate(
-                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(10), oddAmount);
+                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(10), oddAmount, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(30.0), res.refundPercentage());
             // 999999 * 0.30 = 299999.70
@@ -444,7 +440,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         void challenge_OddAmount_100PercentOfIntegerVND() {
             BigDecimal oddInteger = new BigDecimal("999999");
             RefundEvaluationResult res = engine.evaluate(
-                    RefundReason.WEATHER, baseDeparture, baseDeparture, oddInteger);
+                    RefundReason.WEATHER, baseDeparture, baseDeparture, oddInteger, null, RefundPolicyEngine.LEGACY_POLICY);
 
             assertEquals(BigDecimal.valueOf(100.0), res.refundPercentage());
             assertEquals(new BigDecimal("999999"), res.refundAmount());
@@ -458,12 +454,12 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
 
             // 1.00 * 70 / 100 = 0.70
             RefundEvaluationResult res70 = engine.evaluate(
-                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(30), oneVnd);
+                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(30), oneVnd, null, RefundPolicyEngine.LEGACY_POLICY);
             assertEquals(new BigDecimal("0.70"), res70.refundAmount());
 
             // 1.00 * 30 / 100 = 0.30
             RefundEvaluationResult res30 = engine.evaluate(
-                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(10), oneVnd);
+                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(10), oneVnd, null, RefundPolicyEngine.LEGACY_POLICY);
             assertEquals(new BigDecimal("0.30"), res30.refundAmount());
         }
 
@@ -474,12 +470,12 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
 
             // 999,999.99 * 0.70 = 699,999.993 -> 699,999.99
             RefundEvaluationResult res70 = engine.evaluate(
-                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(30), fractionalAmount);
+                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(30), fractionalAmount, null, RefundPolicyEngine.LEGACY_POLICY);
             assertEquals(new BigDecimal("699999.99"), res70.refundAmount());
 
             // 999,999.99 * 0.30 = 299,999.997 -> 300,000.00
             RefundEvaluationResult res30 = engine.evaluate(
-                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(10), fractionalAmount);
+                    RefundReason.CUSTOMER_REQUEST, baseDeparture, baseDeparture.minusHours(10), fractionalAmount, null, RefundPolicyEngine.LEGACY_POLICY);
             assertEquals(new BigDecimal("300000.00"), res30.refundAmount());
         }
     }

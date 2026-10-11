@@ -28,15 +28,7 @@ import com.danasea.backend.modules.weather.domain.services.WeatherRuleEngine;
 import com.danasea.backend.modules.weather.infrastructure.jobs.SlotWeatherMonitoringJob;
 import com.danasea.backend.modules.weather.infrastructure.persistence.entities.SafetyRuleEvaluationJpaEntity;
 import com.danasea.backend.modules.weather.infrastructure.persistence.repositories.JpaSafetyRuleEvaluationRepository;
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -47,6 +39,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SlotWeatherMonitoringJob Comprehensive Tests")
@@ -514,7 +516,7 @@ class SlotWeatherMonitoringJobTest {
 
             // 2. Tạo bản ghi hoàn tiền 100% với RefundReason.WEATHER và PROCESSED
             ArgumentCaptor<RefundJpaEntity> refundCaptor = ArgumentCaptor.forClass(RefundJpaEntity.class);
-            verify(refundRepository, times(1)).save(refundCaptor.capture());
+            verify(refundRepository, times(1)).saveAndFlush(refundCaptor.capture());
             RefundJpaEntity refund = refundCaptor.getValue();
             assertEquals(BigDecimal.valueOf(1200000), refund.getAmount());
             assertEquals(BigDecimal.valueOf(100.0), refund.getRefundPercentage());
@@ -538,9 +540,9 @@ class SlotWeatherMonitoringJobTest {
         }
 
         @Test
-        @DisplayName("Khi còn trên 60 phút trước giờ khởi hành (ví dụ 120 phút) -> Không kích hoạt Auto-escalation fallback")
-        void checkAutoEscalationFallback_over60Minutes_doesNotCancel() {
-            LocalDateTime now = LocalDateTime.of(2026, 9, 20, 6, 0);
+        @DisplayName("Khi còn trên 12 giờ trước giờ khởi hành -> Không kích hoạt Auto-escalation fallback")
+        void checkAutoEscalationFallback_over12Hours_doesNotCancel() {
+            LocalDateTime now = LocalDateTime.of(2026, 9, 19, 18, 0);
             // Slot khởi hành lúc 8:00 (còn 120 phút)
             slot.setDate(LocalDate.of(2026, 9, 20));
             slot.setStartTime(LocalTime.of(8, 0));
@@ -550,7 +552,7 @@ class SlotWeatherMonitoringJobTest {
 
             assertFalse(fallbackTriggered);
             verify(subOrderRepository, never()).saveAndFlush(any());
-            verify(refundRepository, never()).save(any());
+            verify(refundRepository, never()).saveAndFlush(any());
             verify(sendNotificationUseCase, never()).execute(any(NotificationCommand.class));
         }
     }

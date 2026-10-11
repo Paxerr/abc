@@ -2,6 +2,7 @@ package com.danasea.backend.modules.order.application.dtos;
 
 import com.danasea.backend.modules.order.domain.models.SubOrder;
 import com.danasea.backend.modules.order.domain.models.SubOrderStatus;
+
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -34,7 +35,8 @@ public record SubOrderDetailResult(
         String waiverAcceptedLanguage,
         String waiverAcceptedContent,
         OffsetDateTime vendorNotifiedAt,
-        OffsetDateTime createdAt
+        OffsetDateTime createdAt,
+        String cancellationPolicyVersion
 ) {
     public SubOrderDetailResult(
             UUID id,
@@ -61,7 +63,7 @@ public record SubOrderDetailResult(
         this(id, bookingItemId, masterOrderId, vendorId, serviceId, slotId, quantity, unitPrice, subtotalAmount,
                 discountAmount, vendorDiscountAmount, platformDiscountAmount, finalAmount,
                 commissionRate, commissionAmount, vendorPayoutAmount, status,
-                false, 1, null, null, waiverAccepted, null, null, null, null, vendorNotifiedAt, createdAt);
+                false, 1, null, null, waiverAccepted, null, null, null, null, vendorNotifiedAt, createdAt, "STANDARD_24H_V2");
     }
 
     public SubOrderDetailResult(
@@ -85,7 +87,7 @@ public record SubOrderDetailResult(
         this(id, bookingItemId, masterOrderId, vendorId, serviceId, slotId, quantity, unitPrice, subtotalAmount,
                 BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, subtotalAmount,
                 commissionRate, commissionAmount, vendorPayoutAmount, status,
-                false, 1, null, null, waiverAccepted, null, null, null, null, vendorNotifiedAt, createdAt);
+                false, 1, null, null, waiverAccepted, null, null, null, null, vendorNotifiedAt, createdAt, "STANDARD_24H_V2");
     }
 
     public static SubOrderDetailResult fromDomain(SubOrder subOrder) {
@@ -120,7 +122,8 @@ public record SubOrderDetailResult(
                 subOrder.getWaiverAcceptedLanguage(),
                 subOrder.getWaiverAcceptedContent(),
                 subOrder.getVendorNotifiedAt(),
-                subOrder.getCreatedAt()
+                subOrder.getCreatedAt(),
+                subOrder.getCancellationPolicyVersion()
         );
     }
 }

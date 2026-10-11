@@ -2,8 +2,10 @@ package com.danasea.backend.modules.order.application.usecases;
 
 import com.danasea.backend.modules.audit.application.api.AuditLogInternalApi;
 import com.danasea.backend.modules.booking.domain.ports.ServiceSlotPort;
+import com.danasea.backend.modules.order.application.services.DisruptionDecisionService;
 import com.danasea.backend.modules.order.application.services.RescheduleSupport;
 import com.danasea.backend.modules.order.domain.events.RescheduleProposalCreatedEvent;
+import com.danasea.backend.modules.order.domain.models.RefundReason;
 import com.danasea.backend.modules.order.infrastructure.persistence.entities.SubOrderJpaEntity;
 import com.danasea.backend.modules.order.infrastructure.persistence.entities.SubOrderRescheduleProposalJpaEntity;
 import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaSubOrderRescheduleProposalRepository;
@@ -47,6 +49,7 @@ public class CreateRescheduleProposalUseCase {
     private final RescheduleSupport support;
     private final ApplicationEventPublisher eventPublisher;
     private final ServiceSlotPort serviceSlotPort;
+    private final DisruptionDecisionService decisions;
 
     @Transactional
     public RescheduleProposalResponse execute(
@@ -123,23 +126,18 @@ public class CreateRescheduleProposalUseCase {
             throw RescheduleSupport.conflict("Service is not published.");
         OffsetDateTime oldDeparture =
                 oldSlot.getDate().atTime(oldSlot.getStartTime()).atOffset(VIETNAM_OFFSET);
+        OffsetDateTime decisionDeadline = oldDeparture.minusHours(12);
         OffsetDateTime latestExpiry =
-                oldDeparture.isBefore(proposedDepartureOffset)
-                        ? oldDeparture
+                decisionDeadline.isBefore(proposedDepartureOffset)
+                        ? decisionDeadline
                         : proposedDepartureOffset;
-        OffsetDateTime expiresAt = request.expiresAt();
-        if (expiresAt == null) {
-            // Expire before either departure and no later than 24 hours after creation.
-            OffsetDateTime default24h = now.plusHours(24);
-            OffsetDateTime departureLimit = latestExpiry;
-            expiresAt = default24h.isBefore(departureLimit) ? default24h : departureLimit;
-        } else {
-            if (!expiresAt.isAfter(now)) {
-                throw new IllegalArgumentException("Invalid reschedule proposal.");
-            }
-            if (expiresAt.isAfter(latestExpiry)) {
-                throw new IllegalArgumentException("Invalid reschedule proposal.");
-            }
+        OffsetDateTime expiresAt = request.expiresAt() == null ? latestExpiry : request.expiresAt();
+        if (expiresAt.isAfter(latestExpiry)) {
+            throw new IllegalArgumentException(
+                    "Proposal expiry cannot exceed the decision deadline or target departure.");
+        }
+        if (!expiresAt.isAfter(now) && decisionDeadline.isAfter(now)) {
+            throw new IllegalArgumentException("Proposal expiry must be in the future.");
         }
 
         // Đánh dấu SUPERSEDED cho các đề xuất cũ đang PENDING của subOrder này
@@ -163,6 +161,16 @@ public class CreateRescheduleProposalUseCase {
                         .build();
 
         SubOrderRescheduleProposalJpaEntity saved = proposalRepository.save(newProposal);
+        var decision =
+                decisions.record(
+                        subOrderId,
+                        "WEATHER".equals(reasonType)
+                                ? RefundReason.WEATHER
+                                : RefundReason.VENDOR_FAULT,
+                        request.reason().trim(),
+                        "proposal-" + saved.getId(),
+                        currentUserId);
+        if ("REFUND_REQUESTED".equals(decision.getStatus())) saved.setStatus("EXPIRED");
 
         // Ghi nhận Audit Log
         auditLogInternalService.recordTransactionalAuditLog(

@@ -5,6 +5,7 @@ public enum RefundReason {
     CUSTOMER_REQUEST,
     WEATHER,
     VENDOR_FAULT,
+    SYSTEM_FAULT,
     ADMIN_OVERRIDE,
     DISPUTE,
     COMPENSATION

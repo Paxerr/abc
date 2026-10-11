@@ -1,6 +1,7 @@
 package com.danasea.backend.modules.order.presentation.dtos;
 
 import com.danasea.backend.modules.order.domain.models.SubOrderStatus;
+
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -24,7 +25,8 @@ public record SubOrderResponse(
         Boolean waiverAccepted,
         OffsetDateTime waiverAcceptedAt,
         UUID waiverAcceptedBy,
-        String waiverAcceptedLanguage
+        String waiverAcceptedLanguage,
+        String cancellationPolicyVersion
 ) {
     public SubOrderResponse(
             UUID id,
@@ -39,7 +41,7 @@ public record SubOrderResponse(
             BigDecimal finalAmount
     ) {
         this(id, vendorId, serviceId, slotId, quantity, unitPrice, subtotalAmount, status,
-                discountAmount, finalAmount, false, 1, null, null, false, false, null, null, null);
+                discountAmount, finalAmount, false, 1, null, null, false, false, null, null, null, "STANDARD_24H_V2");
     }
 
     public SubOrderResponse(

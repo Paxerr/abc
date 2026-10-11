@@ -1,7 +1,10 @@
 package com.danasea.backend.modules.order.presentation.dtos;
 
+import com.danasea.backend.modules.order.domain.models.RefundReason;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,4 +20,7 @@ public record RescheduleOptionsSummaryResponse(
         Long rescheduleVersion,
         boolean rescheduleAllowed,
         String eligibilityReason,
-        List<RescheduleOptionItemResponse> options) {}
+        List<RescheduleOptionItemResponse> options,
+        OffsetDateTime decisionDeadline,
+        boolean fullRefundAvailable,
+        RefundReason disruptionReason) {}

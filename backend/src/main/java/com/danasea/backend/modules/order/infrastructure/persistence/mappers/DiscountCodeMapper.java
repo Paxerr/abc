@@ -1,9 +1,9 @@
 package com.danasea.backend.modules.order.infrastructure.persistence.mappers;
 
-import org.springframework.stereotype.Component;
-
 import com.danasea.backend.modules.order.domain.models.DiscountCode;
 import com.danasea.backend.modules.order.infrastructure.persistence.entities.DiscountCodeJpaEntity;
+
+import org.springframework.stereotype.Component;
 
 @Component
 public class DiscountCodeMapper {
@@ -19,6 +19,8 @@ public class DiscountCodeMapper {
         domain.setSponsorType(entity.getSponsorType());
         domain.setVendorId(entity.getVendorId());
         domain.setServiceId(entity.getServiceId());
+        domain.setRecipientCustomerId(entity.getRecipientCustomerId());
+        domain.setReplacementSubOrderId(entity.getReplacementSubOrderId());
         domain.setDiscountType(entity.getDiscountType());
         domain.setDiscountValue(entity.getDiscountValue());
         domain.setMinOrderAmount(entity.getMinOrderAmount());
@@ -47,6 +49,8 @@ public class DiscountCodeMapper {
         entity.setSponsorType(domain.getSponsorType());
         entity.setVendorId(domain.getVendorId());
         entity.setServiceId(domain.getServiceId());
+        entity.setRecipientCustomerId(domain.getRecipientCustomerId());
+        entity.setReplacementSubOrderId(domain.getReplacementSubOrderId());
         entity.setDiscountType(domain.getDiscountType());
         entity.setDiscountValue(domain.getDiscountValue());
         entity.setMinOrderAmount(domain.getMinOrderAmount());

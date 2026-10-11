@@ -28,6 +28,14 @@ import com.danasea.backend.modules.weather.infrastructure.persistence.repositori
 import com.danasea.backend.shared.i18n.LocalizedContentValue;
 import com.danasea.backend.shared.i18n.LocalizedMessageRef;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -39,11 +47,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
@@ -51,11 +54,9 @@ public class SlotWeatherMonitoringJob {
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
-    @Autowired
-    private Clock clock;
+    @Autowired private Clock clock;
 
-    @Autowired
-    private WeatherBookingCancellationService weatherCancellation;
+    @Autowired private WeatherBookingCancellationService weatherCancellation;
 
     private final JpaServiceSlotRepository slotRepository;
     private final JpaServiceRepository serviceRepository;
@@ -86,8 +87,7 @@ public class SlotWeatherMonitoringJob {
             @Autowired(required = false) JpaRefundRepository refundRepository,
             @Autowired(required = false) CategorySafetyRuleService categorySafetyRuleService,
             @Autowired(required = false) JpaMasterOrderRepository masterOrderRepository,
-            @Autowired(required = false) RefundPolicyEngine refundPolicyEngine
-    ) {
+            @Autowired(required = false) RefundPolicyEngine refundPolicyEngine) {
         this.slotRepository = slotRepository;
         this.serviceRepository = serviceRepository;
         this.categoryRepository = categoryRepository;
@@ -99,7 +99,8 @@ public class SlotWeatherMonitoringJob {
         this.refundRepository = refundRepository;
         this.categorySafetyRuleService = categorySafetyRuleService;
         this.masterOrderRepository = masterOrderRepository;
-        this.refundPolicyEngine = refundPolicyEngine != null ? refundPolicyEngine : new RefundPolicyEngine();
+        this.refundPolicyEngine =
+                refundPolicyEngine != null ? refundPolicyEngine : new RefundPolicyEngine();
         this.clock = Clock.system(ZoneId.of("Asia/Ho_Chi_Minh"));
     }
 
@@ -114,11 +115,20 @@ public class SlotWeatherMonitoringJob {
             SendNotificationUseCase sendNotificationUseCase,
             JpaRefundRepository refundRepository,
             CategorySafetyRuleService categorySafetyRuleService,
-            JpaMasterOrderRepository masterOrderRepository
-    ) {
-        this(slotRepository, serviceRepository, categoryRepository, evaluationRepository,
-             subOrderRepository, weatherProviderPort, weatherRuleEngine, sendNotificationUseCase,
-             refundRepository, categorySafetyRuleService, masterOrderRepository, null);
+            JpaMasterOrderRepository masterOrderRepository) {
+        this(
+                slotRepository,
+                serviceRepository,
+                categoryRepository,
+                evaluationRepository,
+                subOrderRepository,
+                weatherProviderPort,
+                weatherRuleEngine,
+                sendNotificationUseCase,
+                refundRepository,
+                categorySafetyRuleService,
+                masterOrderRepository,
+                null);
     }
 
     public SlotWeatherMonitoringJob(
@@ -131,11 +141,20 @@ public class SlotWeatherMonitoringJob {
             WeatherRuleEngine weatherRuleEngine,
             SendNotificationUseCase sendNotificationUseCase,
             JpaRefundRepository refundRepository,
-            CategorySafetyRuleService categorySafetyRuleService
-    ) {
-        this(slotRepository, serviceRepository, categoryRepository, evaluationRepository,
-             subOrderRepository, weatherProviderPort, weatherRuleEngine, sendNotificationUseCase,
-             refundRepository, categorySafetyRuleService, null, null);
+            CategorySafetyRuleService categorySafetyRuleService) {
+        this(
+                slotRepository,
+                serviceRepository,
+                categoryRepository,
+                evaluationRepository,
+                subOrderRepository,
+                weatherProviderPort,
+                weatherRuleEngine,
+                sendNotificationUseCase,
+                refundRepository,
+                categorySafetyRuleService,
+                null,
+                null);
     }
 
     public SlotWeatherMonitoringJob(
@@ -146,17 +165,26 @@ public class SlotWeatherMonitoringJob {
             JpaSubOrderRepository subOrderRepository,
             WeatherProviderPort weatherProviderPort,
             WeatherRuleEngine weatherRuleEngine,
-            SendNotificationUseCase sendNotificationUseCase
-    ) {
-        this(slotRepository, serviceRepository, categoryRepository, evaluationRepository,
-             subOrderRepository, weatherProviderPort, weatherRuleEngine, sendNotificationUseCase,
-             null, null, null, null);
+            SendNotificationUseCase sendNotificationUseCase) {
+        this(
+                slotRepository,
+                serviceRepository,
+                categoryRepository,
+                evaluationRepository,
+                subOrderRepository,
+                weatherProviderPort,
+                weatherRuleEngine,
+                sendNotificationUseCase,
+                null,
+                null,
+                null,
+                null);
     }
 
     /**
-     * Sliding window scheduler running every 30 minutes.
-     * Evaluates booked slots in sliding windows T-24h and T-2h,
-     * and performs auto-escalation fallback for unhandled RED incidents within 60 minutes.
+     * Sliding window scheduler running every 30 minutes. Evaluates booked slots in sliding windows
+     * T-24h and T-2h, and performs auto-escalation fallback for unhandled RED incidents within 12
+     * hours.
      */
     @Scheduled(
             cron = "${app.weather.monitoring-cron:0 */30 * * * *}",
@@ -168,16 +196,20 @@ public class SlotWeatherMonitoringJob {
 
     @Transactional
     public void monitorUpcomingSlots(LocalDateTime now) {
-        log.info("Starting SlotWeatherMonitoringJob: scanning upcoming booked slots (T-24h and T-2h sliding windows) at {}...", now);
+        log.info(
+                "Starting SlotWeatherMonitoringJob: scanning upcoming booked slots (T-24h and T-2h"
+                    + " sliding windows) at {}...",
+                now);
         LocalDate today = now.toLocalDate();
         LocalDate dayAfterTomorrow = today.plusDays(2);
 
-        List<ServiceSlotJpaEntity> slots = slotRepository.findByDateBetween(today, dayAfterTomorrow);
+        List<ServiceSlotJpaEntity> slots =
+                slotRepository.findByDateBetween(today, dayAfterTomorrow);
 
         int alertCount = 0;
         for (ServiceSlotJpaEntity slot : slots) {
             if (slot.getBookedCount() != null && slot.getBookedCount() > 0) {
-                // Check Auto-Escalation Fallback (T <= 60 minutes)
+                // Check the 12-hour decision deadline
                 boolean autoCancelled = checkAutoEscalationFallback(slot, now);
                 if (autoCancelled) {
                     continue; // Do not evaluate in sliding window if just auto-cancelled!
@@ -186,17 +218,23 @@ public class SlotWeatherMonitoringJob {
                 // Check Sliding Window: T-24h [now+23h, now+25h] and T-2h [now+1h, now+3h]
                 if (isSlotInSlidingWindow(slot, now)) {
                     boolean hasAlert = evaluateAndAlertSlot(slot);
-                    if (hasAlert) alertCount++;
+                    if (hasAlert) {
+                        alertCount++;
+                        checkAutoEscalationFallback(slot, now);
+                    }
                 }
             }
         }
-        log.info("Completed SlotWeatherMonitoringJob. Total slots evaluated in range: {}, alerts active/triggered: {}", slots.size(), alertCount);
+        log.info(
+                "Completed SlotWeatherMonitoringJob. Total slots evaluated in range: {}, alerts"
+                    + " active/triggered: {}",
+                slots.size(),
+                alertCount);
     }
 
     /**
-     * Determines whether a slot falls within either the T-24h or T-2h sliding windows.
-     * T-24h window: [now + 23h, now + 25h]
-     * T-2h window:  [now + 1h, now + 3h]
+     * Determines whether a slot falls within either the T-24h or T-2h sliding windows. T-24h
+     * window: [now + 23h, now + 25h] T-2h window: [now + 1h, now + 3h]
      */
     public boolean isSlotInSlidingWindow(ServiceSlotJpaEntity slot, LocalDateTime now) {
         if (slot == null || slot.getDate() == null || slot.getStartTime() == null) {
@@ -214,10 +252,10 @@ public class SlotWeatherMonitoringJob {
     }
 
     /**
-     * Auto-escalation fallback for a specific slot:
-     * If unresolved RED incident exists (status = 'AWAITING_ADMIN_RESOLUTION') and departure is within 60 minutes,
-     * auto-cancels sub-orders, generates 100% refund, updates status to AUTO_CANCELLED_FOR_SAFETY,
-     * and sends urgent notifications to Admin, Vendor, and Customer.
+     * Auto-escalation fallback for a specific slot: If unresolved RED incident exists (status =
+     * 'AWAITING_ADMIN_RESOLUTION') and departure is within 12 hours, auto-cancels sub-orders,
+     * generates 100% refund, updates status to AUTO_CANCELLED_FOR_SAFETY, and sends urgent
+     * notifications to Admin, Vendor, and Customer.
      */
     @Transactional
     public boolean checkAutoEscalationFallback(ServiceSlotJpaEntity slot) {
@@ -231,28 +269,36 @@ public class SlotWeatherMonitoringJob {
         LocalDateTime slotStart = LocalDateTime.of(slot.getDate(), slot.getStartTime());
         Duration durationToStart = Duration.between(now, slotStart);
 
-        // Within 60 minutes of departure: T_remain <= 60m and T_remain >= 0
-        if (!durationToStart.isNegative() && durationToStart.toMinutes() <= 60) {
-            Optional<SafetyRuleEvaluationJpaEntity> latestAlertOpt = findActiveAlertForSlot(slot.getId());
+        // At or after the decision deadline, including delayed scheduler execution.
+        if (durationToStart.compareTo(Duration.ofHours(12)) <= 0) {
+            Optional<SafetyRuleEvaluationJpaEntity> latestAlertOpt =
+                    findActiveAlertForSlot(slot.getId());
 
             if (latestAlertOpt.isPresent()) {
                 SafetyRuleEvaluationJpaEntity alert = latestAlertOpt.get();
                 // Unresolved RED alert awaiting admin resolution
-                boolean isUnresolvedRed = "AWAITING_ADMIN_RESOLUTION".equalsIgnoreCase(alert.getStatus())
-                        || (Boolean.FALSE.equals(alert.getIsSafe())
-                            && !"RESOLVED_CANCEL_AND_REFUND".equalsIgnoreCase(alert.getStatus())
-                            && !"RESOLVED_DISMISSED".equalsIgnoreCase(alert.getStatus())
-                            && !"AUTO_CANCELLED_FOR_SAFETY".equalsIgnoreCase(alert.getStatus()));
+                boolean isUnresolvedRed =
+                        "AWAITING_ADMIN_RESOLUTION".equalsIgnoreCase(alert.getStatus())
+                                || (Boolean.FALSE.equals(alert.getIsSafe())
+                                        && !"RESOLVED_CANCEL_AND_REFUND"
+                                                .equalsIgnoreCase(alert.getStatus())
+                                        && !"RESOLVED_DISMISSED".equalsIgnoreCase(alert.getStatus())
+                                        && !"AUTO_CANCELLED_FOR_SAFETY"
+                                                .equalsIgnoreCase(alert.getStatus()));
 
                 if (isUnresolvedRed) {
-                    log.warn("AUTO-ESCALATION FALLBACK: Slot {} has unresolved RED alert with {} min remaining. Auto-cancelling and refunding 100%.",
+                    log.warn(
+                            "AUTO-ESCALATION FALLBACK: Slot {} has unresolved RED alert with {} min"
+                                + " remaining. Auto-cancelling and refunding 100%.",
                             slot.getId(), durationToStart.toMinutes());
 
-                    List<SubOrderJpaEntity> subOrders = subOrderRepository.findBySlotId(slot.getId());
+                    List<SubOrderJpaEntity> subOrders =
+                            subOrderRepository.findBySlotId(slot.getId());
                     int cancelledCount = 0;
                     List<SubOrderJpaEntity> cancelled = new ArrayList<>();
                     for (SubOrderJpaEntity subOrder : subOrders) {
-                        if (weatherCancellation.cancel(subOrder.getId(), slot.getId(), alert.getId())) {
+                        if (weatherCancellation.cancel(
+                                subOrder.getId(), slot.getId(), alert.getId())) {
                             cancelledCount++;
                             cancelled.add(subOrder);
                         }
@@ -261,40 +307,61 @@ public class SlotWeatherMonitoringJob {
 
                     // Update alert status
                     alert.setStatus("AUTO_CANCELLED_FOR_SAFETY");
-                    alert.setWarningMessage("[AUTO-CANCELLED FOR SAFETY] Canceled and refunded 100% due to unresolved RED alert within 60 minutes: "
-                            + alert.getWarningMessage());
+                    alert.setWarningMessage(
+                            "[AUTO-CANCELLED FOR SAFETY] Canceled and refunded 100% due to"
+                                + " unresolved RED alert within 12 hours: "
+                                    + alert.getWarningMessage());
                     evaluationRepository.save(alert);
 
                     // Tri-party urgent notifications
-                    Optional<ServiceJpaEntity> serviceOpt = serviceRepository.findById(slot.getServiceId());
-                    LocalizedContentValue serviceName = serviceOpt
-                            .map(service -> new LocalizedContentValue(service.getName(), service.getNameEn()))
-                            .orElse(new LocalizedContentValue("Dịch vụ biển", "Marine service"));
+                    Optional<ServiceJpaEntity> serviceOpt =
+                            serviceRepository.findById(slot.getServiceId());
+                    LocalizedContentValue serviceName =
+                            serviceOpt
+                                    .map(
+                                            service ->
+                                                    new LocalizedContentValue(
+                                                            service.getName(), service.getNameEn()))
+                                    .orElse(
+                                            new LocalizedContentValue(
+                                                    "Dịch vụ biển", "Marine service"));
 
                     // 1. Notify Admin
-                    sendLocalizedNotification(null, "AUTO_CANCELLED_FOR_SAFETY",
-                            "notification.weather.auto_cancel.admin.title", new Object[0],
+                    sendLocalizedNotification(
+                            null,
+                            "AUTO_CANCELLED_FOR_SAFETY",
+                            "notification.weather.auto_cancel.admin.title",
+                            new Object[0],
                             "notification.weather.auto_cancel.admin.body",
-                            new Object[]{slot.getId(), slot.getDate(), slot.getStartTime()},
-                            "SERVICE_SLOT", slot.getId());
+                            new Object[] {slot.getId(), slot.getDate(), slot.getStartTime()},
+                            "SERVICE_SLOT",
+                            slot.getId());
 
                     // 2. Notify Vendor
                     if (serviceOpt.isPresent() && serviceOpt.get().getVendorId() != null) {
-                        sendLocalizedNotification(serviceOpt.get().getVendorId(), "AUTO_CANCELLED_FOR_SAFETY",
-                                "notification.weather.auto_cancel.vendor.title", new Object[]{serviceName},
+                        sendLocalizedNotification(
+                                serviceOpt.get().getVendorId(),
+                                "AUTO_CANCELLED_FOR_SAFETY",
+                                "notification.weather.auto_cancel.vendor.title",
+                                new Object[] {serviceName},
                                 "notification.weather.auto_cancel.vendor.body",
-                                new Object[]{slot.getStartTime(), slot.getDate()},
-                                "SERVICE_SLOT", slot.getId());
+                                new Object[] {slot.getStartTime(), slot.getDate()},
+                                "SERVICE_SLOT",
+                                slot.getId());
                     }
 
                     // 3. Notify Customer
                     for (SubOrderJpaEntity subOrder : cancelled) {
                         UUID customerId = resolveCustomerId(subOrder);
-                        sendLocalizedNotification(customerId, "AUTO_CANCELLED_FOR_SAFETY",
-                                "notification.weather.auto_cancel.customer.title", new Object[]{serviceName},
+                        sendLocalizedNotification(
+                                customerId,
+                                "AUTO_CANCELLED_FOR_SAFETY",
+                                "notification.weather.auto_cancel.customer.title",
+                                new Object[] {serviceName},
                                 "notification.weather.auto_cancel.customer.body",
-                                new Object[]{slot.getStartTime(), slot.getDate()},
-                                "SUB_ORDER", subOrder.getId());
+                                new Object[] {slot.getStartTime(), slot.getDate()},
+                                "SUB_ORDER",
+                                subOrder.getId());
                     }
 
                     return true;
@@ -305,8 +372,8 @@ public class SlotWeatherMonitoringJob {
     }
 
     /**
-     * Evaluates weather condition for a slot with Idempotency, In-Place Metric Update,
-     * YELLOW Early Warning, and Escalation detection.
+     * Evaluates weather condition for a slot with Idempotency, In-Place Metric Update, YELLOW Early
+     * Warning, and Escalation detection.
      */
     @Transactional
     public boolean evaluateAndAlertSlot(ServiceSlotJpaEntity slot) {
@@ -318,21 +385,29 @@ public class SlotWeatherMonitoringJob {
 
         String categorySlug = "default";
         if (service.getCategoryId() != null) {
-            Optional<CategoryJpaEntity> catOpt = categoryRepository.findById(service.getCategoryId());
+            Optional<CategoryJpaEntity> catOpt =
+                    categoryRepository.findById(service.getCategoryId());
             if (catOpt.isPresent() && catOpt.get().getSlug() != null) {
                 categorySlug = catOpt.get().getSlug();
             }
         }
 
-        double lat = service.getLatitude() != null ? service.getLatitude().doubleValue() : DEFAULT_LAT;
-        double lng = service.getLongitude() != null ? service.getLongitude().doubleValue() : DEFAULT_LNG;
+        double lat =
+                service.getLatitude() != null ? service.getLatitude().doubleValue() : DEFAULT_LAT;
+        double lng =
+                service.getLongitude() != null ? service.getLongitude().doubleValue() : DEFAULT_LNG;
 
-        WeatherInfoDto.TimeWindowForecast forecast = weatherProviderPort.getTimeWindowForecast(
-                lat, lng, slot.getDate(), slot.getStartTime(), slot.getEndTime()
-        );
+        WeatherInfoDto.TimeWindowForecast forecast =
+                weatherProviderPort.getTimeWindowForecast(
+                        lat, lng, slot.getDate(), slot.getStartTime(), slot.getEndTime());
 
-        if (forecast == null || !forecast.isFreshAt(Instant.now()) || forecast.getPeakWindSpeed() == null) {
-            log.warn("No fresh verified meteorological forecast for slot {}; existing safety alerts remain active", slot.getId());
+        if (forecast == null
+                || !forecast.isFreshAt(Instant.now())
+                || forecast.getPeakWindSpeed() == null) {
+            log.warn(
+                    "No fresh verified meteorological forecast for slot {}; existing safety alerts"
+                        + " remain active",
+                    slot.getId());
             return false;
         }
 
@@ -344,29 +419,35 @@ public class SlotWeatherMonitoringJob {
             rule = CategorySafetyRule.getBySlug(categorySlug);
         }
 
-        WeatherRuleEngine.SafetyEvaluationResult evalResult = weatherRuleEngine.evaluate(
-                rule,
-                forecast.getPeakWaveHeight(),
-                forecast.getPeakWindSpeed(),
-                forecast.getPeakWindGust(),
-                forecast.getPeakOceanCurrent(),
-                forecast.getMinVisibility(),
-                forecast.getSevereWeatherCode()
-        );
+        WeatherRuleEngine.SafetyEvaluationResult evalResult =
+                weatherRuleEngine.evaluate(
+                        rule,
+                        forecast.getPeakWaveHeight(),
+                        forecast.getPeakWindSpeed(),
+                        forecast.getPeakWindGust(),
+                        forecast.getPeakOceanCurrent(),
+                        forecast.getMinVisibility(),
+                        forecast.getSevereWeatherCode());
 
         String currentLevel = evalResult.getAlertLevel();
         if (currentLevel == null) {
-            currentLevel = evalResult.isSafe() ? WeatherRuleEngine.ALERT_GREEN : WeatherRuleEngine.ALERT_RED;
+            currentLevel =
+                    evalResult.isSafe()
+                            ? WeatherRuleEngine.ALERT_GREEN
+                            : WeatherRuleEngine.ALERT_RED;
         }
 
         // 0. GREEN: Safe condition
         if (WeatherRuleEngine.ALERT_GREEN.equals(currentLevel)) {
-            Optional<SafetyRuleEvaluationJpaEntity> activeAlertOpt = findActiveAlertForSlot(slot.getId());
+            Optional<SafetyRuleEvaluationJpaEntity> activeAlertOpt =
+                    findActiveAlertForSlot(slot.getId());
             if (activeAlertOpt.isPresent()) {
                 SafetyRuleEvaluationJpaEntity existingAlert = activeAlertOpt.get();
                 existingAlert.setIsSafe(true);
                 existingAlert.setStatus("RESOLVED_SAFE");
-                existingAlert.setWarningMessage("Weather conditions have improved to safe levels: " + evalResult.getWarningMessage());
+                existingAlert.setWarningMessage(
+                        "Weather conditions have improved to safe levels: "
+                                + evalResult.getWarningMessage());
                 existingAlert.setEvaluatedAt(OffsetDateTime.now());
                 evaluationRepository.save(existingAlert);
             }
@@ -374,25 +455,33 @@ public class SlotWeatherMonitoringJob {
         }
 
         // Check if an active alert already exists for this slot
-        Optional<SafetyRuleEvaluationJpaEntity> existingAlertOpt = findActiveAlertForSlot(slot.getId());
+        Optional<SafetyRuleEvaluationJpaEntity> existingAlertOpt =
+                findActiveAlertForSlot(slot.getId());
 
         // 1. RED ALERT CASE:
         if (!evalResult.isSafe() || WeatherRuleEngine.ALERT_RED.equals(currentLevel)) {
-            log.warn("WEATHER ALERT (RED) for slot {} (Date: {}, Start: {}). Reason: {}",
-                    slot.getId(), slot.getDate(), slot.getStartTime(), evalResult.getWarningMessage());
+            log.warn(
+                    "WEATHER ALERT (RED) for slot {} (Date: {}, Start: {}). Reason: {}",
+                    slot.getId(),
+                    slot.getDate(),
+                    slot.getStartTime(),
+                    evalResult.getWarningMessage());
 
             if (existingAlertOpt.isPresent()) {
                 SafetyRuleEvaluationJpaEntity existing = existingAlertOpt.get();
                 String prevLevel = existing.getAlertLevel();
                 if (prevLevel == null) {
-                    prevLevel = "MONITORING_YELLOW".equalsIgnoreCase(existing.getStatus())
-                            ? WeatherRuleEngine.ALERT_YELLOW
-                            : WeatherRuleEngine.ALERT_RED;
+                    prevLevel =
+                            "MONITORING_YELLOW".equalsIgnoreCase(existing.getStatus())
+                                    ? WeatherRuleEngine.ALERT_YELLOW
+                                    : WeatherRuleEngine.ALERT_RED;
                 }
 
                 if (WeatherRuleEngine.ALERT_YELLOW.equalsIgnoreCase(prevLevel)) {
                     // ESCALATION: YELLOW -> RED
-                    log.warn("ESCALATION: Slot {} weather worsened from YELLOW to RED. Updating status and triggering urgent alerts.",
+                    log.warn(
+                            "ESCALATION: Slot {} weather worsened from YELLOW to RED. Updating"
+                                + " status and triggering urgent alerts.",
                             slot.getId());
                     existing.setStatus("AWAITING_ADMIN_RESOLUTION");
                     existing.setAlertLevel(WeatherRuleEngine.ALERT_RED);
@@ -403,8 +492,11 @@ public class SlotWeatherMonitoringJob {
                     sendRedAlertNotifications(service, slot, evalResult, true);
                     return true;
                 } else {
-                    // IDEMPOTENCY: Unchanged RED severity -> in-place update without duplicate alert or spam
-                    log.info("Idempotency: Active RED alert for slot {} severity unchanged. Updating metrics in-place.",
+                    // IDEMPOTENCY: Unchanged RED severity -> in-place update without duplicate
+                    // alert or spam
+                    log.info(
+                            "Idempotency: Active RED alert for slot {} severity unchanged. Updating"
+                                + " metrics in-place.",
                             slot.getId());
                     updateEntityMetrics(existing, forecast, evalResult);
                     evaluationRepository.save(existing);
@@ -428,21 +520,28 @@ public class SlotWeatherMonitoringJob {
 
         // 2. YELLOW EARLY WARNING CASE:
         else if (WeatherRuleEngine.ALERT_YELLOW.equals(currentLevel)) {
-            log.info("WEATHER CAUTION (YELLOW) for slot {} (Date: {}, Start: {}). Reason: {}",
-                    slot.getId(), slot.getDate(), slot.getStartTime(), evalResult.getWarningMessage());
+            log.info(
+                    "WEATHER CAUTION (YELLOW) for slot {} (Date: {}, Start: {}). Reason: {}",
+                    slot.getId(),
+                    slot.getDate(),
+                    slot.getStartTime(),
+                    evalResult.getWarningMessage());
 
             if (existingAlertOpt.isPresent()) {
                 SafetyRuleEvaluationJpaEntity existing = existingAlertOpt.get();
                 String prevLevel = existing.getAlertLevel();
                 if (prevLevel == null) {
-                    prevLevel = "MONITORING_YELLOW".equalsIgnoreCase(existing.getStatus())
-                            ? WeatherRuleEngine.ALERT_YELLOW
-                            : WeatherRuleEngine.ALERT_RED;
+                    prevLevel =
+                            "MONITORING_YELLOW".equalsIgnoreCase(existing.getStatus())
+                                    ? WeatherRuleEngine.ALERT_YELLOW
+                                    : WeatherRuleEngine.ALERT_RED;
                 }
 
                 if (WeatherRuleEngine.ALERT_YELLOW.equalsIgnoreCase(prevLevel)) {
                     // IDEMPOTENCY: Unchanged YELLOW severity -> in-place metric update without spam
-                    log.info("Idempotency: Active YELLOW alert for slot {} severity unchanged. Updating metrics in-place.",
+                    log.info(
+                            "Idempotency: Active YELLOW alert for slot {} severity unchanged."
+                                + " Updating metrics in-place.",
                             slot.getId());
                     updateEntityMetrics(existing, forecast, evalResult);
                     evaluationRepository.save(existing);
@@ -457,7 +556,8 @@ public class SlotWeatherMonitoringJob {
                     return true;
                 }
             } else {
-                // New YELLOW alert record: record with MONITORING_YELLOW for active tracking on Admin Portal
+                // New YELLOW alert record: record with MONITORING_YELLOW for active tracking on
+                // Admin Portal
                 SafetyRuleEvaluationJpaEntity entity = new SafetyRuleEvaluationJpaEntity();
                 entity.setServiceId(service.getId());
                 entity.setSlotId(slot.getId());
@@ -479,112 +579,160 @@ public class SlotWeatherMonitoringJob {
     private Optional<SafetyRuleEvaluationJpaEntity> findActiveAlertForSlot(UUID slotId) {
         if (slotId == null) return Optional.empty();
 
-        Optional<SafetyRuleEvaluationJpaEntity> alertOpt = evaluationRepository
-                .findTopBySlotIdAndStatusInOrderByEvaluatedAtDesc(
-                        slotId, List.of("AWAITING_ADMIN_RESOLUTION", "MONITORING_YELLOW")
-                );
+        Optional<SafetyRuleEvaluationJpaEntity> alertOpt =
+                evaluationRepository.findTopBySlotIdAndStatusInOrderByEvaluatedAtDesc(
+                        slotId, List.of("AWAITING_ADMIN_RESOLUTION", "MONITORING_YELLOW"));
         if (alertOpt.isPresent()) {
             return alertOpt;
         }
 
-        return evaluationRepository.findTopBySlotIdOrderByEvaluatedAtDesc(slotId)
-                .filter(a -> Boolean.FALSE.equals(a.getIsSafe())
-                        && !"RESOLVED_CANCEL_AND_REFUND".equalsIgnoreCase(a.getStatus())
-                        && !"RESOLVED_DISMISSED".equalsIgnoreCase(a.getStatus())
-                        && !"AUTO_CANCELLED_FOR_SAFETY".equalsIgnoreCase(a.getStatus()));
+        return evaluationRepository
+                .findTopBySlotIdOrderByEvaluatedAtDesc(slotId)
+                .filter(
+                        a ->
+                                Boolean.FALSE.equals(a.getIsSafe())
+                                        && !"RESOLVED_CANCEL_AND_REFUND"
+                                                .equalsIgnoreCase(a.getStatus())
+                                        && !"RESOLVED_DISMISSED".equalsIgnoreCase(a.getStatus())
+                                        && !"AUTO_CANCELLED_FOR_SAFETY"
+                                                .equalsIgnoreCase(a.getStatus()));
     }
 
-    private void sendRedAlertNotifications(ServiceJpaEntity service, ServiceSlotJpaEntity slot,
-                                           WeatherRuleEngine.SafetyEvaluationResult evalResult, boolean isEscalation) {
-        LocalizedContentValue serviceName = new LocalizedContentValue(service.getName(), service.getNameEn());
+    private void sendRedAlertNotifications(
+            ServiceJpaEntity service,
+            ServiceSlotJpaEntity slot,
+            WeatherRuleEngine.SafetyEvaluationResult evalResult,
+            boolean isEscalation) {
+        LocalizedContentValue serviceName =
+                new LocalizedContentValue(service.getName(), service.getNameEn());
         String level = isEscalation ? "escalated" : "red";
 
         // 1. Vendor
         if (service.getVendorId() != null) {
-            sendLocalizedNotification(service.getVendorId(), "WEATHER_ALERT",
-                    "notification.weather.red.vendor.title", new Object[]{serviceName, level},
-                    "notification.weather.red.vendor.body", new Object[]{new LocalizedWeatherEvaluationValue(evalResult)},
-                    "SERVICE_SLOT", slot.getId());
+            sendLocalizedNotification(
+                    service.getVendorId(),
+                    "WEATHER_ALERT",
+                    "notification.weather.red.vendor.title",
+                    new Object[] {serviceName, level},
+                    "notification.weather.red.vendor.body",
+                    new Object[] {new LocalizedWeatherEvaluationValue(evalResult)},
+                    "SERVICE_SLOT",
+                    slot.getId());
         }
 
         // 2. Customer
         List<SubOrderJpaEntity> subOrders = subOrderRepository.findBySlotId(slot.getId());
         for (SubOrderJpaEntity subOrder : subOrders) {
-            if (subOrder.getStatus() == SubOrderStatus.CONFIRMED || subOrder.getStatus() == SubOrderStatus.PENDING) {
+            if (subOrder.getStatus() == SubOrderStatus.CONFIRMED
+                    || subOrder.getStatus() == SubOrderStatus.PENDING) {
                 UUID customerId = resolveCustomerId(subOrder);
-                sendLocalizedNotification(customerId, "WEATHER_WARNING",
-                        "notification.weather.red.customer.title", new Object[]{serviceName, level},
+                sendLocalizedNotification(
+                        customerId,
+                        "WEATHER_WARNING",
+                        "notification.weather.red.customer.title",
+                        new Object[] {serviceName, level},
                         "notification.weather.red.customer.body",
-                        new Object[]{slot.getDate(), slot.getStartTime(), new LocalizedWeatherEvaluationValue(evalResult)},
-                        "SUB_ORDER", subOrder.getId());
+                        new Object[] {
+                            slot.getDate(),
+                            slot.getStartTime(),
+                            new LocalizedWeatherEvaluationValue(evalResult)
+                        },
+                        "SUB_ORDER",
+                        subOrder.getId());
             }
         }
 
         // 3. Admin (on escalation)
         if (isEscalation) {
-            sendLocalizedNotification(null, "WEATHER_ALERT",
-                    "notification.weather.red.admin.title", new Object[]{serviceName},
+            sendLocalizedNotification(
+                    null,
+                    "WEATHER_ALERT",
+                    "notification.weather.red.admin.title",
+                    new Object[] {serviceName},
                     "notification.weather.red.admin.body",
-                    new Object[]{slot.getId(), serviceName, new LocalizedWeatherEvaluationValue(evalResult)},
-                    "SERVICE_SLOT", slot.getId());
+                    new Object[] {
+                        slot.getId(), serviceName, new LocalizedWeatherEvaluationValue(evalResult)
+                    },
+                    "SERVICE_SLOT",
+                    slot.getId());
         }
     }
 
-    private void sendYellowEarlyWarningNotifications(ServiceJpaEntity service, ServiceSlotJpaEntity slot,
-                                                     WeatherRuleEngine.SafetyEvaluationResult evalResult) {
-        LocalizedContentValue serviceName = new LocalizedContentValue(service.getName(), service.getNameEn());
+    private void sendYellowEarlyWarningNotifications(
+            ServiceJpaEntity service,
+            ServiceSlotJpaEntity slot,
+            WeatherRuleEngine.SafetyEvaluationResult evalResult) {
+        LocalizedContentValue serviceName =
+                new LocalizedContentValue(service.getName(), service.getNameEn());
         // 1. Vendor
         if (service.getVendorId() != null) {
-            sendLocalizedNotification(service.getVendorId(), "WEATHER_EARLY_WARNING",
-                    "notification.weather.yellow.vendor.title", new Object[]{serviceName},
-                    "notification.weather.yellow.vendor.body", new Object[]{new LocalizedWeatherEvaluationValue(evalResult)},
-                    "SERVICE_SLOT", slot.getId());
+            sendLocalizedNotification(
+                    service.getVendorId(),
+                    "WEATHER_EARLY_WARNING",
+                    "notification.weather.yellow.vendor.title",
+                    new Object[] {serviceName},
+                    "notification.weather.yellow.vendor.body",
+                    new Object[] {new LocalizedWeatherEvaluationValue(evalResult)},
+                    "SERVICE_SLOT",
+                    slot.getId());
         }
 
         // 2. Customer
         List<SubOrderJpaEntity> subOrders = subOrderRepository.findBySlotId(slot.getId());
         for (SubOrderJpaEntity subOrder : subOrders) {
-            if (subOrder.getStatus() == SubOrderStatus.CONFIRMED || subOrder.getStatus() == SubOrderStatus.PENDING) {
+            if (subOrder.getStatus() == SubOrderStatus.CONFIRMED
+                    || subOrder.getStatus() == SubOrderStatus.PENDING) {
                 UUID customerId = resolveCustomerId(subOrder);
-                sendLocalizedNotification(customerId, "WEATHER_EARLY_WARNING",
-                        "notification.weather.yellow.customer.title", new Object[]{serviceName},
-                        "notification.weather.yellow.customer.body", new Object[]{new LocalizedWeatherEvaluationValue(evalResult)},
-                        "SUB_ORDER", subOrder.getId());
+                sendLocalizedNotification(
+                        customerId,
+                        "WEATHER_EARLY_WARNING",
+                        "notification.weather.yellow.customer.title",
+                        new Object[] {serviceName},
+                        "notification.weather.yellow.customer.body",
+                        new Object[] {new LocalizedWeatherEvaluationValue(evalResult)},
+                        "SUB_ORDER",
+                        subOrder.getId());
             }
         }
     }
 
-    private void sendLocalizedNotification(UUID recipientId,
-                                           String type,
-                                           String titleKey,
-                                           Object[] titleArgs,
-                                           String bodyKey,
-                                           Object[] bodyArgs,
-                                           String relatedEntityType,
-                                           UUID relatedEntityId) {
-        sendNotificationUseCase.execute(new NotificationCommand(
-                recipientId,
-                type,
-                NotificationChannel.IN_APP,
-                LocalizedMessageRef.of(titleKey, titleArgs),
-                LocalizedMessageRef.of(bodyKey, bodyArgs),
-                relatedEntityType,
-                relatedEntityId,
-                null));
+    private void sendLocalizedNotification(
+            UUID recipientId,
+            String type,
+            String titleKey,
+            Object[] titleArgs,
+            String bodyKey,
+            Object[] bodyArgs,
+            String relatedEntityType,
+            UUID relatedEntityId) {
+        sendNotificationUseCase.execute(
+                new NotificationCommand(
+                        recipientId,
+                        type,
+                        NotificationChannel.IN_APP,
+                        LocalizedMessageRef.of(titleKey, titleArgs),
+                        LocalizedMessageRef.of(bodyKey, bodyArgs),
+                        relatedEntityType,
+                        relatedEntityId,
+                        null));
     }
 
     private UUID resolveCustomerId(SubOrderJpaEntity subOrder) {
-        if (subOrder == null || subOrder.getMasterOrderId() == null || masterOrderRepository == null) {
+        if (subOrder == null
+                || subOrder.getMasterOrderId() == null
+                || masterOrderRepository == null) {
             return null;
         }
-        return masterOrderRepository.findById(subOrder.getMasterOrderId())
+        return masterOrderRepository
+                .findById(subOrder.getMasterOrderId())
                 .map(MasterOrderJpaEntity::getCustomerId)
                 .orElse(null);
     }
 
-    private void updateEntityMetrics(SafetyRuleEvaluationJpaEntity entity,
-                                     WeatherInfoDto.TimeWindowForecast forecast,
-                                     WeatherRuleEngine.SafetyEvaluationResult evalResult) {
+    private void updateEntityMetrics(
+            SafetyRuleEvaluationJpaEntity entity,
+            WeatherInfoDto.TimeWindowForecast forecast,
+            WeatherRuleEngine.SafetyEvaluationResult evalResult) {
         entity.setWarningMessage(evalResult.getWarningMessage());
         try {
             entity.setFindingsJson(JSON.writeValueAsString(evalResult.getFindings()));

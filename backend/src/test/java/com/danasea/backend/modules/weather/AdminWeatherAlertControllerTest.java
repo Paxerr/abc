@@ -19,14 +19,7 @@ import com.danasea.backend.modules.service.infrastructure.persistence.repositori
 import com.danasea.backend.modules.weather.infrastructure.persistence.entities.SafetyRuleEvaluationJpaEntity;
 import com.danasea.backend.modules.weather.infrastructure.persistence.repositories.JpaSafetyRuleEvaluationRepository;
 import com.danasea.backend.modules.weather.presentation.controllers.AdminWeatherAlertController;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,6 +28,15 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AdminWeatherAlertController Tests")
@@ -191,7 +193,7 @@ class AdminWeatherAlertControllerTest {
 
         // Kiểm tra tạo bản ghi Refund 100% với lý do WEATHER
         ArgumentCaptor<RefundJpaEntity> refundCaptor = ArgumentCaptor.forClass(RefundJpaEntity.class);
-        verify(refundRepository).save(refundCaptor.capture());
+        verify(refundRepository).saveAndFlush(refundCaptor.capture());
         RefundJpaEntity capturedRefund = refundCaptor.getValue();
         assertEquals(BigDecimal.valueOf(1200000), capturedRefund.getAmount());
         assertEquals(BigDecimal.valueOf(100.0), capturedRefund.getRefundPercentage());
@@ -222,6 +224,6 @@ class AdminWeatherAlertControllerTest {
         assertEquals("RESOLVED_DISMISSED", alertEntity.getStatus());
         verify(evaluationRepository).save(alertEntity);
         verify(subOrderRepository, never()).saveAndFlush(any());
-        verify(refundRepository, never()).save(any());
+        verify(refundRepository, never()).saveAndFlush(any());
     }
 }

@@ -2,12 +2,15 @@ package com.danasea.backend.modules.order.application.usecases;
 
 import com.danasea.backend.modules.booking.domain.models.Booking;
 import com.danasea.backend.modules.booking.infrastructure.persistence.repositories.JpaBookingItemRepository;
+import com.danasea.backend.modules.order.application.services.DisruptionDecisionService;
 import com.danasea.backend.modules.order.application.services.RescheduleSupport;
 import com.danasea.backend.modules.order.domain.exceptions.OrderNotFoundException;
+import com.danasea.backend.modules.order.domain.models.RefundReason;
 import com.danasea.backend.modules.order.infrastructure.persistence.entities.MasterOrderJpaEntity;
 import com.danasea.backend.modules.order.infrastructure.persistence.entities.SubOrderJpaEntity;
 import com.danasea.backend.modules.order.infrastructure.persistence.entities.SubOrderRescheduleProposalJpaEntity;
 import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaMasterOrderRepository;
+import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaSubOrderDisruptionRepository;
 import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaSubOrderRepository;
 import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaSubOrderRescheduleProposalRepository;
 import com.danasea.backend.modules.order.presentation.dtos.RescheduleOptionItemResponse;
@@ -36,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -55,6 +59,7 @@ public class GetRescheduleOptionsUseCase {
     private final JpaSafetyRuleEvaluationRepository evaluationRepository;
 
     private final SlotAvailabilityCalculator availabilityCalculator;
+    private final JpaSubOrderDisruptionRepository disruptions;
 
     @Transactional(readOnly = true)
     public RescheduleOptionsSummaryResponse execute(UUID subOrderId) {
@@ -112,6 +117,32 @@ public class GetRescheduleOptionsUseCase {
         var proposals =
                 proposalRepository.findBySubOrderIdAndStatusAndExpiresAtAfter(
                         subOrderId, "PENDING", OffsetDateTime.now());
+        var disruption =
+                disruptions.findBySubOrderIdAndStatus(
+                        subOrderId, DisruptionDecisionService.AWAITING);
+        var deadline =
+                disruption
+                        .map(d -> d.getDecisionDeadline())
+                        .orElseGet(
+                                () ->
+                                        currentSlot
+                                                .getDate()
+                                                .atTime(currentSlot.getStartTime())
+                                                .atOffset(ZoneOffset.ofHours(7))
+                                                .minusHours(12));
+        boolean beforeDeadline = deadline.isAfter(OffsetDateTime.now());
+        boolean refundAvailable =
+                disruption.isPresent()
+                        || evaluationRepository
+                                .findTopBySlotIdOrderByEvaluatedAtDesc(currentSlot.getId())
+                                .filter(
+                                        a ->
+                                                RescheduleSupport.weatherAlert(a)
+                                                        && (Boolean.FALSE.equals(a.getIsSafe())
+                                                                || "RED".equals(a.getAlertLevel())))
+                                .isPresent();
+        boolean decisionRequired = refundAvailable || !proposals.isEmpty();
+        boolean rescheduleWindowOpen = !decisionRequired || beforeDeadline;
         boolean privatePackage = "PER_PACKAGE".equals(item.getPricingUnit());
         var option =
                 ServiceOption.builder()
@@ -150,7 +181,9 @@ public class GetRescheduleOptionsUseCase {
                         proposals.stream()
                                 .filter(p -> slot.getId().equals(p.getProposedSlotId()))
                                 .findFirst();
-                boolean allowed = weather || proposal.isPresent();
+                boolean allowed =
+                        rescheduleWindowOpen
+                                && (weather || disruption.isPresent() || proposal.isPresent());
                 boolean fits =
                         remaining.canBook(
                                 item.getQuantity(),
@@ -191,8 +224,17 @@ public class GetRescheduleOptionsUseCase {
                 item.getQuantity(),
                 item.getPricingUnit(),
                 subOrder.getRescheduleVersion(),
-                weather || !proposals.isEmpty(),
-                weather ? "WEATHER_ALERT" : (proposals.isEmpty() ? null : "VENDOR_PROPOSAL"),
-                options);
+                rescheduleWindowOpen && (weather || disruption.isPresent() || !proposals.isEmpty()),
+                weather
+                        ? "WEATHER_ALERT"
+                        : disruption
+                                .map(d -> d.getReason().name())
+                                .orElse(proposals.isEmpty() ? null : "VENDOR_PROPOSAL"),
+                options,
+                decisionRequired ? deadline : null,
+                refundAvailable,
+                disruption
+                        .map(d -> d.getReason())
+                        .orElse(refundAvailable ? RefundReason.WEATHER : null));
     }
 }

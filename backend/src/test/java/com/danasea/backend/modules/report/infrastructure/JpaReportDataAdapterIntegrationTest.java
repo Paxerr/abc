@@ -46,6 +46,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -72,7 +73,8 @@ class JpaReportDataAdapterIntegrationTest {
     void setUp() {
         vendorId = UUID.randomUUID();
         userId = UUID.randomUUID();
-        timeRange = TimeRange.of(LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 10));
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        timeRange = TimeRange.of(today.minusDays(1), today.plusDays(1));
     }
 
     @Test
@@ -177,7 +179,7 @@ class JpaReportDataAdapterIntegrationTest {
 
         ServiceSlotJpaEntity slot = new ServiceSlotJpaEntity();
         slot.setServiceId(service.getId());
-        slot.setDate(LocalDate.of(2026, 10, 5));
+        slot.setDate(LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")));
         slot.setStartTime(LocalTime.of(9, 0));
         slot.setEndTime(LocalTime.of(11, 0));
         slot.setCapacity(25);

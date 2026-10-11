@@ -18,11 +18,13 @@ import com.danasea.backend.modules.service.presentation.dtos.ServiceOptionRespon
 import com.danasea.backend.modules.service.presentation.dtos.StructuredSlotResponse;
 import com.danasea.backend.modules.vendor.domain.models.BadgeTier;
 import com.danasea.backend.shared.i18n.LocalizedContentSelector;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 @Component
 public class GetPublicServiceDetailUseCase {
@@ -155,9 +157,9 @@ public class GetPublicServiceDetailUseCase {
 
         // Refund, cancellation and safety policies
         String refundPolicy = refundPolicyEngine != null ? refundPolicyEngine.getRefundPolicySummary()
-                : "Refund policy: 100% more than 48 hours before departure, 70% from 24 to 48 hours, 30% from 2 to 24 hours, and 0% within 2 hours. Dangerous weather and vendor fault receive a full refund.";
+                : "Refund policy: 100% more than 24 hours before departure and 0% within 24 hours or for no-shows. Verified weather, vendor and system faults receive a full refund.";
         String cancellationPolicy = refundPolicyEngine != null ? refundPolicyEngine.getCancellationPolicySummary()
-                : "Cancellation policy: Free cancellation more than 48 hours before departure.";
+                : "Cancellation policy: Free cancellation more than 24 hours before departure.";
 
         String safetyRules;
         if (Boolean.TRUE.equals(service.getWeatherSensitive())) {

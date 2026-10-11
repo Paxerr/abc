@@ -27,13 +27,7 @@ import com.danasea.backend.modules.weather.domain.services.WeatherRuleEngine;
 import com.danasea.backend.modules.weather.infrastructure.jobs.SlotWeatherMonitoringJob;
 import com.danasea.backend.modules.weather.infrastructure.persistence.entities.SafetyRuleEvaluationJpaEntity;
 import com.danasea.backend.modules.weather.infrastructure.persistence.repositories.JpaSafetyRuleEvaluationRepository;
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -43,6 +37,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Adversarial Stress & Verification Test Suite for Marine Weather Monitoring System.
@@ -324,7 +326,7 @@ class WeatherAdversarialStressTest {
             assertFalse(triggered, "T=61m must NOT trigger auto-escalation fallback");
             assertEquals(SubOrderStatus.CONFIRMED, subOrder.getStatus());
             verify(subOrderRepository, never()).saveAndFlush(any());
-            verify(refundRepository, never()).save(any());
+            verify(refundRepository, never()).saveAndFlush(any());
             verify(sendNotificationUseCase, never()).execute(any(NotificationCommand.class));
         }
 
@@ -349,7 +351,7 @@ class WeatherAdversarialStressTest {
 
             // Verify 100% refund
             ArgumentCaptor<RefundJpaEntity> refundCaptor = ArgumentCaptor.forClass(RefundJpaEntity.class);
-            verify(refundRepository, times(1)).save(refundCaptor.capture());
+            verify(refundRepository, times(1)).saveAndFlush(refundCaptor.capture());
             RefundJpaEntity refund = refundCaptor.getValue();
             assertEquals(BigDecimal.valueOf(2000000), refund.getAmount());
             assertEquals(BigDecimal.valueOf(100.0), refund.getRefundPercentage());
@@ -385,7 +387,7 @@ class WeatherAdversarialStressTest {
             assertTrue(triggered, "T=59m MUST trigger auto-escalation fallback");
             assertEquals(SubOrderStatus.CANCELLED, subOrder.getStatus());
             verify(subOrderRepository, times(1)).saveAndFlush(subOrder);
-            verify(refundRepository, times(1)).save(any(RefundJpaEntity.class));
+            verify(refundRepository, times(1)).saveAndFlush(any(RefundJpaEntity.class));
             assertEquals("AUTO_CANCELLED_FOR_SAFETY", redAlert.getStatus());
         }
 
@@ -400,7 +402,7 @@ class WeatherAdversarialStressTest {
 
             assertFalse(triggered, "Past slot must NOT trigger auto-escalation");
             verify(subOrderRepository, never()).saveAndFlush(any());
-            verify(refundRepository, never()).save(any());
+            verify(refundRepository, never()).saveAndFlush(any());
         }
     }
 

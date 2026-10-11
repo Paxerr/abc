@@ -1,7 +1,6 @@
 package com.danasea.backend.modules.order.infrastructure.persistence.repositories;
 
-import java.util.Optional;
-import java.util.UUID;
+import com.danasea.backend.modules.order.infrastructure.persistence.entities.DiscountCodeJpaEntity;
 
 import jakarta.persistence.LockModeType;
 
@@ -15,7 +14,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.danasea.backend.modules.order.infrastructure.persistence.entities.DiscountCodeJpaEntity;
+import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface JpaDiscountCodeRepository extends JpaRepository<DiscountCodeJpaEntity, UUID>, JpaSpecificationExecutor<DiscountCodeJpaEntity> {
@@ -27,6 +27,10 @@ public interface JpaDiscountCodeRepository extends JpaRepository<DiscountCodeJpa
     boolean existsByCodeIgnoreCaseAndIdNot(String code, UUID id);
 
     Page<DiscountCodeJpaEntity> findByVendorId(UUID vendorId, Pageable pageable);
+
+    Page<DiscountCodeJpaEntity> findByRecipientCustomerId(UUID customerId, Pageable pageable);
+
+    Optional<DiscountCodeJpaEntity> findByReplacementSubOrderId(UUID subOrderId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT d FROM DiscountCodeJpaEntity d WHERE UPPER(d.code) = UPPER(:code)")

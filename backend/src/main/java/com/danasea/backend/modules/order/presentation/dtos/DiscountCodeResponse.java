@@ -1,14 +1,14 @@
 package com.danasea.backend.modules.order.presentation.dtos;
 
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.UUID;
-
 import com.danasea.backend.modules.order.domain.models.DiscountCode;
 import com.danasea.backend.modules.order.domain.models.DiscountScope;
 import com.danasea.backend.modules.order.domain.models.DiscountSponsorType;
 import com.danasea.backend.modules.order.domain.models.DiscountType;
 import com.danasea.backend.modules.order.infrastructure.persistence.entities.DiscountCodeJpaEntity;
+
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
 public record DiscountCodeResponse(
         UUID id,
@@ -28,7 +28,9 @@ public record DiscountCodeResponse(
         OffsetDateTime validTo,
         Boolean isActive,
         OffsetDateTime createdAt,
-        OffsetDateTime updatedAt
+        OffsetDateTime updatedAt,
+        UUID recipientCustomerId,
+        UUID replacementSubOrderId
 ) {
     public static DiscountCodeResponse fromEntity(DiscountCodeJpaEntity entity) {
         if (entity == null) {
@@ -52,7 +54,9 @@ public record DiscountCodeResponse(
                 entity.getValidTo(),
                 entity.getIsActive(),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                entity.getUpdatedAt(),
+                entity.getRecipientCustomerId(),
+                entity.getReplacementSubOrderId()
         );
     }
 
@@ -78,7 +82,9 @@ public record DiscountCodeResponse(
                 domain.getValidTo(),
                 domain.getIsActive(),
                 domain.getCreatedAt(),
-                domain.getUpdatedAt()
+                domain.getUpdatedAt(),
+                domain.getRecipientCustomerId(),
+                domain.getReplacementSubOrderId()
         );
     }
 }

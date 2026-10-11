@@ -33,12 +33,7 @@ import com.danasea.backend.modules.weather.infrastructure.persistence.entities.S
 import com.danasea.backend.modules.weather.infrastructure.persistence.repositories.JpaCategorySafetyRuleRepository;
 import com.danasea.backend.modules.weather.infrastructure.persistence.repositories.JpaSafetyRuleEvaluationRepository;
 import com.danasea.backend.modules.weather.presentation.controllers.AdminWeatherAlertController;
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -48,6 +43,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
 
 /**
  * Comprehensive, Opaque-Box E2E & Acceptance Test Suite for the DANASEA Marine Weather Monitoring System Upgrade.
@@ -325,7 +327,7 @@ class WeatherMonitoringE2ETest {
 
             // Kiểm tra bản ghi hoàn tiền 100% được tạo với lý do WEATHER
             ArgumentCaptor<RefundJpaEntity> refundCaptor = ArgumentCaptor.forClass(RefundJpaEntity.class);
-            verify(refundRepository, times(1)).save(refundCaptor.capture());
+            verify(refundRepository, times(1)).saveAndFlush(refundCaptor.capture());
             RefundJpaEntity refund = refundCaptor.getValue();
             assertEquals(BigDecimal.valueOf(1200000), refund.getAmount());
             assertEquals(BigDecimal.valueOf(100.0), refund.getRefundPercentage());
@@ -563,7 +565,7 @@ class WeatherMonitoringE2ETest {
             adminWeatherAlertController.resolveAlert(alertId, new AdminWeatherAlertController.ResolveAlertRequest("CANCEL_AND_REFUND", "Hủy"));
 
             // Không gọi save hoàn tiền mới cho đơn đã hủy
-            verify(refundRepository, never()).save(any());
+            verify(refundRepository, never()).saveAndFlush(any());
         }
     }
 
@@ -766,7 +768,7 @@ class WeatherMonitoringE2ETest {
                     new AdminWeatherAlertController.ResolveAlertRequest("CANCEL_AND_REFUND", "Dông sét mùa hè nguy hiểm"));
 
             assertEquals(SubOrderStatus.CANCELLED, order1.getStatus());
-            verify(refundRepository).save(argThat(refund ->
+            verify(refundRepository).saveAndFlush(argThat(refund ->
                     refund.getAmount().equals(BigDecimal.valueOf(800000)) &&
                             refund.getRefundPercentage().equals(BigDecimal.valueOf(100.0)) &&
                             refund.getReason() == RefundReason.WEATHER
