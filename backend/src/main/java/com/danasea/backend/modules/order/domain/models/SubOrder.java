@@ -3,13 +3,15 @@ package com.danasea.backend.modules.order.domain.models;
 
 import com.danasea.backend.modules.order.domain.exceptions.InvalidOrderStateException;
 import com.danasea.backend.shared.core.domain.models.BaseDomainModel;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.UUID;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -35,6 +37,7 @@ public class SubOrder extends BaseDomainModel {
     private SubOrderStatus status;
 
     private RefundReason cancellationReason;
+    private String cancellationPolicyVersion = "STANDARD_24H_V2";
     private Boolean waiverRequired;
     private Integer waiverVersion;
     private String waiverContent;

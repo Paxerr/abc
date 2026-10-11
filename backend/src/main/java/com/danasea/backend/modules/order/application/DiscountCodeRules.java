@@ -1,17 +1,24 @@
 package com.danasea.backend.modules.order.application;
 
-import java.math.BigDecimal;
-
 import com.danasea.backend.modules.order.domain.exceptions.InvalidDiscountException;
 import com.danasea.backend.modules.order.domain.models.DiscountScope;
 import com.danasea.backend.modules.order.domain.models.DiscountSponsorType;
 import com.danasea.backend.modules.order.domain.models.DiscountType;
 import com.danasea.backend.modules.order.infrastructure.persistence.entities.DiscountCodeJpaEntity;
 
+import java.math.BigDecimal;
+
 public final class DiscountCodeRules {
     private DiscountCodeRules() { }
 
     public static void validate(DiscountCodeJpaEntity code) {
+        if (code.getReplacementSubOrderId() != null
+                && (code.getRecipientCustomerId() == null || !Integer.valueOf(1).equals(code.getMaxUses())
+                    || !Integer.valueOf(1).equals(code.getMaxUsesPerUser())
+                    || code.getDiscountType() != DiscountType.FIXED || code.getScope() != DiscountScope.PLATFORM
+                    || code.getSponsorType() != DiscountSponsorType.PLATFORM)) {
+            invalid("INVALID_DISCOUNT", "Replacement vouchers must remain personal, single-use platform fixed discounts.");
+        }
         if (code.getScope() == null || code.getDiscountType() == null || code.getDiscountValue() == null
                 || code.getDiscountValue().signum() <= 0) {
             invalid("INVALID_DISCOUNT", "Discount scope, type, and a positive value are required.");

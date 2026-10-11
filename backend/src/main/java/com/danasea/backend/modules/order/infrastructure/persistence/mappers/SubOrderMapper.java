@@ -2,6 +2,7 @@ package com.danasea.backend.modules.order.infrastructure.persistence.mappers;
 
 import com.danasea.backend.modules.order.domain.models.SubOrder;
 import com.danasea.backend.modules.order.infrastructure.persistence.entities.SubOrderJpaEntity;
+
 import org.springframework.stereotype.Component;
 
 @Component
@@ -31,6 +32,7 @@ public class SubOrderMapper {
         domain.setVendorPayoutAmount(entity.getVendorPayoutAmount());
         domain.setStatus(entity.getStatus());
         domain.setCancellationReason(entity.getCancellationReason());
+        domain.setCancellationPolicyVersion(entity.getCancellationPolicyVersion());
         domain.setWaiverRequired(entity.getWaiverRequired() != null ? entity.getWaiverRequired() : Boolean.FALSE);
         domain.setWaiverVersion(entity.getWaiverVersion() != null ? entity.getWaiverVersion() : 1);
         domain.setWaiverContent(entity.getWaiverContent());
@@ -77,6 +79,7 @@ public class SubOrderMapper {
         entity.setVendorPayoutAmount(domain.getVendorPayoutAmount());
         entity.setStatus(domain.getStatus());
         entity.setCancellationReason(domain.getCancellationReason());
+        entity.setCancellationPolicyVersion(domain.getCancellationPolicyVersion());
         entity.setWaiverRequired(domain.getWaiverRequired() != null ? domain.getWaiverRequired() : Boolean.FALSE);
         entity.setWaiverVersion(domain.getWaiverVersion() != null ? domain.getWaiverVersion() : 1);
         entity.setWaiverContent(domain.getWaiverContent());

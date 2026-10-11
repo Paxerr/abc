@@ -1,18 +1,18 @@
 package com.danasea.backend.modules.order.infrastructure.persistence.entities;
 
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.UUID;
-
-import jakarta.persistence.*;
-
 import com.danasea.backend.modules.order.domain.models.DiscountScope;
 import com.danasea.backend.modules.order.domain.models.DiscountSponsorType;
 import com.danasea.backend.modules.order.domain.models.DiscountType;
 import com.danasea.backend.shared.core.infrastructure.persistence.entities.BaseJpaEntity;
 
+import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -36,6 +36,12 @@ public class DiscountCodeJpaEntity extends BaseJpaEntity {
 
     @Column(name = "service_id")
     private UUID serviceId;
+
+    @Column(name = "recipient_customer_id")
+    private UUID recipientCustomerId;
+
+    @Column(name = "replacement_sub_order_id")
+    private UUID replacementSubOrderId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

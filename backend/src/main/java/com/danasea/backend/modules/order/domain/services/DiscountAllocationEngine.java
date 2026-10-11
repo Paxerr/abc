@@ -1,5 +1,12 @@
 package com.danasea.backend.modules.order.domain.services;
 
+import com.danasea.backend.modules.order.domain.models.DiscountCode;
+import com.danasea.backend.modules.order.domain.models.DiscountScope;
+import com.danasea.backend.modules.order.domain.models.DiscountSponsorType;
+import com.danasea.backend.modules.order.domain.models.DiscountType;
+
+import org.springframework.stereotype.Service;
+
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -9,13 +16,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
-
-import org.springframework.stereotype.Service;
-
-import com.danasea.backend.modules.order.domain.models.DiscountCode;
-import com.danasea.backend.modules.order.domain.models.DiscountScope;
-import com.danasea.backend.modules.order.domain.models.DiscountSponsorType;
-import com.danasea.backend.modules.order.domain.models.DiscountType;
 
 @Service
 public class DiscountAllocationEngine {
@@ -91,8 +91,23 @@ public class DiscountAllocationEngine {
             OffsetDateTime now,
             long customerUsageCount
     ) {
+        return evaluateAndAllocate(discountCode, items, now, customerUsageCount, null);
+    }
+
+    public AllocationResult evaluateAndAllocate(
+            DiscountCode discountCode,
+            List<CandidateItem> items,
+            OffsetDateTime now,
+            long customerUsageCount,
+            UUID customerId
+    ) {
         if (discountCode == null) {
             return AllocationResult.invalid("DISCOUNT_NOT_FOUND", "Discount code was not found.");
+        }
+
+        if (discountCode.getRecipientCustomerId() != null
+                && !discountCode.getRecipientCustomerId().equals(customerId)) {
+            return AllocationResult.invalid("DISCOUNT_CUSTOMER_RESTRICTED", "Discount code belongs to another customer.");
         }
 
         if (Boolean.FALSE.equals(discountCode.getIsActive())) {

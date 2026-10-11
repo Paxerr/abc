@@ -1,26 +1,14 @@
 package com.danasea.backend.modules.order.application.usecases;
 
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.danasea.backend.modules.order.domain.exceptions.OrderNotFoundException;
 import com.danasea.backend.modules.order.domain.exceptions.UnauthorizedOrderAccessException;
 import com.danasea.backend.modules.order.domain.models.DiscountCode;
 import com.danasea.backend.modules.order.domain.ports.BookingLookupPort;
 import com.danasea.backend.modules.order.domain.ports.BookingOrderView;
 import com.danasea.backend.modules.order.domain.ports.CommissionPolicyPort;
+import com.danasea.backend.modules.order.domain.services.DiscountAllocationEngine;
 import com.danasea.backend.modules.order.domain.services.DiscountAllocationEngine.AllocationResult;
 import com.danasea.backend.modules.order.domain.services.DiscountAllocationEngine.CandidateItem;
-import com.danasea.backend.modules.order.domain.services.DiscountAllocationEngine;
 import com.danasea.backend.modules.order.infrastructure.persistence.entities.DiscountCodeJpaEntity;
 import com.danasea.backend.modules.order.infrastructure.persistence.mappers.DiscountCodeMapper;
 import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaDiscountCodeRepository;
@@ -29,6 +17,18 @@ import com.danasea.backend.modules.order.presentation.dtos.DiscountPreviewReques
 import com.danasea.backend.modules.order.presentation.dtos.DiscountPreviewResponse;
 import com.danasea.backend.modules.order.presentation.dtos.ItemDiscountPreviewResponse;
 import com.danasea.backend.shared.i18n.LocalizedMessageService;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class DiscountPreviewUseCase {
@@ -127,7 +127,8 @@ public class DiscountPreviewUseCase {
                 discountCode,
                 candidateItems,
                 OffsetDateTime.now(),
-                userUsageCount
+                userUsageCount,
+                customerId
         );
 
         if (!result.valid()) {

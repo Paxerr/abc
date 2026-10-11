@@ -1,15 +1,22 @@
 package com.danasea.backend.modules.order.presentation.controllers;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.danasea.backend.modules.booking.domain.ports.VendorLookupPort;
+import com.danasea.backend.modules.order.application.usecases.AdminDiscountCodeUseCase;
+import com.danasea.backend.modules.order.application.usecases.DiscountPreviewUseCase;
+import com.danasea.backend.modules.order.application.usecases.VendorDiscountCodeUseCase;
+import com.danasea.backend.modules.order.domain.models.DiscountScope;
+import com.danasea.backend.modules.order.domain.models.DiscountSponsorType;
+import com.danasea.backend.modules.order.domain.models.DiscountType;
+import com.danasea.backend.modules.order.presentation.dtos.CreateDiscountCodeRequest;
+import com.danasea.backend.modules.order.presentation.dtos.DiscountCodeResponse;
+import com.danasea.backend.modules.order.presentation.dtos.DiscountPreviewRequest;
+import com.danasea.backend.modules.order.presentation.dtos.DiscountPreviewResponse;
+import com.danasea.backend.modules.order.presentation.dtos.ItemDiscountPreviewResponse;
+import com.danasea.backend.security.authorization.domain.models.AuthorizationSubject;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,20 +36,11 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.danasea.backend.modules.booking.domain.ports.VendorLookupPort;
-import com.danasea.backend.modules.order.application.usecases.AdminDiscountCodeUseCase;
-import com.danasea.backend.modules.order.application.usecases.DiscountPreviewUseCase;
-import com.danasea.backend.modules.order.application.usecases.VendorDiscountCodeUseCase;
-import com.danasea.backend.modules.order.domain.models.DiscountScope;
-import com.danasea.backend.modules.order.domain.models.DiscountSponsorType;
-import com.danasea.backend.modules.order.domain.models.DiscountType;
-import com.danasea.backend.modules.order.presentation.dtos.CreateDiscountCodeRequest;
-import com.danasea.backend.modules.order.presentation.dtos.DiscountCodeResponse;
-import com.danasea.backend.modules.order.presentation.dtos.DiscountPreviewRequest;
-import com.danasea.backend.modules.order.presentation.dtos.DiscountPreviewResponse;
-import com.danasea.backend.modules.order.presentation.dtos.ItemDiscountPreviewResponse;
-import com.danasea.backend.modules.order.presentation.dtos.UpdateDiscountCodeRequest;
-import com.danasea.backend.security.authorization.domain.models.AuthorizationSubject;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Discount Controllers Unit Tests (Admin, Vendor, Checkout)")
@@ -113,7 +111,7 @@ class DiscountControllersTest {
                 UUID.randomUUID(), "ADMINPROMO", DiscountScope.PLATFORM, DiscountSponsorType.PLATFORM,
                 null, null, DiscountType.FIXED, new BigDecimal("50000.00"), BigDecimal.ZERO, null,
                 100, 0, 1, null, null, true, OffsetDateTime.now(), OffsetDateTime.now()
-        );
+        , null, null);
 
         when(adminDiscountCodeUseCase.createDiscountCode(request)).thenReturn(expected);
 
@@ -132,7 +130,7 @@ class DiscountControllersTest {
                 UUID.randomUUID(), "CODE1", DiscountScope.PLATFORM, DiscountSponsorType.PLATFORM,
                 null, null, DiscountType.FIXED, new BigDecimal("10000.00"), BigDecimal.ZERO, null,
                 50, 5, 1, null, null, true, OffsetDateTime.now(), OffsetDateTime.now()
-        );
+        , null, null);
         Page<DiscountCodeResponse> page = new PageImpl<>(List.of(item), pageable, 1);
 
         when(adminDiscountCodeUseCase.getDiscountCodes(null, null, null, null, pageable)).thenReturn(page);
@@ -170,7 +168,7 @@ class DiscountControllersTest {
                 UUID.randomUUID(), "MYSHOP20", DiscountScope.VENDOR, DiscountSponsorType.VENDOR,
                 testVendorId, null, DiscountType.PERCENTAGE, new BigDecimal("20.00"), new BigDecimal("100000.00"), new BigDecimal("50000.00"),
                 200, 0, 2, null, null, true, OffsetDateTime.now(), OffsetDateTime.now()
-        );
+        , null, null);
 
         when(vendorDiscountCodeUseCase.createVendorDiscountCode(eq(testVendorId), eq(request))).thenReturn(expected);
 

@@ -12,10 +12,13 @@ import com.danasea.backend.modules.booking.infrastructure.persistence.mappers.Bo
 import com.danasea.backend.modules.booking.infrastructure.persistence.repositories.*;
 import com.danasea.backend.modules.checkin.infrastructure.persistence.repositories.JpaCheckinTokenRepository;
 import com.danasea.backend.modules.communication.application.usecases.SendNotificationUseCase;
+import com.danasea.backend.modules.order.application.services.DisruptionDecisionService;
 import com.danasea.backend.modules.order.application.services.RescheduleSupport;
 import com.danasea.backend.modules.order.domain.models.*;
 import com.danasea.backend.modules.order.infrastructure.persistence.entities.*;
+import com.danasea.backend.modules.order.infrastructure.persistence.entities.SubOrderDisruptionJpaEntity;
 import com.danasea.backend.modules.order.infrastructure.persistence.repositories.*;
+import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaSubOrderDisruptionRepository;
 import com.danasea.backend.modules.order.presentation.dtos.*;
 import com.danasea.backend.modules.service.application.services.SlotAvailabilityCalculator;
 import com.danasea.backend.modules.service.domain.models.*;
@@ -49,6 +52,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 class SubOrderRescheduleUseCaseTest {
+    final DisruptionDecisionService decisions =
+            mock(DisruptionDecisionService.class);
+    final JpaSubOrderDisruptionRepository disruptions =
+            mock(JpaSubOrderDisruptionRepository.class);
     final JpaSubOrderRepository subs = mock(JpaSubOrderRepository.class);
     final JpaMasterOrderRepository orders = mock(JpaMasterOrderRepository.class);
     final JpaBookingItemRepository items = mock(JpaBookingItemRepository.class);
@@ -89,6 +96,10 @@ class SubOrderRescheduleUseCaseTest {
 
     @BeforeEach
     void setup() {
+        var pendingDecision = new SubOrderDisruptionJpaEntity();
+        pendingDecision.setStatus("AWAITING_DECISION");
+        when(decisions.record(any(), any(), any(), any(), any())).thenReturn(pendingDecision);
+
         SecurityContextHolder.getContext()
                 .setAuthentication(
                         new UsernamePasswordAuthenticationToken(
@@ -167,13 +178,13 @@ class SubOrderRescheduleUseCaseTest {
                         inventory,
                         capacity,
                         support,
-                        new BookingMapper());
+                        new BookingMapper(), decisions, disruptions);
         getOptions =
                 new GetRescheduleOptionsUseCase(
-                        subs, orders, slots, services, items, proposals, evaluations, availability);
+                        subs, orders, slots, services, items, proposals, evaluations, availability, disruptions);
         create =
                 new CreateRescheduleProposalUseCase(
-                        slots, proposals, vendors, audits, support, events, capacity);
+                        slots, proposals, vendors, audits, support, events, capacity, decisions);
     }
 
     @AfterEach
@@ -420,6 +431,31 @@ class SubOrderRescheduleUseCaseTest {
         var result = getOptions.execute(subId);
         assertEquals(2, result.options().getFirst().availableCapacity());
         assertFalse(result.options().getFirst().canAccommodate());
+    }
+
+    @Test
+    void optionsReflectDisruptionEligibilityReason() {
+        var service = new ServiceJpaEntity();
+        service.setId(serviceId);
+        service.setStatus(ServiceStatus.PUBLISHED);
+        service.setName("Test");
+        when(services.findById(serviceId)).thenReturn(Optional.of(service));
+        when(slots.findByServiceIdAndDateBetweenOrderByDateAscStartTimeAsc(
+                        eq(serviceId), any(), any()))
+                .thenReturn(List.of(target));
+        when(availability.evaluate(any(), any()))
+                .thenReturn(new SlotAvailabilityCalculator.Availability(10, 10));
+        when(evaluations.findTopBySlotIdOrderByEvaluatedAtDesc(any())).thenReturn(Optional.empty());
+        var disruption = new SubOrderDisruptionJpaEntity();
+        disruption.setReason(RefundReason.VENDOR_FAULT);
+        disruption.setDecisionDeadline(OffsetDateTime.now().plusHours(20));
+        when(disruptions.findBySubOrderIdAndStatus(eq(subId), eq(DisruptionDecisionService.AWAITING)))
+                .thenReturn(Optional.of(disruption));
+        var result = getOptions.execute(subId);
+        assertTrue(result.rescheduleAllowed());
+        assertEquals("VENDOR_FAULT", result.eligibilityReason());
+        assertEquals(RefundReason.VENDOR_FAULT, result.disruptionReason());
+        assertTrue(result.fullRefundAvailable());
     }
 
     void vendor() {

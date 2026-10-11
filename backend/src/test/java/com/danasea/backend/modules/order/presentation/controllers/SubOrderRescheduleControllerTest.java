@@ -55,7 +55,7 @@ class SubOrderRescheduleControllerTest {
                         1L,
                         true,
                         "WEATHER_ALERT",
-                        List.of());
+                        List.of(), null, false, null);
 
         when(getRescheduleOptionsUseCase.execute(subOrderId)).thenReturn(mockResponse);
 

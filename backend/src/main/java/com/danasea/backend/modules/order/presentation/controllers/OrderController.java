@@ -33,12 +33,11 @@ import com.danasea.backend.modules.order.presentation.dtos.SubOrderCancellationP
 import com.danasea.backend.modules.order.presentation.dtos.SubOrderResponse;
 import com.danasea.backend.security.infrastructure.SecurityUtils;
 import com.danasea.backend.shared.i18n.LocalizedContentSelector;
+
 import jakarta.validation.Valid;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.UUID;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -56,6 +55,12 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -166,7 +171,7 @@ public class OrderController {
                 id,
                 reason,
                 idempotencyKey,
-                LocalDateTime.now()
+                LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"))
         );
         List<OrderRefundResult> results = requestRefundUseCase.execute(command);
         List<RefundResponse> responses = results.stream()
@@ -293,7 +298,8 @@ public class OrderController {
                 s.waiverAccepted(),
                 s.waiverAcceptedAt(),
                 s.waiverAcceptedBy(),
-                s.waiverAcceptedLanguage()
+                s.waiverAcceptedLanguage(),
+                s.cancellationPolicyVersion()
         );
     }
 

@@ -1,19 +1,9 @@
 package com.danasea.backend.modules.order.application.usecases;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.danasea.backend.modules.order.application.RefundProcessingService;
 import com.danasea.backend.modules.order.application.dtos.OrderRefundResult;
 import com.danasea.backend.modules.order.application.dtos.RequestRefundCommand;
+import com.danasea.backend.modules.order.application.services.DisruptionDecisionService;
 import com.danasea.backend.modules.order.domain.exceptions.InvalidOrderStateException;
 import com.danasea.backend.modules.order.domain.exceptions.OrderNotFoundException;
 import com.danasea.backend.modules.order.domain.exceptions.UnauthorizedOrderAccessException;
@@ -34,8 +24,26 @@ import com.danasea.backend.modules.order.infrastructure.persistence.entities.Ref
 import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaPaymentRepository;
 import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaRefundRepository;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 @Service
 public class RequestRefundUseCase {
+
+    private DisruptionDecisionService disruptionDecisions;
+
+    @Autowired
+    public void setDisruptionDecisions(DisruptionDecisionService disruptionDecisions) {
+        this.disruptionDecisions = disruptionDecisions;
+    }
 
     private final MasterOrderRepositoryPort masterOrderRepository;
     private final SubOrderRepositoryPort subOrderRepository;
@@ -71,7 +79,15 @@ public class RequestRefundUseCase {
             SubOrderRepositoryPort subOrderRepository,
             PaymentGatewayPort paymentGatewayPort,
             RefundPolicyEngine refundPolicyEngine) {
-        this(masterOrderRepository, subOrderRepository, paymentGatewayPort, refundPolicyEngine, null, null, null, null);
+        this(
+                masterOrderRepository,
+                subOrderRepository,
+                paymentGatewayPort,
+                refundPolicyEngine,
+                null,
+                null,
+                null,
+                null);
     }
 
     @Transactional
@@ -80,35 +96,50 @@ public class RequestRefundUseCase {
     }
 
     @Transactional
-    public List<OrderRefundResult> execute(RequestRefundCommand command, LocalDateTime departureTime) {
-        if (command == null || command.customerId() == null || command.orderOrSubOrderId() == null) {
+    public List<OrderRefundResult> execute(
+            RequestRefundCommand command, LocalDateTime departureTime) {
+        if (command == null
+                || command.customerId() == null
+                || command.orderOrSubOrderId() == null) {
             throw new IllegalArgumentException("Customer ID and Order ID are required.");
         }
         if (command.idempotencyKey() == null || command.idempotencyKey().isBlank()) {
             throw new IllegalArgumentException("Idempotency key is required.");
         }
 
-        RefundReason reason = command.requestedReason() == null
-                ? RefundReason.CUSTOMER_REQUEST
-                : command.requestedReason();
+        RefundReason reason =
+                command.requestedReason() == null
+                        ? RefundReason.CUSTOMER_REQUEST
+                        : command.requestedReason();
 
         if (reason != RefundReason.CUSTOMER_REQUEST && reason != RefundReason.CUSTOMER_CANCEL) {
-            throw new IllegalArgumentException("Customers may only request a customer cancellation refund.");
+            throw new IllegalArgumentException(
+                    "Customers may only request a customer cancellation refund.");
         }
 
         MasterOrder order;
         List<SubOrder> subOrders;
 
-        Optional<MasterOrder> masterOpt = masterOrderRepository.findById(command.orderOrSubOrderId());
+        Optional<MasterOrder> masterOpt =
+                masterOrderRepository.findByIdForUpdate(command.orderOrSubOrderId());
         if (masterOpt.isPresent()) {
             order = masterOpt.get();
-            subOrders = subOrderRepository.findByMasterOrderId(order.getId());
+            subOrders = subOrderRepository.findByMasterOrderIdForUpdate(order.getId());
         } else {
-            SubOrder subOrder = subOrderRepository.findById(command.orderOrSubOrderId())
-                    .orElseThrow(() -> new OrderNotFoundException(command.orderOrSubOrderId()));
-            order = masterOrderRepository.findById(subOrder.getMasterOrderId())
-                    .orElseThrow(() -> new OrderNotFoundException(subOrder.getMasterOrderId()));
-            subOrders = List.of(subOrder);
+            var parentId =
+                    subOrderRepository
+                            .findMasterOrderIdById(command.orderOrSubOrderId())
+                            .orElseThrow(
+                                    () -> new OrderNotFoundException(command.orderOrSubOrderId()));
+            order =
+                    masterOrderRepository
+                            .findByIdForUpdate(parentId)
+                            .orElseThrow(() -> new OrderNotFoundException(parentId));
+            subOrders =
+                    List.of(
+                            subOrderRepository
+                                    .findByIdForUpdate(command.orderOrSubOrderId())
+                                    .orElseThrow());
         }
 
         // Chặn IDOR: Khách hàng chỉ được yêu cầu hoàn tiền cho đơn của chính mình
@@ -120,16 +151,20 @@ public class RequestRefundUseCase {
         if (refundRepository != null) {
             List<OrderRefundResult> existingResults = new ArrayList<>();
             for (SubOrder subOrder : subOrders) {
-                var existingOpt = refundRepository.findBySubOrderIdAndIdempotencyKey(subOrder.getId(), command.idempotencyKey());
-                existingOpt.ifPresent(existing -> existingResults.add(new OrderRefundResult(
-                        existing.getId(),
-                        subOrder.getId(),
-                        existing.getAmount(),
-                        existing.getRefundPercentage(),
-                        existing.getReason(),
-                        existing.getStatus(),
-                        "IDEMPOTENT_REPLAY"
-                )));
+                var existingOpt =
+                        refundRepository.findBySubOrderIdAndIdempotencyKey(
+                                subOrder.getId(), command.idempotencyKey());
+                existingOpt.ifPresent(
+                        existing ->
+                                existingResults.add(
+                                        new OrderRefundResult(
+                                                existing.getId(),
+                                                subOrder.getId(),
+                                                existing.getAmount(),
+                                                existing.getRefundPercentage(),
+                                                existing.getReason(),
+                                                existing.getStatus(),
+                                                "IDEMPOTENT_REPLAY")));
             }
             if (!existingResults.isEmpty() && existingResults.size() == subOrders.size()) {
                 return existingResults;
@@ -138,57 +173,110 @@ public class RequestRefundUseCase {
 
         // Chỉ cho phép yêu cầu hoàn tiền khi đơn đã thanh toán
         if (!CustomerRefundEligibilityPolicy.paidOrder(order.getStatus())) {
-            throw new InvalidOrderStateException("Refunds can only be requested for a paid order; current: " + order.getStatus());
+            throw new InvalidOrderStateException(
+                    "Refunds can only be requested for a paid order; current: "
+                            + order.getStatus());
         }
 
         PaymentJpaEntity originalPayment = null;
         if (paymentRepository != null) {
-            originalPayment = paymentRepository
-                    .findByMasterOrderIdOrderByCreatedAtDesc(order.getId()).stream()
-                    .filter(p -> p.getStatus() == PaymentStatus.SUCCESS || p.getStatus() == PaymentStatus.REFUNDED)
-                    .findFirst()
-                    .orElse(null);
+            originalPayment =
+                    paymentRepository
+                            .findByMasterOrderIdOrderByCreatedAtDesc(order.getId())
+                            .stream()
+                            .filter(
+                                    p ->
+                                            p.getStatus() == PaymentStatus.SUCCESS
+                                                    || p.getStatus() == PaymentStatus.REFUNDED)
+                            .findFirst()
+                            .orElse(null);
         }
 
-        LocalDateTime cancelTime = command.cancelTime() != null ? command.cancelTime() : LocalDateTime.now();
+        LocalDateTime cancelTime =
+                command.cancelTime() != null
+                        ? command.cancelTime()
+                        : LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
         List<OrderRefundResult> results = new ArrayList<>();
 
         for (SubOrder subOrder : subOrders) {
             if (!CustomerRefundEligibilityPolicy.refundableItem(subOrder.getStatus())) {
-                throw new InvalidOrderStateException("Sub-order " + subOrder.getId() + " is already in terminal state: " + subOrder.getStatus());
+                throw new InvalidOrderStateException(
+                        "Sub-order "
+                                + subOrder.getId()
+                                + " is already in terminal state: "
+                                + subOrder.getStatus());
+            }
+
+            if (disruptionDecisions != null
+                    && disruptionDecisions
+                            .verifiedReason(subOrder.getId(), subOrder.getSlotId())
+                            .isPresent()) {
+                var decision =
+                        disruptionDecisions.chooseRefund(subOrder.getId(), command.customerId());
+                if (decision.getRefundId() == null) continue;
+                var stored = refundRepository.findById(decision.getRefundId()).orElseThrow();
+                stored.setIdempotencyKey(command.idempotencyKey());
+                refundRepository.save(stored);
+                results.add(
+                        new OrderRefundResult(
+                                stored.getId(),
+                                subOrder.getId(),
+                                stored.getAmount(),
+                                stored.getRefundPercentage(),
+                                stored.getReason(),
+                                stored.getStatus(),
+                                stored.getReason().name()));
+                continue;
+            }
+
+            if (refundRepository != null
+                    && !refundRepository.findBySubOrderId(subOrder.getId()).isEmpty()) {
+                throw new InvalidOrderStateException("A refund already exists for this sub-order.");
             }
 
             LocalDateTime effectiveDeparture = departureTime;
-            if (effectiveDeparture == null && subOrder.getSlotId() != null && departureLookupPort != null) {
-                effectiveDeparture = departureLookupPort.findDepartureTime(subOrder.getSlotId()).orElse(null);
+            if (effectiveDeparture == null
+                    && subOrder.getSlotId() != null
+                    && departureLookupPort != null) {
+                effectiveDeparture =
+                        departureLookupPort.findDepartureTime(subOrder.getSlotId()).orElse(null);
             }
 
-            BigDecimal refundableBase = subOrder.getFinalAmount() != null ? subOrder.getFinalAmount() : subOrder.getSubtotalAmount();
-            RefundEvaluationResult evaluation = refundPolicyEngine.evaluate(
-                    reason,
-                    effectiveDeparture,
-                    cancelTime,
-                    refundableBase
-            );
+            BigDecimal refundableBase =
+                    subOrder.getFinalAmount() != null
+                            ? subOrder.getFinalAmount()
+                            : subOrder.getSubtotalAmount();
+            RefundEvaluationResult evaluation =
+                    refundPolicyEngine.evaluate(
+                            reason,
+                            effectiveDeparture,
+                            cancelTime,
+                            refundableBase,
+                            null,
+                            subOrder.getCancellationPolicyVersion());
 
             if (evaluation.refundAmount().compareTo(BigDecimal.ZERO) <= 0) {
                 throw new InvalidOrderStateException(
-                        "The cancellation policy does not allow a refund for sub-order " + subOrder.getId() + " (< 24h).");
+                        "The cancellation policy does not allow a refund for sub-order "
+                                + subOrder.getId()
+                                + " (within 24 hours).");
             }
 
             if (refundRepository != null) {
-                var existingOpt = refundRepository.findBySubOrderIdAndIdempotencyKey(subOrder.getId(), command.idempotencyKey());
+                var existingOpt =
+                        refundRepository.findBySubOrderIdAndIdempotencyKey(
+                                subOrder.getId(), command.idempotencyKey());
                 if (existingOpt.isPresent()) {
                     RefundJpaEntity existing = existingOpt.get();
-                    results.add(new OrderRefundResult(
-                            existing.getId(),
-                            subOrder.getId(),
-                            existing.getAmount(),
-                            existing.getRefundPercentage(),
-                            existing.getReason(),
-                            existing.getStatus(),
-                            evaluation.policyCode()
-                    ));
+                    results.add(
+                            new OrderRefundResult(
+                                    existing.getId(),
+                                    subOrder.getId(),
+                                    existing.getAmount(),
+                                    existing.getRefundPercentage(),
+                                    existing.getReason(),
+                                    existing.getStatus(),
+                                    evaluation.policyCode()));
                     continue;
                 }
 
@@ -207,17 +295,18 @@ public class RequestRefundUseCase {
                 }
                 refund = refundRepository.save(refund);
 
-                results.add(new OrderRefundResult(
-                        refund.getId(),
-                        subOrder.getId(),
-                        evaluation.refundAmount(),
-                        evaluation.refundPercentage(),
-                        reason,
-                        RefundStatus.PENDING,
-                        evaluation.policyCode()
-                ));
+                results.add(
+                        new OrderRefundResult(
+                                refund.getId(),
+                                subOrder.getId(),
+                                evaluation.refundAmount(),
+                                evaluation.refundPercentage(),
+                                reason,
+                                RefundStatus.PENDING,
+                                evaluation.policyCode()));
             } else {
-                throw new IllegalStateException("Refund persistence is required before gateway processing.");
+                throw new IllegalStateException(
+                        "Refund persistence is required before gateway processing.");
             }
         }
 

@@ -11,6 +11,7 @@ import com.danasea.backend.modules.booking.infrastructure.persistence.entities.B
 import com.danasea.backend.modules.booking.infrastructure.persistence.entities.BookingJpaEntity;
 import com.danasea.backend.modules.booking.infrastructure.persistence.repositories.JpaBookingRepository;
 import com.danasea.backend.modules.order.application.dtos.CreatePaymentIntentCommand;
+import com.danasea.backend.modules.order.application.services.DisruptionDecisionService;
 import com.danasea.backend.modules.order.application.services.WaiverAcceptanceGuard;
 import com.danasea.backend.modules.order.application.usecases.CreatePaymentIntentUseCase;
 import com.danasea.backend.modules.order.domain.events.PaymentSuccessEvent;
@@ -60,19 +61,9 @@ import com.danasea.backend.shared.i18n.LocalizedContentSelector;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -87,12 +78,32 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 public class OrderPaymentService {
 
     private static final Pattern IDEMPOTENCY_KEY = Pattern.compile("[A-Za-z0-9._:-]{8,100}");
     private static final BigDecimal DEFAULT_COMMISSION_RATE = CommissionPolicyPort.DEFAULT_COMMISSION_RATE;
+
+    private DisruptionDecisionService disruptionDecisions;
+
+    @Autowired
+    public void setDisruptionDecisions(DisruptionDecisionService disruptionDecisions) {
+        this.disruptionDecisions = disruptionDecisions;
+    }
 
     private ApplicationEventPublisher eventPublisher;
 
@@ -365,48 +376,14 @@ public class OrderPaymentService {
         UUID vendorId = vendorInternalApi.findByUserId(userId)
                 .orElseThrow(() -> new AccessDeniedException("Vendor profile not found."))
                 .getId();
-        SubOrderJpaEntity subOrder = subOrderRepository.findByBookingItemIdForUpdate(bookingItemId)
-                .orElseThrow(() -> new OrderNotFoundException(
-                        "Vendor booking item not found with id: " + bookingItemId));
-        if (!vendorId.equals(subOrder.getVendorId())) {
+        SubOrderJpaEntity candidate = subOrderRepository.findByBookingItemId(bookingItemId)
+                .orElseThrow(() -> new OrderNotFoundException("Vendor booking item not found: " + bookingItemId));
+        if (!vendorId.equals(candidate.getVendorId())) {
             throw new AccessDeniedException("Vendor does not own this booking item.");
         }
-        if (subOrder.getStatus() == SubOrderStatus.REJECTED) {
-            return toSubOrderResponse(subOrder);
-        }
-        if (subOrder.getStatus() != SubOrderStatus.CONFIRMED) {
-            throw new InvalidOrderStateException("Only a confirmed booking item can be rejected.");
-        }
-
-        var existingRefund = refundRepository.findBySubOrderIdAndIdempotencyKey(
-                subOrder.getId(), idempotencyKey);
-        RefundJpaEntity refundToProcess = null;
-        if (existingRefund.isEmpty() && subOrder.getFinalAmount().signum() > 0) {
-            RefundJpaEntity refund = new RefundJpaEntity();
-            refund.setSubOrderId(subOrder.getId());
-            refund.setAmount(subOrder.getFinalAmount());
-            refund.setRefundPercentage(BigDecimal.valueOf(100));
-            refund.setReason(RefundReason.VENDOR_FAULT);
-            refund.setStatus(RefundStatus.PENDING);
-            refund.setRequestedBy(userId);
-            refund.setIdempotencyKey(idempotencyKey);
-            refundToProcess = refundRepository.save(refund);
-        } else if (existingRefund.isPresent()) {
-            refundToProcess = existingRefund.get();
-        }
-
-
-        subOrder.setStatus(SubOrderStatus.REJECTED);
-        subOrder.setCancellationReason(RefundReason.VENDOR_FAULT);
-        subOrderRepository.save(subOrder);
-        if (subOrder.getSlotId() != null && subOrder.getQuantity() != null && subOrder.getQuantity() > 0) {
-            if (subOrder.getBookingItemId() != null) {
-                serviceSlotRepository.releaseBookingItemCapacity(subOrder.getBookingItemId());
-            } else {
-                serviceSlotRepository.decrementBookedCount(subOrder.getSlotId(), subOrder.getQuantity());
-            }
-        }
-        return toSubOrderResponse(subOrder);
+        disruptionDecisions.record(candidate.getId(), RefundReason.VENDOR_FAULT, reason.trim(),
+                "vendor-reject-" + idempotencyKey, userId);
+        return toSubOrderResponse(subOrderRepository.findById(candidate.getId()).orElseThrow());
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -1045,7 +1022,8 @@ public class OrderPaymentService {
                 subOrder.getWaiverAccepted(),
                 subOrder.getWaiverAcceptedAt(),
                 subOrder.getWaiverAcceptedBy(),
-                subOrder.getWaiverAcceptedLanguage()
+                subOrder.getWaiverAcceptedLanguage(),
+                subOrder.getCancellationPolicyVersion()
         );
     }
 

@@ -8,20 +8,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import com.danasea.backend.modules.order.application.dtos.OrderRefundResult;
 import com.danasea.backend.modules.order.application.dtos.RequestRefundCommand;
 import com.danasea.backend.modules.order.domain.exceptions.InvalidOrderStateException;
@@ -37,6 +23,20 @@ import com.danasea.backend.modules.order.domain.ports.SubOrderRepositoryPort;
 import com.danasea.backend.modules.order.domain.services.RefundPolicyEngine;
 import com.danasea.backend.modules.order.infrastructure.persistence.entities.RefundJpaEntity;
 import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaRefundRepository;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("RequestRefundUseCase Unit Tests")
@@ -84,8 +84,8 @@ class RequestRefundUseCaseTest {
         subOrder.setSubtotalAmount(new BigDecimal("100.00"));
         subOrder.setStatus(SubOrderStatus.CONFIRMED);
 
-        when(masterOrderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        when(subOrderRepository.findByMasterOrderId(orderId)).thenReturn(List.of(subOrder));
+        when(masterOrderRepository.findByIdForUpdate(orderId)).thenReturn(Optional.of(order));
+        when(subOrderRepository.findByMasterOrderIdForUpdate(orderId)).thenReturn(List.of(subOrder));
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime departureTime = now.plusHours(72); // Hủy trước 72h (> 48h) -> 100%
@@ -115,8 +115,8 @@ class RequestRefundUseCaseTest {
         subOrder.setSubtotalAmount(new BigDecimal("100.00"));
         subOrder.setStatus(SubOrderStatus.CONFIRMED);
 
-        when(masterOrderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        when(subOrderRepository.findByMasterOrderId(orderId)).thenReturn(List.of(subOrder));
+        when(masterOrderRepository.findByIdForUpdate(orderId)).thenReturn(Optional.of(order));
+        when(subOrderRepository.findByMasterOrderIdForUpdate(orderId)).thenReturn(List.of(subOrder));
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime departureTime = now.plusMinutes(30); // Hủy sát giờ (< 2h) -> 0% hoàn
@@ -138,7 +138,7 @@ class RequestRefundUseCaseTest {
         order.setId(orderId);
         order.setStatus(MasterOrderStatus.PAID);
 
-        when(masterOrderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(masterOrderRepository.findByIdForUpdate(orderId)).thenReturn(Optional.of(order));
 
         RequestRefundCommand command = new RequestRefundCommand(
                 strangerId, orderId, RefundReason.CUSTOMER_CANCEL, "idem-ref-3", LocalDateTime.now());

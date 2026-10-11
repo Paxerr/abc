@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +56,8 @@ class JpaReportDataAdapterAdversarialStressTest {
     void setUp() {
         vendorA = UUID.randomUUID();
         vendorB = UUID.randomUUID();
-        timeRange = TimeRange.of(LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 10));
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        timeRange = TimeRange.of(today.minusDays(1), today.plusDays(1));
     }
 
     @Test

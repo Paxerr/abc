@@ -1,10 +1,10 @@
 # DANASEA — Master API & Test Checklist (EPIC-01 → EPIC-08)
 
-**Cập nhật:** 10/10/2026 — đồng bộ các API đã triển khai với nhánh main và giữ đầy đủ nghiệp vụ của từng module.
+**Cập nhật:** 11/10/2026 — chuẩn hóa checklist 212 HTTP method/path, cập nhật bằng chứng kiểm thử và tách các hạng mục triển khai sau.
 
-**Phạm vi kiểm kê:** Các tổ hợp HTTP method/path được đối chiếu tự động với controller trong profile `test` qua `BackendApplicationTests`; inventory mới nhất được xuất tại `backend/target/test-artifacts/api-endpoints.txt`. Swagger/Actuator do thư viện cung cấp không thuộc inventory này. Các số lượng trong ghi nhận nghiệm thu bên dưới thuộc snapshot được nêu tại thời điểm kiểm chứng.
+**Phạm vi kiểm kê:** Đối chiếu 212 tổ hợp HTTP method/path từ 67 controller
 
-**Quy ước:** Với mục API, `[x]` nghĩa là endpoint đã có trong controller; không đồng nghĩa đã kiểm chứng toàn bộ nghiệp vụ hoặc tích hợp cổng thanh toán thật. Với mục Test, hạ tầng và quyết định nghiệp vụ, giữ trạng thái checklist đã ghi nhận; `[ ]` là việc còn thiếu/chưa xác nhận. Lần cập nhật này không đánh dấu các test chưa xác nhận thành đã pass.
+**Quy ước:** Với mục API, `[x]` nghĩa là endpoint đã có trong controller; không đồng nghĩa đã kiểm chứng toàn bộ nghiệp vụ hoặc tích hợp cổng thanh toán thật. Với mục Test, chỉ đánh dấu `[x]` khi có bằng chứng kiểm thử; ghi rõ phạm vi mock, test bị bỏ qua và snapshot kiểm chứng. `[ ]` là việc còn thiếu/chưa xác nhận hoặc chính sách đang chờ thống nhất. Các hạng mục chi trả/hoa hồng và vận hành vendor được người dùng hoãn sang đợt sau, không thuộc phạm vi bổ sung API hiện tại.
 
 ---
 
@@ -49,8 +49,6 @@
 - [x] Cấp mã/reset/login/refresh khóa cùng tài khoản; request đồng thời không dùng OTP hai lần hoặc tạo phiên cũ sau reset.
 - [x] Reset tăng `session_version` và revoke mọi refresh token; JWT filter kiểm tra phiên bản trên dữ liệu tài khoản không qua cache.
 - [x] Migration `V20__password_reset_security.sql` giữ dữ liệu cũ; JWT không có version được coi là 0 cho đến lần reset đầu tiên.
-
-**Kiểm chứng 08/10/2026:** `./mvnw verify` thành công; 1.623 test, 0 failure/error, 135 skipped theo cấu hình suite. Cả 17 ca `PasswordResetSecurityIntegrationTest` chạy và pass với PostgreSQL 16/Redis thật; migration V20 áp dụng và schema Hibernate validate thành công. SMTP/publisher được mock trong kiểm thử, chưa phải kiểm tra gửi email ngoài hệ thống.
 
 ### RBAC — Hạ tầng
 - [x] Role trong JWT claims + map GrantedAuthority (ROLE_*)
@@ -104,8 +102,6 @@
 - Migration `V22__report_financial_events.sql`: `payments.paid_at`, `sub_orders.cancellation_reason`, index tài chính. Thời điểm thanh toán của dữ liệu cũ là ước lượng từ timestamp có sẵn; chưa thể coi là đối soát lịch sử chính xác với cổng.
 - [x] ReportFinancialIntegrationTest: PostgreSQL thật, refund qua kỳ, pending/failed, phân bổ tiền, ranh giới ngày, tính nhất quán dashboard/vendor, CSV và lý do hủy.
 - [x] ReportSecurityAdversarialIntegrationTest: phân quyền và vendor isolation qua Spring Security.
-- Kiểm chứng 09/10/2026 tại worktree này: `clean verify` BUILD SUCCESS, 1875 test, 0 failures/errors, 135 skipped; riêng report 288 test không có test bỏ qua. Chưa áp dụng migration lên database ứng dụng đang chạy.
-- Chi tiết hợp đồng và ví dụ: [reports-dashboard-contract.md](reports-dashboard-contract.md).
 
 ### User Module — API
 - [x] GET /api/users/me
@@ -229,14 +225,14 @@
 
 ### Quyết định nghiệp vụ
 - [x] Cơ chế lock: dùng phương án thuận tiện/đúng chuẩn nhất — đề xuất Redis SETNX + Lua script (atomic, tận dụng hạ tầng Redis đã có)
-- [x] Hủy trễ: mất toàn bộ tiền dịch vụ (không có khái niệm đặt cọc)
+- [x] Không có khái niệm đặt cọc; số tiền hoàn khi khách hủy được tính bằng RefundPolicyEngine trên số thực trả của từng sub-order.
 - [x] 1 booking có thể chứa nhiều dịch vụ
 - [x] Booking bắt buộc thanh toán toàn bộ mới được xác nhận (không đặt cọc)
 
 ### Quyết định nghiệp vụ
-- [x] Mốc thời gian cụ thể coi là "hủy trễ" (trước giờ dịch vụ 24h)
-- [x] Hủy SỚM hơn mốc đó thì hoàn toàn bộ
-- [x] Vendor có API từ chối booking item ở trạng thái CONFIRMED; hiện tạo yêu cầu hoàn 100% với trạng thái PENDING và nhả chỗ của item đó
+- [x] Chính sách STANDARD_24H_V2: khách hủy khi còn hơn 24 giờ hoàn 100%; đúng 24 giờ trở xuống, sau khởi hành hoặc không đến hoàn 0%; áp dụng chung cho tour ghép/gói riêng, tính theo số thực trả từng sub-order.
+- [x] Flyway V37 lưu cancellationPolicyVersion; đơn đã thanh toán trước nâng cấp giữ LEGACY_TIERED_V1, đơn chưa thanh toán và đơn mới dùng STANDARD_24H_V2. Response sub-order công khai version chính sách đã lưu.
+- [x] Vendor báo không thể phục vụ booking item đã thanh toán, CONFIRMED và chưa check-in: ghi nhận VENDOR_FAULT, thông báo khách chọn đổi ca/hoàn 100%; nếu đã qua hạn 12 giờ trước ca gốc thì khởi tạo hoàn ngay. Nhả chỗ đúng một lần khi hủy.
 - [ ] Hoàn thiện gửi yêu cầu refund tới cổng gốc, thông báo khách hàng và gợi ý vendor khác còn slot để khách tự chọn lại
 
 ### API
@@ -262,8 +258,6 @@
 - [x] RefundProcessingServiceTest: hoàn tiền của item có allocation gọi cơ chế trả tồn theo bookingItemId đúng một lần; dữ liệu legacy không có bookingItemId giữ nhánh cũ.
 
 ### Hợp đồng booking và tồn dùng chung
-
-**Kiểm chứng ngày 2026-10-08:** `./mvnw verify` → BUILD SUCCESS; 1.624 tests, 0 failures, 0 errors, 135 skipped. Bao gồm 33 test tồn/option tích hợp trên PostgreSQL 16 + Redis 7, 11 test BookingHoldController, 13 test RefundProcessingService, và 2 test migration (database mới + nâng V18→V19). Guard inventory xác nhận 122 endpoint. `git diff --check` đạt. Đây là bằng chứng backend/test, không thay thế nghiệm thu thanh toán sandbox qua giao diện.
 
 - `slotId` là ca/chuyến; `optionId` xác định SHARED/PER_PERSON hoặc PRIVATE/PER_PACKAGE. Có nhiều option hoạt động thì phải gửi optionId; ngừng bán tất cả option không được fallback về giá service.
 - `quantity` là số người với SHARED, số gói với PRIVATE. `participantsCount` nếu có phải >= 1 và là số khách mỗi gói trong item; các gói có số khách khác nhau gửi thành các item riêng.
@@ -293,7 +287,7 @@ Hai item phải nhận hai đơn vị khác nhau và tính giá hai gói. Nhóm 
 - [x] Không hỗ trợ đặt cọc — bắt buộc thanh toán toàn bộ
 - [x] Thanh toán 1 lần cho toàn bộ Master Order (không thanh toán riêng từng Sub-Order)
 - [x] Hoàn tiền tự động (không cần Admin duyệt thủ công)
-- [x] Cổng thanh toán: Trong nước (VNPay, MoMo) & Quốc tế (PayPal Sandbox). Bỏ SePay, thay bằng PayPal.
+- [x] Khởi tạo thanh toán hiện hỗ trợ VNPay và PayPal Sandbox. MoMo/SePay chưa tích hợp và bị từ chối; route webhook MoMo được liệt kê vì còn tồn tại trong controller.
 
 ### API
 - [x] POST /api/orders (tạo Master Order từ booking, chờ thanh toán)
@@ -311,6 +305,10 @@ Hai item phải nhận hai đơn vị khác nhau và tính giá hai gói. Nhóm 
 - [x] POST /api/payments/webhook/internal/{provider} (chỉ profile `test`, cần ADMIN và HMAC; không tồn tại ở dev/production)
 - [x] POST /api/payments/webhook/paypal/refund (xác minh đủ 5 transmission headers; không dùng HMAC/fallback nội bộ)
 - [x] POST /api/orders/{id}/refund-request (yêu cầu hoàn theo policy; đã hoàn thiện persistence, idempotency và provider transaction ID)
+- [x] POST /api/admin/sub-orders/{id}/disruptions (admin ghi nhận WEATHER/VENDOR_FAULT/SYSTEM_FAULT đã xác minh; Idempotency-Key; hạn quyết định cố định ca gốc trừ 12 giờ)
+- [x] POST /api/sub-orders/{id}/disruption-refund (chủ đơn chọn hoàn 100% cho sự cố đã xác minh; không nhận nguyên nhân tài chính từ khách; replay trả cùng quyết định)
+- [x] GET /api/customers/me/discount-codes (khách xem mã bù cá nhân, gồm mã đã dùng/hết hạn; phân trang, tối đa 100)
+
 - [x] GET /api/orders/{id}/payments (lịch sử intent/giao dịch, chỉ chủ đơn hoặc admin)
 - [x] GET /api/orders/{id}/refunds (danh sách yêu cầu hoàn tiền theo đơn hàng cho chủ đơn hoặc admin)
 - [x] GET /api/payments/{orderId}/status (truy vấn trạng thái thanh toán theo đơn hàng cho khách)
@@ -400,9 +398,7 @@ Hai item phải nhận hai đơn vị khác nhau và tính giá hai gói. Nhóm 
 - [x] OrderExpiryEventListenerTest (4 unit test: hủy khi pending, giữ nguyên paid, không có đơn, trả reservation khi hết hạn)
 - [x] SettlementCalculationTest (15 unit test: tính settlement, loại trừ, hoa hồng và snapshot giảm giá; trường hợp đồng tài trợ ở mức engine, API hiện chỉ có PLATFORM hoặc VENDOR)
 
-### Quản trị giao dịch — hợp đồng đối soát ngày 09/10/2026
-
-**Kiểm chứng 09/10/2026:** `./mvnw clean verify` → BUILD SUCCESS; 1.711 test cases, 1576 thực chạy, 135 skipped, 0 failures, 0 errors. Trong đó 29 ca `AdminTransactionIntegrationTest` trên PostgreSQL 16/Flyway/Redis 7 riêng và 57 ca tập trung reconciliation/adapter/job. Kiểm kê runtime: 126 method/path; migration mới V23 đã được kiểm tra trên DB mới và nâng từ V20. Gateway được mock; sandbox thật chưa được chạy trong lần này.
+### Quản trị giao dịch
 
 - Ba danh sách `/api/admin/orders`, `/api/admin/payments`, `/api/admin/refunds` dùng bộ lọc động, chạy với PostgreSQL khi bỏ trống ngày hoặc chỉ có một cận. Ngày bao gồm cả hai biên, so sánh theo instant; `from > to` trả 400. Lọc vendor dùng `EXISTS` để không nhân bản đơn nhiều sub-order.
 - Query cổng chạy ngoài transaction áp dụng kết quả. Sau query, khóa payment rồi master order, đọc lại trạng thái và đối chiếu intent đã lưu. Webhook/capture thắng trước thì đối soát no-op, không ghi đè trạng thái cuối.
@@ -420,7 +416,7 @@ Hai item phải nhận hai đơn vị khác nhau và tính giá hai gói. Nhóm 
 ---
 
 ### Safety waiver acceptance
-- `POST /api/sub-orders/{id}/waiver-acceptance`: Customer owner confirms the frozen sub-order waiver with `accepted=true`, `version`, and `language` (`VI`/`EN`). Stores JWT user, server timestamp, actual fallback language and accepted content; replay preserves the original evidence.
+- [x] POST /api/sub-orders/{id}/waiver-acceptance (Customer owner confirms the frozen waiver with `accepted=true`, `version`, and `language` (`VI`/`EN`); stores JWT user, server timestamp, actual fallback language and accepted content; replay preserves the original evidence.)
 - Public service/order detail exposes waiver policy, version, content and fallback metadata. Order creation freezes the policy. Payment initiation and PayPal capture reject missing required acceptance with HTTP 409 `WAIVER_ACCEPTANCE_REQUIRED` and `missingSubOrders`.
 - V35 backfills unpaid legacy sub-orders from current service policy; paid history is preserved without invented acceptance. Vendor policy updates are serialized and increment the version only for actual policy/content changes.
 
@@ -458,19 +454,6 @@ Hai item phải nhận hai đơn vị khác nhau và tính giá hai gói. Nhóm 
 - [x] AdminWeatherAlertControllerTest (DISMISSED không ghi đè isSafe=true, CANCEL_AND_REFUND tạo refund PENDING)
 - [x] WeatherRuleEngineTest (vượt ngưỡng chặn, không vượt cho phép, không weather_sensitive bỏ qua)
 - [x] SlotWeatherMonitoringJobTest (không cảnh báo trùng; forecast cũ không tự gỡ cảnh báo RED)
-
----
-
-### Reschedule contract and verification (2026-10-10)
-- Vendor proposals do not reserve inventory. `reasonType` supports `OPERATIONAL`/`WEATHER`; default expiry is the earliest of 24 hours, the original departure, and the proposed departure. A new proposal supersedes previous pending proposals under the same order lock.
-- Only the customer owner confirms a PAID/CONFIRMED, not checked-in, upcoming sub-order. Admin may inspect options but cannot accept on the customer's behalf. Target must remain open, published, within the same service/vendor, and without a known unsafe assessment.
-- Keep the purchased quantity, price, package-capacity snapshot, participants and original `allowSplit` consent. Availability includes live Redis holds; package availability counts empty whole units. Redis allocation is reused verbatim for DB commit. Temporary holds are released after commit/rollback, with a 2-minute expiry protecting crash recovery.
-- `Idempotency-Key` accepts 8–100 letters/digits or `._:-`; replay checks ownership and the complete target/proposal/version fingerprint, and returns the committed historical version. Conflict responses preserve HTTP 409 and code `RESCHEDULE_CONFLICT`.
-- V36 adds history/proposals, booking policy snapshots, and durable notification delivery markers; it can coexist with waiver V35. Legacy package limits conservatively retain allocated-unit capacity and participant requirements.
-- Weather cancellation locks and rechecks the current order/slot, releases inventory once, and creates a PENDING full-refund request. Resolution never invents `isSafe=true`. Refund notifications say the request is awaiting provider confirmation.
-- Cache freshness is 30 minutes; upstream errors/null results may use the same source payload up to 2 hours old, including Redis fallback after restart. Original source timestamps are preserved. Missing marine data is `METEOROLOGY_ONLY`, without an invented estimate. Advance safety returns `UNKNOWN` for stale/unverified/missing observations and beyond the forecast horizon; monitoring cannot clear warnings from stale data.
-- Durable proposal/history rows are retried each minute using separate transactions and idempotent notification keys. Trip reminders follow the new slot automatically.
-- Real PostgreSQL/Redis regression coverage: `ReschedulePersistenceIntegrationTest`; HTTP 409: `RescheduleHttpConflictTest`; source timestamps/fallback: `WeatherSourceFreshnessTest`; stale safety guard: `WeatherFreshnessSafetyGuardTest`.
 
 ---
 
@@ -531,10 +514,10 @@ Hai item phải nhận hai đơn vị khác nhau và tính giá hai gói. Nhóm 
 
 ### Test
 - [x] AssistantOwnershipHttpRegressionTest (10 ca MockMvc standalone với service/use case thật và repository mock: đọc/confirm đúng owner, chặn truy cập chéo và trả 404 khi không tồn tại)
-- [x] Nghiệm thu quyền sở hữu ngày 08/10/2026: 38 test tập trung pass; 11 probe bổ sung ngoài repository dùng JWT/Spring Security/PostgreSQL thật pass (card store và lệnh tạo hold được mock). Toàn bộ `mvn verify` chạy 1.587 test, 0 failure, 2 error, 135 skip: hai error ở fixture Dispute đặt chuyến 09:00 ngày chạy, đã tái hiện khi chạy trước 09:00; chưa xác nhận full suite xanh
-- [ ] AssistantChatUseCaseTest (tool calling đúng function)
-- [ ] Test rate limit endpoint chat
-- [ ] Test fallback khi LLM lỗi/timeout
+- [x] Ghi nhận lịch sử ngày 08/10/2026: 38 test ownership tập trung và 11 probe bổ sung pass; `mvn verify` lúc đó có 2 error ở fixture Dispute. Kết quả này thuộc snapshot cũ; xem lần hồi quy bản kết hợp ngày 10/10/2026 tại mục Regression.
+- [x] AssistantChatUseCaseTest (13 ca: luồng chat/tool calling và xử lý lỗi; báo cáo Surefire ngày 10/10/2026 không có failure/error/skip).
+- [x] RateLimitTest và RateLimitAndFallbackTest (14 ca ở tầng rate limiter với proxy/bucket mock; không thay thế nghiệm thu tải HTTP/Redis thật).
+- [x] LlmFallbackTest (13 ca fallback/circuit breaker với lời gọi LLM mô phỏng; không phải nghiệm thu chất lượng mô hình hoặc cổng LLM thật).
 
 ---
 
@@ -601,7 +584,7 @@ Chính sách hiện tại: khách sửa review trong 7 ngày; chưa cung cấp A
 ### QR Check-in
 - [x] POST /api/bookings/{id}/qr-code
 - [x] POST /api/vendor/checkin/verify
-- [ ] Test: check-in trùng, QR hết hạn/không hợp lệ
+- [x] CheckinUseCaseTest và CheckinAdversarialEmpiricalTest (44 ca: QR hết hạn/không hợp lệ, đã sử dụng, quyền và trạng thái; báo cáo ngày 10/10/2026 không có failure/error/skip).
 
 ### Settlement
 - [x] GET /api/admin/settlements
@@ -610,7 +593,7 @@ Chính sách hiện tại: khách sửa review trong 7 ngày; chưa cung cấp A
 - [x] PATCH /api/admin/settlements/{id}/finalize (chốt kỳ FINALIZED; chưa phải xác nhận chi trả PAID)
 - [x] GET /api/vendor/settlements
 - [x] GET /api/vendor/settlements/{id}
-- [ ] Test: tính hoa hồng đúng, không tính trùng đơn hoàn/hủy
+- [x] SettlementCalculationTest, SettlementUseCaseTest, SettlementAdversarialTest và AdversarialSettlementStressTest (71 ca: tính tiền/hoa hồng, refund, cam kết kỳ và chống tạo/chốt trùng; báo cáo ngày 10/10/2026 không có failure/error/skip). Không nghiệm thu payout hoặc cấu hình hoa hồng chưa triển khai.
 
 ### Thông báo — API
 - [x] GET /api/notifications (danh sách thông báo của user hiện tại, có phân trang, `isRead`/`readAt`)
@@ -639,11 +622,19 @@ Availability là dữ liệu tham khảo; `POST /api/bookings/hold` vẫn quyế
 Nếu DB dev đã áp dụng migration notification V25 cũ, cần kiểm tra chính xác bản ghi Flyway và phối hợp nâng version trước khi ghép nhánh. Không xóa/reset DB hay sửa history tự động; V27 chưa giải quyết việc hai nhánh AI/chat khác cùng sử dụng V25.
 
 ### Chính sách Hoàn/Hủy
-- [ ] Rule engine % hoàn tiền theo mốc thời gian (dùng chung logic "mất toàn bộ nếu hủy trễ" đã chốt ở EPIC-03)
-- [ ] Test: mốc thời gian biên tính đúng
+- [x] RefundPolicyEngine đã được dùng chung bởi cancellation preview, yêu cầu refund và hủy booking; số tiền cơ sở là giá thực trả sau phân bổ giảm giá.
+- [x] RefundPolicyEngineTest và RefundPolicyEngineEmpiricalChallengeTest tiếp tục kiểm tra LEGACY_TIERED_V1; StandardCancellationPolicyTest kiểm tra chính sách mới và mốc chính xác 24 giờ.
+- [x] WEATHER/VENDOR_FAULT/SYSTEM_FAULT đã xác minh cho phần dịch vụ không thể thực hiện: khách chọn đổi ca cùng service/vendor hoặc hoàn 100%; hết hạn tại giờ ca gốc trừ 12 giờ tự tạo refund PENDING. Sự cố được ghi nhận sau hạn tạo hoàn ngay; không coi timeout thanh toán là bằng chứng lỗi hệ thống.
+- [x] Vendor proposal không giữ tồn khi tạo; expiresAt không vượt hạn quyết định hoặc giờ ca đề xuất. Đổi ca và hoàn dưới khóa master-order/sub-order chung; xác nhận đổi ca chấm dứt quyết định hoàn tự động.
+- [x] Khi đơn đã thanh toán, voucher gốc giữ nguyên usedCount/redemption bất kể nguyên nhân hủy, kể cả mã đã hết hạn. Nhả reservation chỉ cho đơn PENDING_PAYMENT/UNPAID; không gia hạn hoặc kích hoạt lại mã.
+- [x] SYSTEM_FAULT: khi hủy cấp một mã PLATFORM/FIXED tương đương discountAmount của sub-order bị ảnh hưởng; chỉ đúng khách được dùng, maxUses/maxUsesPerUser=1, có provenance duy nhất replacementSubOrderId. Discount bằng 0 không tạo mã. Thời hạn mới mặc định 30 ngày qua app.refund.replacement-voucher-valid-days; WEATHER/VENDOR_FAULT không tự cấp mã.
+- [x] Preview và checkout cùng kiểm tra recipientCustomerId; hủy một sub-order không tính lại giảm giá của các sub-order còn lại. Worker chỉ đổi PENDING sang PROCESSED khi cổng xác nhận.
+- Hợp đồng và ví dụ: [cancellation-refund-contract.md](cancellation-refund-contract.md). **Kiểm chứng 11/10/2026:** `./mvnw -q clean verify` exit 0; Surefire XML có 2.537 test cases, 2.401 pass, 136 skipped, 0 failure/error. 22 ca DisruptionDecisionIntegrationTest và 13 ca StandardCancellationPolicyTest đều pass; PostgreSqlMigrationIntegrationTest kiểm chứng V36→V37 và dữ liệu cũ; BackendApplicationTests pass 2/2, Tracking khớp runtime 212/212. Chi tiết: [cancellation-refund-verification-2026-10-11.md](cancellation-refund-verification-2026-10-11.md). Gateway mô phỏng, chưa thay thế nghiệm thu sandbox thật.
 
 ### Regression
-- [ ] Chạy lại toàn bộ test suite Sprint 1-3
+- [x] Hồi quy bản kết hợp waiver/reschedule ngày 10/10/2026: `./mvnw -q clean '-Dtest=!BackendApplicationTests' test` exit 0; Surefire ghi nhận 2.363 test pass, 136 skipped, 0 failure/error. Gateway mô phỏng; PostgreSQL/Redis integration kiểm chứng migration/schema và cạnh tranh.
+- Lần chạy đầu của bản kết hợp lỗi 1 assertion cache RBAC; chạy riêng 11/11 và chạy lại suite sạch đều pass. Không sửa production code cho lỗi không ổn định này.
+- BackendApplicationTests đã bị loại khỏi lần hồi quy trên. Kiểm kê ngày 11/10/2026 đối chiếu riêng 209/209 method/path bằng Spring MVC annotation mapping và parser checklist; không tuyên bố đã chạy lại toàn bộ suite trong lần sửa tài liệu.
 
 ---
 
@@ -655,30 +646,23 @@ Nếu DB dev đã áp dụng migration notification V25 cũ, cần kiểm tra ch
 
 ---
 
-# ĐỀ XUẤT
 
-1. **Quản lý lịch và tồn chỗ — đã có API** Lịch, option và tồn dùng chung đã được triển khai trong EPIC-02/03; các mục API bên dưới đã nằm trong inventory, không còn là API thiếu. Tạo lịch lặp, đồng bộ tồn từ kênh ngoài và điều phối phương tiện thực tế nằm ngoài đợt triển khai này.
-   - `GET /api/services/{id}/slots`
-   - `GET/POST /api/vendor/services/{id}/slots`
-   - `PATCH /api/vendor/services/{id}/slots/{slotId}`
+# TODO 
 
-2. **Thống kê và báo cáo** Đã có API admin/vendor, dashboard thật, nhóm ngày/tuần/quý/năm và CSV trên nhánh `implement_admin_reports_dashboard`. Hợp đồng và giới hạn dữ liệu lịch sử được ghi tại mục Thống kê ở trên; nghiệm thu runtime theo kết quả kiểm chứng của worktree này.
+### P1 Chi trả vendor và cấu hình hoa hồng -> ĐANG THẢO LUẬN, CHƯA THỐNG NHẤT VÀ TRIỂN KHAI.
 
-3. **Đánh giá sau trải nghiệm** Đã triển khai 9 endpoint và kiểm thử nghiệp vụ/đồng thời; xem checklist Review & Rating tại EPIC-07.
+Settlement đã có generate/list/detail/finalize. Finalize chỉ chốt kỳ, chưa đánh dấu PAID; PayoutRequest mới có model/entity/repository. Chưa có luồng rút tiền và xác nhận chi trả. `CommissionPolicyAdapter` hiện trả mặc định 10%, chưa đọc cấu hình.
 
-4. **Chi trả vendor** `FINALIZED` hiện chưa chứng minh vendor đã nhận tiền.
-   - `POST/GET /api/vendor/payout-requests`
-   - API Admin duyệt và xác nhận chi trả.
-   - Cấu hình hoa hồng thay cho tỷ lệ mặc định cố định.
+- `POST /api/vendor/payout-requests`, `GET /api/vendor/payout-requests`.
+- `GET /api/admin/payout-requests`; approve/reject và xác nhận paid, hoặc luồng admin trực tiếp chi trả settlement nếu muốn thu gọn MVP.
+- `PATCH /api/admin/settlements/{id}/mark-paid` kèm tham chiếu giao dịch/chứng từ, nếu chọn cách chi trả thủ công mô phỏng.
+- API cấu hình commission theo category/vendor/gói; lưu tỷ lệ tại lúc tạo sub-order để thay đổi sau không sửa giao dịch cũ.
 
-5. **Theo dõi và quản trị giao dịch [ĐÃ KIỂM CHỨNG BACKEND]** Khách xem được lịch sử payment/refund của đơn; admin tìm và lọc giao dịch toàn sàn. Đối soát chỉ tra cứu, kiểm tra identity/money, cập nhật dưới khóa và ghi audit cùng transaction. Gateway trong test được mô phỏng; nghiệm thu sandbox thật vẫn là mục riêng.
-   - `GET /api/orders/{id}/payments`
-   - `GET /api/orders/{id}/refunds`
-   - `GET /api/admin/orders`, `/payments`, `/refunds`
+Đảm bảo một settlement không chi trả hai lần, không rút quá số được nhận, lưu audit log. Thông tin ngân hàng riêng tư chỉ dùng cho vendor/admin có quyền.
 
-6. **Phục hồi tài khoản và xác nhận an toàn.**
-   - `POST /api/auth/forgot-password`
-   - `POST /api/auth/reset-password`
-   - Mở rộng service detail và checkout để khách đọc, xác nhận waiver; lưu nội dung/version và thời điểm xác nhận.
+***SUGGEST TODO***
+Thay mức 10% cố định bằng chính sách mặc định + thỏa thuận riêng của vendor, có thời gian hiệu lực và audit.
+Giữ snapshot commission theo từng sub-order. Phần lưu tỷ lệ đã có; cần bổ sung nguồn/phiên bản chính sách và dùng nhất quán kết quả xác định tỷ lệ trong luồng tạo đơn.
+Hoàn thiện chi trả settlement: chốt số tiền, kiểm soát khoản đang chi trả, chống trả trùng và xác nhận PAID kèm chứng từ. Khoản điều chỉnh phát sinh sau khi chốt cần có lịch sử riêng, không sửa số đã chi trả. Có thể dùng luồng rút tiền vendor hoặc admin trực tiếp chi trả.
 
-Sau các nhóm trên, nên bổ sung **đổi lịch do thời tiết**, **voucher**, **nhắn tin khách–vendor**, **theo dõi/phản hồi khiếu nại**, **read/unread thông báo** và **biên nhận thanh toán**. Đây đều là những phần đã được nêu trong phạm vi đề tài hoặc giúp khép kín luồng sử dụng.
+### P0 Test nghiệm thu sandbox thật với cổng thanh toán, callback và refund. Hiện tại gateway mock không chứng minh luồng thực đã hoạt động.

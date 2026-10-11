@@ -3,12 +3,15 @@ package com.danasea.backend.modules.order.infrastructure.persistence.entities;
 import com.danasea.backend.modules.order.domain.models.RefundReason;
 import com.danasea.backend.modules.order.domain.models.SubOrderStatus;
 import com.danasea.backend.shared.core.infrastructure.persistence.entities.BaseJpaEntity;
+
 import jakarta.persistence.*;
+
+import lombok.Getter;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
-import lombok.Getter;
-import lombok.Setter;
 
 @Entity
 @Getter
@@ -59,6 +62,9 @@ public class SubOrderJpaEntity extends BaseJpaEntity {
 
     @Enumerated(EnumType.STRING)
     private RefundReason cancellationReason;
+
+    @Column(name = "cancellation_policy_version", nullable = false, length = 40)
+    private String cancellationPolicyVersion = "STANDARD_24H_V2";
 
     @Column(name = "waiver_required")
     private Boolean waiverRequired = false;

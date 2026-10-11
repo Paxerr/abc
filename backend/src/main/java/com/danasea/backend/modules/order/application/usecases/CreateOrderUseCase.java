@@ -28,6 +28,11 @@ import com.danasea.backend.modules.order.infrastructure.persistence.entities.Dis
 import com.danasea.backend.modules.order.infrastructure.persistence.mappers.DiscountCodeMapper;
 import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaDiscountCodeRepository;
 import com.danasea.backend.modules.order.infrastructure.persistence.repositories.JpaDiscountRedemptionRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
@@ -40,9 +45,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CreateOrderUseCase {
@@ -225,7 +227,8 @@ public class CreateOrderUseCase {
                     discountCode,
                     candidateItems,
                     now,
-                    userUsageCount
+                    userUsageCount,
+                    command.customerId()
             );
 
             if (!allocationResult.valid()) {
