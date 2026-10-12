@@ -1,0 +1,1149 @@
+// DANASEA - Database schema converted from the supplied pgAdmin PostgreSQL ERD SQL export.
+// Source: Pasted text.txt | All tables and explicit FK constraints only; no inferred relationships.
+// TableGroup works for source organization; visual table-group collapse/expand may depend on dbdiagram plan.
+
+Project DANASEA {
+  database_type: 'PostgreSQL'
+  Note: 'DANASEA tourism experience marketplace. ERD faithfully represents declared PostgreSQL constraints from the supplied SQL.'
+}
+
+// ===========================================================================
+// G01 Users Identity
+// ===========================================================================
+
+Table public.users {
+  is_email_verified boolean
+  is_locked boolean
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  avatar_url varchar(255)
+  email varchar(255)
+  full_name varchar(255)
+  locale varchar(2) [not null, default: 'vi']
+  password_hash varchar(255)
+  phone varchar(255)
+  role varchar(255)
+  session_version bigint [not null, default: 0]
+}
+
+Table public.refresh_tokens {
+  created_at timestamptz(6) [not null]
+  expires_at timestamptz(6) [not null]
+  revoked_at timestamptz(6)
+  family_id uuid [not null]
+  id uuid [pk, not null]
+  replaced_by_id uuid
+  user_id uuid [not null]
+  token_hash varchar(255) [not null, unique]
+}
+
+Table public.password_reset_tokens {
+  created_at timestamptz(6) [not null]
+  expires_at timestamptz(6)
+  updated_at timestamptz(6) [not null]
+  used_at timestamptz(6)
+  id uuid [pk, not null]
+  user_id uuid
+  token_hash varchar(255)
+  failed_attempts integer [not null, default: 0]
+}
+
+// ===========================================================================
+// G02 Vendors
+// ===========================================================================
+
+Table public.vendors {
+  rating_avg numeric(38,2)
+  rating_count integer
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  verified_at timestamptz(6)
+  id uuid [pk, not null]
+  user_id uuid
+  verified_by uuid
+  address varchar(255)
+  badge_tier varchar(255)
+  bank_account_holder varchar(255)
+  bank_account_number varchar(255)
+  bank_name varchar(255)
+  business_name varchar(255)
+  tax_code varchar(255)
+  verification_status varchar(255)
+}
+
+Table public.vendor_documents {
+  created_at timestamptz(6) [not null]
+  reviewed_at timestamptz(6)
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  reviewed_by uuid
+  vendor_id uuid
+  doc_type varchar(255)
+  file_url varchar(255)
+  status varchar(255)
+}
+
+// ===========================================================================
+// G03 Catalog Discovery
+// ===========================================================================
+
+Table public.categories {
+  is_active boolean [not null]
+  requires_safety_cert boolean [not null]
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  parent_id uuid
+  name varchar(100) [not null]
+  name_en varchar(100)
+  slug varchar(120) [not null, unique]
+  icon_url text
+}
+
+Table public.services {
+  avg_rating numeric(38,2)
+  capacity_per_slot integer
+  duration_minutes integer
+  latitude numeric(38,2)
+  longitude numeric(38,2)
+  max_wavem numeric(38,2)
+  min_wind_kmh numeric(38,2)
+  price numeric(38,2)
+  rating_count integer
+  view_count integer
+  weather_sensitive boolean
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  category_id uuid
+  id uuid [pk, not null]
+  vendor_id uuid
+  address varchar(255)
+  description varchar(255)
+  description_en varchar(255)
+  location_name varchar(255)
+  name varchar(255)
+  name_en varchar(255)
+  rejection_reason varchar(255)
+  slug varchar(255)
+  status varchar(255)
+  waiver_content text
+  waiver_content_en text
+  search_vector tsvector [note: 'Generated STORED column in PostgreSQL; see original SQL for computation.']
+  // PostgreSQL expression: GENERATED ALWAYS AS ((((setweight(to_tsvector('simple'::regconfig, (COALESCE(name, ''::character varying))::text), 'A'::"char") || setweight(to_tsvector('simple'::regconfig, (COALESCE(name_en, ''::character varying))::text), 'A'::"char")) || setweight(to_tsvector('simple'::regconfig, (COALESCE(description, ''::character varying))::text), 'B'::"char")) || setweight(to_tsvector('simple'::regconfig, (COALESCE(description_en, ''::character varying))::text), 'B'::"char"))) STORED
+  waiver_required boolean [not null, default: false]
+  waiver_version integer [not null, default: 1]
+}
+
+Table public.service_images {
+  sort_order smallint
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  service_id uuid
+  url varchar(255)
+}
+
+Table public.service_options {
+  id uuid [pk, not null]
+  service_id uuid [not null]
+  name varchar(255) [not null]
+  option_type varchar(50) [not null]
+  pricing_unit varchar(50) [not null]
+  price numeric(15,2) [not null]
+  max_pax_per_package integer
+  benefits text
+  status varchar(50) [not null, default: 'ACTIVE']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  Indexes {
+    service_id [name: 'idx_service_options_service_id']
+  }
+}
+
+Table public.service_safety_documents {
+  created_at timestamptz(6) [not null]
+  reviewed_at timestamptz(6)
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  reviewed_by uuid
+  service_id uuid
+  file_url varchar(255)
+  rejection_reason varchar(255)
+  status varchar(255)
+}
+
+Table public.wishlists {
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  service_id uuid
+  user_id uuid
+}
+
+Table public.recently_vieweds {
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  viewed_at timestamptz(6)
+  id uuid [pk, not null]
+  service_id uuid
+  user_id uuid
+  session_id varchar(255)
+}
+
+// ===========================================================================
+// G04 Slots Bookings
+// ===========================================================================
+
+Table public.service_slots {
+  booked_count integer
+  capacity integer
+  date date
+  end_time time(0)
+  start_time time(0)
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  service_id uuid
+  status varchar(255)
+  inventory_type varchar(50) [not null, default: 'PERSON_LIMIT']
+
+  Indexes {
+    (service_id, date, start_time) [unique, name: 'uq_service_departure']
+  }
+}
+
+Table public.service_slot_units {
+  id uuid [pk, not null]
+  slot_id uuid [not null]
+  unit_number integer [not null]
+  capacity integer [not null]
+  booked_count integer [not null, default: 0]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  Indexes {
+    (slot_id, unit_number) [unique, name: 'uq_slot_unit']
+    slot_id [name: 'idx_service_slot_units_slot_id']
+  }
+}
+
+Table public.bookings {
+  id uuid [pk, not null]
+  customer_id uuid [not null]
+  status varchar(50) [not null]
+  total_amount numeric(15,2) [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  hold_expires_at timestamptz
+
+  Indexes {
+    customer_id [name: 'idx_bookings_customer_id']
+  }
+}
+
+Table public.booking_items {
+  id uuid [pk, not null]
+  booking_id uuid [not null]
+  service_id uuid [not null]
+  vendor_id uuid [not null]
+  quantity integer [not null, default: 1]
+  booking_date date [not null]
+  booking_time time [not null]
+  price numeric(15,2) [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  slot_id uuid
+  option_id uuid
+  pricing_unit varchar(50)
+  participants_count integer
+  capacity_released boolean [not null, default: false]
+  max_pax_per_package integer
+  allow_split boolean [not null, default: false]
+
+  Indexes {
+    booking_id [name: 'idx_booking_items_booking_id']
+    service_id [name: 'idx_booking_items_service_id']
+    slot_id [name: 'idx_booking_items_slot_id']
+  }
+}
+
+Table public.booking_item_allocations {
+  id uuid [pk, not null]
+  booking_item_id uuid [not null]
+  slot_id uuid [not null]
+  unit_number integer [not null]
+  allocated_seats integer [not null]
+  is_private_lock boolean [not null, default: false]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  Indexes {
+    booking_item_id [name: 'idx_booking_item_alloc_item_id']
+    slot_id [name: 'idx_booking_item_alloc_slot_id']
+  }
+}
+
+Table public.sub_orders {
+  commission_amount numeric(38,2)
+  commission_rate numeric(38,2)
+  quantity integer
+  subtotal_amount numeric(38,2)
+  unit_price numeric(38,2)
+  vendor_payout_amount numeric(38,2)
+  waiver_accepted boolean
+  checked_in_at timestamptz(6)
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  waiver_accepted_at timestamptz(6)
+  id uuid [pk, not null]
+  master_order_id uuid
+  qr_secret uuid
+  service_id uuid
+  slot_id uuid
+  vendor_id uuid
+  status varchar(255)
+  booking_item_id uuid
+  vendor_notified_at timestamptz
+  cancellation_reason varchar(30)
+  discount_amount numeric(38,2) [not null, default: 0]
+  vendor_discount_amount numeric(38,2) [not null, default: 0]
+  platform_discount_amount numeric(38,2) [not null, default: 0]
+  commission_basis_amount numeric(38,2)
+  final_amount numeric(38,2) [not null, default: 0]
+  waiver_required boolean [not null, default: false]
+  waiver_version integer [not null, default: 1]
+  waiver_content text
+  waiver_content_en text
+  waiver_accepted_by uuid
+  waiver_accepted_language varchar(10)
+  waiver_accepted_content text
+  reschedule_version bigint [not null, default: 0]
+  rescheduled_at timestamptz
+  original_slot_id uuid
+  cancellation_policy_version varchar(40) [not null, default: 'STANDARD_24H_V2']
+
+  Indexes {
+    booking_item_id [name: 'uk_sub_orders_booking_item_id']
+  }
+}
+
+Table public.checkin_tokens {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  sub_order_id uuid [not null]
+  qr_token_hash varchar(64) [not null, unique]
+  expires_at timestamptz [not null]
+  used_at timestamptz
+  used_by_vendor_staff_id uuid
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  Indexes {
+    sub_order_id [name: 'idx_checkin_tokens_sub_order']
+  }
+}
+
+// ===========================================================================
+// G05 Orders Payments
+// ===========================================================================
+
+Table public.master_orders {
+  discount_amount numeric(38,2)
+  total_amount numeric(38,2)
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  customer_id uuid
+  discount_code_id uuid
+  id uuid [pk, not null]
+  status varchar(255)
+  booking_id uuid
+  idempotency_key varchar(100)
+  payment_deadline timestamptz
+  payment_status varchar(50) [not null, default: 'UNPAID']
+
+  Indexes {
+    booking_id [name: 'uk_master_orders_booking_id']
+  }
+}
+
+Table public.payments {
+  amount numeric(38,2)
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  master_order_id uuid
+  provider varchar(255)
+  provider_transaction_id varchar(255)
+  raw_webhook_payload text
+  status varchar(255)
+  idempotency_key varchar(100)
+  webhook_event_id varchar(150)
+  payment_url text
+  qr_code_url text
+  expires_at timestamptz
+  provider_order_id varchar(100)
+  provider_amount numeric(20,2)
+  provider_currency varchar(3)
+  provider_transaction_date varchar(14)
+  capture_request_id varchar(100)
+  capture_requested_at timestamptz
+  last_error text
+  paid_at timestamptz
+  reconciliation_attempts integer [not null, default: 0]
+  reconciliation_next_attempt_at timestamptz
+  last_reconciled_at timestamptz
+}
+
+Table public.refunds {
+  amount numeric(38,2)
+  refund_percentage numeric(38,2)
+  created_at timestamptz(6) [not null]
+  processed_at timestamptz(6)
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  sub_order_id uuid
+  reason varchar(255)
+  status varchar(255)
+  requested_by uuid
+  idempotency_key varchar(100)
+  provider_refund_id varchar(150)
+  provider varchar(50)
+  webhook_event_id varchar(150)
+  retry_count integer [not null, default: 0]
+  last_error text
+  provider_transaction_id varchar(255)
+  payment_id uuid
+  provider_amount numeric(20,2)
+  provider_currency varchar(3)
+  gateway_request_id varchar(100)
+  gateway_requested_at timestamptz
+  next_attempt_at timestamptz
+  verification_attempts integer [not null, default: 0]
+}
+
+Table public.invoices {
+  created_at timestamptz(6) [not null]
+  issued_at timestamptz(6)
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  master_order_id uuid
+  invoice_number varchar(255)
+  pdf_url varchar(255)
+}
+
+Table public.discount_codes {
+  discount_value numeric(38,2)
+  is_active boolean
+  max_uses integer
+  used_count integer
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  valid_from timestamptz(6)
+  valid_to timestamptz(6)
+  id uuid [pk, not null]
+  vendor_id uuid
+  code varchar(255)
+  discount_type varchar(255)
+  scope varchar(255)
+  sponsor_type varchar(50) [not null, default: 'PLATFORM']
+  min_order_amount numeric(38,2) [default: 0]
+  max_discount_amount numeric(38,2)
+  max_uses_per_user integer
+  service_id uuid
+  recipient_customer_id uuid
+  replacement_sub_order_id uuid
+
+  Indexes {
+    recipient_customer_id [name: 'idx_discount_recipient']
+    replacement_sub_order_id [name: 'uq_replacement_voucher_sub_order']
+  }
+}
+
+Table public.discount_redemptions {
+  amount_deducted numeric(38,2)
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  discount_code_id uuid
+  id uuid [pk, not null]
+  master_order_id uuid
+  customer_id uuid
+}
+
+// ===========================================================================
+// G06 Settlements Payouts
+// ===========================================================================
+
+Table public.settlements {
+  commission_amount numeric(38,2)
+  gross_amount numeric(38,2)
+  net_payable_amount numeric(38,2)
+  period_end date
+  period_start date
+  created_at timestamptz(6) [not null]
+  generated_at timestamptz(6)
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  vendor_id uuid
+  status varchar(255)
+  version bigint [not null, default: 0]
+}
+
+Table public.settlement_items {
+  amount numeric(38,2)
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  settlement_id uuid
+  sub_order_id uuid
+}
+
+Table public.settlement_line_items {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  settlement_id uuid [not null]
+  sub_order_id uuid [not null]
+  gross_amount numeric(15,2) [not null, default: 0]
+  refund_amount numeric(15,2) [not null, default: 0]
+  commission_rate numeric(5,4) [not null, default: 0]
+  commission_amount numeric(15,2) [not null, default: 0]
+  net_amount numeric(15,2) [not null, default: 0]
+  excluded_reason varchar(50)
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  Indexes {
+    settlement_id [name: 'idx_settlement_line_items_settlement']
+    sub_order_id [name: 'idx_settlement_line_items_sub_order']
+  }
+}
+
+Table public.payout_requests {
+  amount numeric(38,2)
+  created_at timestamptz(6) [not null]
+  processed_at timestamptz(6)
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  processed_by uuid
+  settlement_id uuid
+  vendor_id uuid
+  status varchar(255)
+}
+
+// ===========================================================================
+// G07 Incidents Rescheduling
+// ===========================================================================
+
+Table public.disputes {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  order_id uuid
+  sub_order_id uuid [not null]
+  customer_id uuid [not null]
+  reason varchar(100) [not null]
+  description text
+  evidence_urls text
+  status varchar(50) [not null]
+  refund_percentage numeric(5,2)
+  admin_note text
+  resolved_at timestamptz
+  resolved_by uuid
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  vendor_response text
+  vendor_evidence_urls text
+  vendor_responded_at timestamptz
+
+  Indexes {
+    customer_id [name: 'idx_disputes_customer_id']
+    sub_order_id [name: 'idx_disputes_active_sub_order']
+  }
+}
+
+Table public.sub_order_disruptions {
+  id uuid [pk, not null]
+  sub_order_id uuid [not null]
+  original_slot_id uuid [not null]
+  original_departure_at timestamptz [not null]
+  decision_deadline timestamptz [not null]
+  reason varchar(30) [not null]
+  details text [not null]
+  source_key varchar(150) [not null]
+  verified_by uuid
+  status varchar(30) [not null]
+  refund_id uuid
+  notification_sent_at timestamptz
+  created_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    (sub_order_id, source_key) [unique, name: 'uq_disruption_source']
+    sub_order_id [name: 'uq_active_disruption']
+  }
+}
+
+Table public.sub_order_reschedule_history {
+  id uuid [pk, not null]
+  sub_order_id uuid [not null]
+  booking_item_id uuid [not null]
+  proposal_id uuid
+  from_slot_id uuid [not null]
+  to_slot_id uuid [not null]
+  from_booking_date date [not null]
+  from_booking_time time [not null]
+  to_booking_date date [not null]
+  to_booking_time time [not null]
+  performed_by uuid [not null]
+  reason_type varchar(50) [not null]
+  reason text [not null]
+  idempotency_key varchar(255) [not null]
+  payload_hash varchar(64)
+  reschedule_version bigint [not null, default: 1]
+  notification_sent_at timestamptz
+  updated_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+  created_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    (sub_order_id, idempotency_key) [unique, name: 'uq_reschedule_idempotency']
+    sub_order_id [name: 'idx_reschedule_history_sub_order']
+    to_slot_id [name: 'idx_reschedule_history_to_slot']
+  }
+}
+
+Table public.sub_order_reschedule_proposals {
+  id uuid [pk, not null]
+  sub_order_id uuid [not null]
+  vendor_id uuid [not null]
+  proposed_slot_id uuid [not null]
+  reason text [not null]
+  reason_type varchar(50) [not null]
+  status varchar(50) [not null, default: 'PENDING']
+  proposal_version bigint [not null, default: 0]
+  notification_sent_at timestamptz
+  expires_at timestamptz [not null]
+  created_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    proposed_slot_id [name: 'idx_reschedule_proposals_slot']
+    vendor_id [name: 'idx_reschedule_proposals_vendor']
+  }
+}
+
+// ===========================================================================
+// G08 Weather Safety
+// ===========================================================================
+
+Table public.weather_caches {
+  precipitation_mm numeric(38,2)
+  wave_heightm numeric(38,2)
+  wind_speed_kmh numeric(38,2)
+  created_at timestamptz(6) [not null]
+  expires_at timestamptz(6)
+  fetched_at timestamptz(6)
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  location_key varchar(255)
+  raw_payload text
+}
+
+Table public.category_safety_rules {
+  id uuid [pk, not null, default: `gen_random_uuid()`]
+  category_id uuid [unique]
+  category_slug varchar(120) [not null, unique]
+  category_name varchar(255) [not null]
+  caution_wave_height_m numeric(5,2)
+  max_wave_height_m numeric(5,2) [not null]
+  caution_wind_speed_kmh numeric(5,2)
+  max_wind_speed_kmh numeric(5,2) [not null]
+  max_wind_gust_kmh numeric(5,2)
+  max_ocean_current_ms numeric(5,2)
+  min_visibility_m numeric(7,2)
+  fatal_thunderstorm_codes varchar(255) [default: '95,96,99']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table public.safety_rule_evaluations {
+  is_safe boolean
+  created_at timestamptz(6) [not null]
+  evaluated_at timestamptz(6)
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  service_id uuid
+  slot_id uuid
+  warning_message varchar(255)
+  status varchar(50)
+  alert_level varchar(20)
+  peak_wave_height_m numeric(5,2)
+  peak_wind_speed_kmh numeric(5,2)
+  peak_wind_gust_kmh numeric(5,2)
+  peak_ocean_current_ms numeric(5,2)
+  min_visibility_m numeric(7,2)
+  severe_weather_code integer
+  findings_json jsonb [not null, default: `'[]'::jsonb`]
+}
+
+// ===========================================================================
+// G09 AI Assistant
+// ===========================================================================
+
+Table public.ai_assessment_cases {
+  id uuid [pk, not null]
+  kind varchar(40) [not null]
+  source_id uuid
+  requested_by uuid [not null]
+  status varchar(40) [not null]
+  evidence_json text [not null]
+  decision_json text [not null]
+  resolved_by uuid
+  resolution_note varchar(1000)
+  version bigint [not null, default: 0]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table public.ai_chat_requests {
+  id uuid [pk, not null]
+  actor_id uuid [not null]
+  request_key varchar(128) [not null]
+  request_fingerprint varchar(64) [not null]
+  conversation_id uuid
+  status varchar(16) [not null]
+  response_json text
+  expires_at timestamptz [not null]
+  created_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    (actor_id, request_key) [unique, name: 'uq_ai_chat_request_actor_key']
+  }
+}
+
+Table public.ai_confirmation_outcomes {
+  card_id varchar(128) [pk, not null]
+  owner_id uuid [not null]
+  conversation_id uuid [not null]
+  card_fingerprint varchar(64) [not null]
+  state varchar(16) [not null]
+  booking_id uuid [unique]
+  response_json text
+  created_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table public.ai_conversations {
+  created_at timestamptz(6) [not null]
+  ended_at timestamptz(6)
+  started_at timestamptz(6)
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  user_id uuid
+  locale varchar(2) [not null, default: 'vi']
+  structured_context text
+  processing_token uuid
+  processing_until timestamptz
+}
+
+Table public.ai_customer_preferences {
+  id uuid [pk, not null]
+  owner_id uuid [not null, unique]
+  enabled boolean [not null, default: false]
+  interests_json text [not null]
+  exclusions_json text [not null]
+  version bigint [not null, default: 0]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table public.ai_customer_support_requests {
+  id uuid [pk, not null]
+  owner_id uuid [not null]
+  order_id uuid [not null]
+  kind varchar(24) [not null]
+  message varchar(1800) [not null]
+  desired_date date
+  desired_slot_id uuid
+  response_note varchar(1800)
+  handled_by uuid
+  handled_at timestamptz
+  status varchar(24) [not null]
+  idempotency_key varchar(120) [not null]
+  request_hash varchar(64) [not null]
+  version bigint [not null, default: 0]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  Indexes {
+    (owner_id, idempotency_key) [unique, name: 'uq_ai_support_request_owner_key']
+  }
+}
+
+Table public.ai_itineraries {
+  id uuid [pk, not null]
+  owner_id uuid [not null]
+  plan_json text [not null]
+  version bigint [not null, default: 0]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+  lifecycle varchar(20) [not null, default: 'DRAFT']
+  locale varchar(5) [not null, default: 'vi']
+  idempotency_key varchar(128)
+  request_fingerprint text
+}
+
+Table public.ai_itinerary_items {
+  id uuid [pk, not null]
+  itinerary_id uuid [not null]
+  slot_id uuid [not null]
+  service_id uuid [not null]
+  activity_date date [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  Indexes {
+    itinerary_id [name: 'idx_ai_itinerary_items_plan']
+  }
+}
+
+Table public.ai_itinerary_previews {
+  id uuid [pk, not null]
+  owner_id uuid [not null]
+  locale varchar(5) [not null, default: 'vi']
+  alternatives_json text [not null]
+  expires_at timestamptz [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table public.ai_itinerary_proposals {
+  id uuid [pk, not null]
+  itinerary_id uuid [not null]
+  owner_id uuid [not null]
+  base_version bigint [not null]
+  state varchar(20) [not null]
+  plan_json text [not null]
+  original_plan_json text [not null]
+  trigger varchar(40) [not null]
+  source_event_id varchar(200)
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table public.ai_itinerary_revisions {
+  id uuid [pk, not null]
+  itinerary_id uuid [not null]
+  itinerary_version bigint [not null]
+  lifecycle varchar(20) [not null]
+  plan_json text [not null]
+  reason varchar(40) [not null]
+  proposal_id uuid
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  Indexes {
+    (itinerary_id, itinerary_version) [unique, name: 'ai_itinerary_revisions_itinerary_id_itinerary_version_key']
+  }
+}
+
+Table public.ai_messages {
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  conversation_id uuid
+  id uuid [pk, not null]
+  content varchar(255)
+  role varchar(255)
+  tool_calls varchar(255)
+  response_payload text
+}
+
+Table public.ai_recommendation_feedback {
+  id uuid [pk, not null]
+  owner_id uuid [not null]
+  recommendation_id uuid [not null]
+  service_id uuid [not null]
+  signal varchar(16) [not null]
+  idempotency_key varchar(120) [not null]
+  request_hash varchar(64) [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  Indexes {
+    (owner_id, idempotency_key) [unique, name: 'uq_ai_feedback_owner_key']
+  }
+}
+
+Table public.ai_recommendations {
+  id uuid [pk, not null]
+  owner_id uuid [not null]
+  service_ids_json text [not null]
+  criteria_fingerprint varchar(128) [not null]
+  expires_at timestamptz [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table public.assistant_audit_logs {
+  id uuid [pk, not null]
+  conversation_id uuid [not null]
+  user_id uuid
+  tool_name varchar(255) [not null]
+  key_masked varchar(255)
+  request_payload text [not null]
+  response_payload text [not null]
+  executed_at timestamptz [not null]
+  created_at timestamptz [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamptz [default: `CURRENT_TIMESTAMP`]
+  is_deleted boolean [default: false]
+  deleted_at timestamptz
+}
+
+// ===========================================================================
+// G10 Messaging Reviews
+// ===========================================================================
+
+Table public.conversations {
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  customer_id uuid
+  id uuid [pk, not null]
+  master_order_id uuid
+  vendor_id uuid
+  last_message_sequence bigint [not null, default: 0]
+}
+
+Table public.messages {
+  is_read boolean
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  conversation_id uuid
+  id uuid [pk, not null]
+  sender_id uuid
+  attachment_url varchar(255)
+  content text
+  message_sequence bigint [not null]
+}
+
+Table public.notifications {
+  created_at timestamptz(6) [not null]
+  sent_at timestamptz(6)
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  related_entity_id uuid
+  user_id uuid
+  body text
+  channel varchar(255)
+  related_entity_type varchar(255)
+  status varchar(255)
+  title varchar(255)
+  type varchar(255)
+  locale varchar(2) [not null, default: 'vi']
+  is_read boolean [not null, default: false]
+  read_at timestamptz(6)
+  idempotency_key varchar(160)
+}
+
+Table public.reviews {
+  is_flagged boolean
+  rating smallint
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  vendor_replied_at timestamptz(6)
+  customer_id uuid
+  id uuid [pk, not null]
+  service_id uuid
+  sub_order_id uuid [unique]
+  vendor_id uuid
+  comment varchar(2000)
+  images text
+  vendor_reply varchar(2000)
+  is_visible boolean [not null, default: true]
+  flag_reason varchar(255)
+  moderation_note varchar(255)
+}
+
+// ===========================================================================
+// G11 System Admin
+// ===========================================================================
+
+Table public.audit_logs {
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  actor_user_id uuid
+  entity_id uuid
+  id uuid [pk, not null]
+  action varchar(255)
+  entity_type varchar(255)
+  metadata text
+}
+
+Table public.system_configs {
+  created_at timestamptz(6) [not null]
+  updated_at timestamptz(6) [not null]
+  id uuid [pk, not null]
+  updated_by uuid
+  description varchar(255)
+  key varchar(255)
+  value varchar(255)
+}
+
+Table public.flyway_schema_history {
+  installed_rank integer [pk, not null]
+  version varchar(50)
+  description varchar(200) [not null]
+  type varchar(20) [not null]
+  script varchar(1000) [not null]
+  checksum integer
+  installed_by varchar(100) [not null]
+  installed_on timestamp [not null, default: `now()`]
+  execution_time integer [not null]
+  success boolean [not null]
+}
+
+// ===== EXPLICIT FOREIGN KEYS (52 from SQL) =====
+// Non-declared *_id columns are intentionally NOT connected.
+
+Ref ai_assessment_cases_requested_by_fkey: public.ai_assessment_cases.requested_by > public.users.id [delete: no action, update: no action]
+Ref ai_assessment_cases_resolved_by_fkey: public.ai_assessment_cases.resolved_by > public.users.id [delete: no action, update: no action]
+Ref ai_chat_requests_conversation_id_fkey: public.ai_chat_requests.conversation_id > public.ai_conversations.id [delete: no action, update: no action]
+Ref ai_confirmation_outcomes_booking_id_fkey: public.bookings.id - public.ai_confirmation_outcomes.booking_id [delete: no action, update: no action]
+Ref ai_confirmation_outcomes_conversation_id_fkey: public.ai_confirmation_outcomes.conversation_id > public.ai_conversations.id [delete: no action, update: no action]
+Ref ai_confirmation_outcomes_owner_id_fkey: public.ai_confirmation_outcomes.owner_id > public.users.id [delete: no action, update: no action]
+Ref ai_itineraries_owner_id_fkey: public.ai_itineraries.owner_id > public.users.id [delete: no action, update: no action]
+Ref ai_itinerary_items_itinerary_id_fkey: public.ai_itinerary_items.itinerary_id > public.ai_itineraries.id [delete: no action, update: no action]
+Ref ai_itinerary_previews_owner_id_fkey: public.ai_itinerary_previews.owner_id > public.users.id [delete: no action, update: no action]
+Ref ai_itinerary_proposals_itinerary_id_fkey: public.ai_itinerary_proposals.itinerary_id > public.ai_itineraries.id [delete: no action, update: no action]
+Ref ai_itinerary_proposals_owner_id_fkey: public.ai_itinerary_proposals.owner_id > public.users.id [delete: no action, update: no action]
+Ref ai_itinerary_revisions_itinerary_id_fkey: public.ai_itinerary_revisions.itinerary_id > public.ai_itineraries.id [delete: no action, update: no action]
+Ref ai_itinerary_revisions_proposal_id_fkey: public.ai_itinerary_revisions.proposal_id > public.ai_itinerary_proposals.id [delete: no action, update: no action]
+Ref ai_recommendation_feedback_recommendation_id_fkey: public.ai_recommendation_feedback.recommendation_id > public.ai_recommendations.id [delete: no action, update: no action]
+Ref booking_item_allocations_booking_item_id_fkey: public.booking_item_allocations.booking_item_id > public.booking_items.id [delete: cascade, update: no action]
+Ref booking_item_allocations_slot_id_fkey: public.booking_item_allocations.slot_id > public.service_slots.id [delete: no action, update: no action]
+Ref booking_items_booking_id_fkey: public.booking_items.booking_id > public.bookings.id [delete: cascade, update: no action]
+Ref booking_items_option_id_fkey: public.booking_items.option_id > public.service_options.id [delete: no action, update: no action]
+Ref booking_items_service_id_fkey: public.booking_items.service_id > public.services.id [delete: no action, update: no action]
+Ref booking_items_slot_id_fkey: public.booking_items.slot_id > public.service_slots.id [delete: no action, update: no action]
+Ref bookings_customer_id_fkey: public.bookings.customer_id > public.users.id [delete: no action, update: no action]
+Ref category_safety_rules_category_id_fkey: public.categories.id - public.category_safety_rules.category_id [delete: cascade, update: no action]
+Ref checkin_tokens_sub_order_id_fkey: public.checkin_tokens.sub_order_id > public.sub_orders.id [delete: no action, update: no action]
+Ref checkin_tokens_used_by_vendor_staff_id_fkey: public.checkin_tokens.used_by_vendor_staff_id > public.users.id [delete: no action, update: no action]
+Ref discount_codes_recipient_customer_id_fkey: public.discount_codes.recipient_customer_id > public.users.id [delete: no action, update: no action]
+Ref discount_codes_replacement_sub_order_id_fkey: public.discount_codes.replacement_sub_order_id > public.sub_orders.id [delete: no action, update: no action]
+Ref disputes_customer_id_fkey: public.disputes.customer_id > public.users.id [delete: no action, update: no action]
+Ref disputes_resolved_by_fkey: public.disputes.resolved_by > public.users.id [delete: no action, update: no action]
+Ref disputes_sub_order_id_fkey: public.disputes.sub_order_id > public.sub_orders.id [delete: no action, update: no action]
+Ref master_orders_booking_id_fkey: public.master_orders.booking_id > public.bookings.id [delete: no action, update: no action]
+Ref refunds_payment_id_fkey: public.refunds.payment_id > public.payments.id [delete: no action, update: no action]
+Ref refunds_requested_by_fkey: public.refunds.requested_by > public.users.id [delete: no action, update: no action]
+Ref service_options_service_id_fkey: public.service_options.service_id > public.services.id [delete: cascade, update: no action]
+Ref service_slot_units_slot_id_fkey: public.service_slot_units.slot_id > public.service_slots.id [delete: cascade, update: no action]
+Ref settlement_line_items_settlement_id_fkey: public.settlement_line_items.settlement_id > public.settlements.id [delete: cascade, update: no action]
+Ref settlement_line_items_sub_order_id_fkey: public.settlement_line_items.sub_order_id > public.sub_orders.id [delete: no action, update: no action]
+Ref sub_order_disruptions_original_slot_id_fkey: public.sub_order_disruptions.original_slot_id > public.service_slots.id [delete: no action, update: no action]
+Ref sub_order_disruptions_refund_id_fkey: public.sub_order_disruptions.refund_id > public.refunds.id [delete: no action, update: no action]
+Ref sub_order_disruptions_sub_order_id_fkey: public.sub_order_disruptions.sub_order_id > public.sub_orders.id [delete: no action, update: no action]
+Ref sub_order_disruptions_verified_by_fkey: public.sub_order_disruptions.verified_by > public.users.id [delete: no action, update: no action]
+Ref sub_order_reschedule_history_booking_item_id_fkey: public.sub_order_reschedule_history.booking_item_id > public.booking_items.id [delete: no action, update: no action]
+Ref sub_order_reschedule_history_from_slot_id_fkey: public.sub_order_reschedule_history.from_slot_id > public.service_slots.id [delete: no action, update: no action]
+Ref sub_order_reschedule_history_performed_by_fkey: public.sub_order_reschedule_history.performed_by > public.users.id [delete: no action, update: no action]
+Ref sub_order_reschedule_history_proposal_id_fkey: public.sub_order_reschedule_history.proposal_id > public.sub_order_reschedule_proposals.id [delete: no action, update: no action]
+Ref sub_order_reschedule_history_sub_order_id_fkey: public.sub_order_reschedule_history.sub_order_id > public.sub_orders.id [delete: cascade, update: no action]
+Ref sub_order_reschedule_history_to_slot_id_fkey: public.sub_order_reschedule_history.to_slot_id > public.service_slots.id [delete: no action, update: no action]
+Ref sub_order_reschedule_proposals_proposed_slot_id_fkey: public.sub_order_reschedule_proposals.proposed_slot_id > public.service_slots.id [delete: no action, update: no action]
+Ref sub_order_reschedule_proposals_sub_order_id_fkey: public.sub_order_reschedule_proposals.sub_order_id > public.sub_orders.id [delete: cascade, update: no action]
+Ref sub_order_reschedule_proposals_vendor_id_fkey: public.sub_order_reschedule_proposals.vendor_id > public.vendors.id [delete: no action, update: no action]
+Ref sub_orders_booking_item_id_fkey: public.sub_orders.booking_item_id > public.booking_items.id [delete: no action, update: no action]
+Ref sub_orders_original_slot_id_fkey: public.sub_orders.original_slot_id > public.service_slots.id [delete: no action, update: no action]
+Ref sub_orders_waiver_accepted_by_fkey: public.sub_orders.waiver_accepted_by > public.users.id [delete: no action, update: no action]
+
+// ===== OPTIONAL VISUAL TABLE GROUPS =====
+// All tables are assigned exactly once.
+
+TableGroup G01_Users_Identity {
+  public.users
+  public.refresh_tokens
+  public.password_reset_tokens
+}
+
+TableGroup G02_Vendors {
+  public.vendors
+  public.vendor_documents
+}
+
+TableGroup G03_Catalog_Discovery {
+  public.categories
+  public.services
+  public.service_images
+  public.service_options
+  public.service_safety_documents
+  public.wishlists
+  public.recently_vieweds
+}
+
+TableGroup G04_Slots_Bookings {
+  public.service_slots
+  public.service_slot_units
+  public.bookings
+  public.booking_items
+  public.booking_item_allocations
+  public.sub_orders
+  public.checkin_tokens
+}
+
+TableGroup G05_Orders_Payments {
+  public.master_orders
+  public.payments
+  public.refunds
+  public.invoices
+  public.discount_codes
+  public.discount_redemptions
+}
+
+TableGroup G06_Settlements_Payouts {
+  public.settlements
+  public.settlement_items
+  public.settlement_line_items
+  public.payout_requests
+}
+
+TableGroup G07_Incidents_Rescheduling {
+  public.disputes
+  public.sub_order_disruptions
+  public.sub_order_reschedule_history
+  public.sub_order_reschedule_proposals
+}
+
+TableGroup G08_Weather_Safety {
+  public.weather_caches
+  public.category_safety_rules
+  public.safety_rule_evaluations
+}
+
+TableGroup G09_AI_Assistant {
+  public.ai_assessment_cases
+  public.ai_chat_requests
+  public.ai_confirmation_outcomes
+  public.ai_conversations
+  public.ai_customer_preferences
+  public.ai_customer_support_requests
+  public.ai_itineraries
+  public.ai_itinerary_items
+  public.ai_itinerary_previews
+  public.ai_itinerary_proposals
+  public.ai_itinerary_revisions
+  public.ai_messages
+  public.ai_recommendation_feedback
+  public.ai_recommendations
+  public.assistant_audit_logs
+}
+
+TableGroup G10_Messaging_Reviews {
+  public.conversations
+  public.messages
+  public.notifications
+  public.reviews
+}
+
+TableGroup G11_System_Admin {
+  public.audit_logs
+  public.system_configs
+  public.flyway_schema_history
+}
