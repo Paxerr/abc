@@ -78,22 +78,49 @@ class CatalogRepository {
     return ServiceModel(
       id: json['id'] as String,
       name: json['name'] as String,
-      vendorId: '',
-      vendorName: '',
-      vendorBadge: VendorBadgeTier.none,
+      vendorId: json['vendorId'] as String? ?? '',
+      vendorName: json['businessName'] as String? ?? '',
+      vendorBadge: switch (json['badgeTier']) {
+        'VERIFIED' => VendorBadgeTier.verified,
+        'TOP_RATED' => VendorBadgeTier.topRated,
+        _ => VendorBadgeTier.none,
+      },
       categoryId: json['categoryId'] as String? ?? '',
       categoryName: json['categoryName'] as String? ?? '',
       slug: '',
       description:
           (json['description'] ?? json['shortDescription'] ?? '') as String,
       price: (json['promotionalPrice'] as num? ?? number('price')).round(),
-      durationMinutes: 0,
-      capacityPerSlot: 0,
+      durationMinutes: number('duration').toInt(),
+      capacityPerSlot: number('capacity').toInt(),
       locationName: address,
       address: address,
       latitude: number('latitude').toDouble(),
       longitude: number('longitude').toDouble(),
-      waiverContent: '',
+      waiverContent: json['waiverContent'] as String? ?? '',
+      participantConditions: json['participantConditions'] as String? ?? '',
+      refundPolicy: json['refundPolicy'] as String? ?? '',
+      cancellationPolicy: json['cancellationPolicy'] as String? ?? '',
+      safetyRules: json['safetyRules'] as String? ?? '',
+      waiverRequired: json['waiverRequired'] as bool?,
+      availableSlots: (json['availableSlots'] as List? ?? [])
+          .whereType<String>()
+          .toList(),
+      catalogSlots: (json['slots'] as List? ?? [])
+          .whereType<Map>()
+          .map(
+            (slot) => CatalogSlot(
+              id: slot['slotId'] as String? ?? '',
+              date: slot['date'] as String? ?? '',
+              startTime: slot['startTime'] as String? ?? '',
+              endTime: slot['endTime'] as String? ?? '',
+              availableCapacity: (slot['availableCapacity'] as num?)?.toInt(),
+              price: slot['price'] as num?,
+              pricingUnit: slot['pricingUnit'] as String?,
+              bookable: slot['bookable'] == true,
+            ),
+          )
+          .toList(),
       weatherSensitive: false,
       avgRating: number('averageRating').toDouble(),
       ratingCount: number('reviewCount').toInt(),

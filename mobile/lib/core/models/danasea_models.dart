@@ -38,6 +38,7 @@ class UserModel {
 // ==========================================
 
 enum VendorBadgeTier { none, verified, topRated }
+
 enum VendorVerificationStatus { pending, approved, rejected }
 
 class VendorModel {
@@ -98,6 +99,24 @@ class CategoryModel {
 
 enum ServiceStatus { draft, pendingReview, published, rejected, paused }
 
+class CatalogSlot {
+  final String id, date, startTime, endTime;
+  final int? availableCapacity;
+  final num? price;
+  final String? pricingUnit;
+  final bool bookable;
+  const CatalogSlot({
+    required this.id,
+    required this.date,
+    required this.startTime,
+    required this.endTime,
+    this.availableCapacity,
+    this.price,
+    this.pricingUnit,
+    required this.bookable,
+  });
+}
+
 class ServiceModel {
   final String id;
   final String vendorId;
@@ -126,6 +145,13 @@ class ServiceModel {
   final int viewCount;
   final List<String> imageUrls;
   final bool isFavorite;
+  final String participantConditions,
+      refundPolicy,
+      cancellationPolicy,
+      safetyRules;
+  final bool? waiverRequired;
+  final List<CatalogSlot> catalogSlots;
+  final List<String> availableSlots;
 
   const ServiceModel({
     required this.id,
@@ -155,11 +181,16 @@ class ServiceModel {
     this.viewCount = 0,
     this.imageUrls = const [],
     this.isFavorite = false,
+    this.participantConditions = '',
+    this.refundPolicy = '',
+    this.cancellationPolicy = '',
+    this.safetyRules = '',
+    this.waiverRequired,
+    this.catalogSlots = const [],
+    this.availableSlots = const [],
   });
 
-  ServiceModel copyWith({
-    bool? isFavorite,
-  }) {
+  ServiceModel copyWith({bool? isFavorite}) {
     return ServiceModel(
       id: id,
       vendorId: vendorId,
@@ -188,6 +219,13 @@ class ServiceModel {
       viewCount: viewCount,
       imageUrls: imageUrls,
       isFavorite: isFavorite ?? this.isFavorite,
+      participantConditions: participantConditions,
+      refundPolicy: refundPolicy,
+      cancellationPolicy: cancellationPolicy,
+      safetyRules: safetyRules,
+      waiverRequired: waiverRequired,
+      catalogSlots: catalogSlots,
+      availableSlots: availableSlots,
     );
   }
 }
@@ -199,7 +237,7 @@ class ServiceSlotModel {
   final String serviceId;
   final DateTime date;
   final String startTime; // "05:00"
-  final String endTime;   // "07:00"
+  final String endTime; // "07:00"
   final int capacity;
   final int bookedCount;
   final SlotStatus status;
@@ -320,6 +358,7 @@ class SubOrderModel {
 // ==========================================
 
 enum RefundReason { customerCancel, weather, dispute, compensation }
+
 enum RefundStatus { pending, processed, failed }
 
 class RefundModel {
