@@ -193,7 +193,7 @@ export function Auth() {
                         <div className="p-space-md rounded-2xl bg-error-container text-on-error-container flex items-start gap-2">
                           <span className="material-symbols-outlined text-[20px] text-error flex-shrink-0 mt-0.5">error</span>
                           <div>
-                            <p className="font-body-sm text-body-sm font-medium">Email hoặc mật khẩu không chính xác. Mật khẩu mặc định của tài khoản thử nghiệm là: <span className="font-mono font-bold">123456</span></p>
+                            <p className="font-body-sm text-body-sm font-medium">Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại thông tin.</p>
                           </div>
                         </div>
                       )}
