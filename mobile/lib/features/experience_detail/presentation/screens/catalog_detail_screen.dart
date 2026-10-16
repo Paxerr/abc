@@ -88,6 +88,24 @@ class _CatalogDetailScreenState extends State<CatalogDetailScreen> {
     }
   }
 
+  List<Widget> _section(String title, String value) => value.trim().isEmpty
+      ? []
+      : [
+          const Divider(height: 32),
+          LocalizedText(title, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          Text(value),
+        ];
+
+  String _time(String value) =>
+      value.length >= 5 ? value.substring(0, 5) : value;
+  String _date(String value) {
+    final date = DateTime.tryParse(value);
+    return date == null
+        ? value
+        : '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final service = _service;
@@ -203,6 +221,89 @@ class _CatalogDetailScreenState extends State<CatalogDetailScreen> {
                         const LocalizedText('Giới thiệu'),
                         const SizedBox(height: 8),
                         Text(service.description),
+                        ..._section('Nhà cung cấp', service.vendorName),
+                        if (service.vendorName.isNotEmpty &&
+                            service.vendorBadge != VendorBadgeTier.none)
+                          LocalizedText(
+                            service.vendorBadge == VendorBadgeTier.topRated
+                                ? 'Được đánh giá cao'
+                                : 'Đã xác minh',
+                          ),
+                        if (service.durationMinutes > 0)
+                          ..._section(
+                            'Thời lượng',
+                            tr(context, '${service.durationMinutes} phút'),
+                          ),
+                        if (service.capacityPerSlot > 0)
+                          ..._section(
+                            'Sức chứa',
+                            tr(context, '${service.capacityPerSlot} khách'),
+                          ),
+                        ..._section(
+                          'Điều kiện tham gia',
+                          service.participantConditions,
+                        ),
+                        if (service.catalogSlots.isNotEmpty) ...[
+                          const Divider(height: 32),
+                          LocalizedText(
+                            'Lịch trải nghiệm',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          for (final slot in service.catalogSlots)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${_date(slot.date)} · ${_time(slot.startTime)} – ${_time(slot.endTime)}',
+                                  ),
+                                  if (slot.availableCapacity != null)
+                                    Text(
+                                      tr(
+                                        context,
+                                        'Còn ${slot.availableCapacity} chỗ',
+                                      ),
+                                    ),
+                                  if (slot.price != null)
+                                    Text(
+                                      '${slot.price!.round()} đ${slot.pricingUnit == 'PER_PERSON'
+                                          ? tr(context, '/người')
+                                          : slot.pricingUnit == 'PER_PACKAGE'
+                                          ? tr(context, '/gói')
+                                          : ''}',
+                                    ),
+                                  LocalizedText(
+                                    slot.bookable
+                                        ? 'Có thể đặt'
+                                        : 'Không thể đặt',
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ] else if (service.availableSlots.isNotEmpty)
+                          ..._section(
+                            'Lịch trải nghiệm',
+                            service.availableSlots.join('\n'),
+                          ),
+                        ..._section(
+                          'Chính sách hoàn tiền',
+                          service.refundPolicy,
+                        ),
+                        ..._section(
+                          'Chính sách hủy',
+                          service.cancellationPolicy,
+                        ),
+                        ..._section('Quy định an toàn', service.safetyRules),
+                        if (service.waiverRequired == true)
+                          ..._section(
+                            'Cam kết tham gia',
+                            tr(
+                              context,
+                              'Cần xác nhận cam kết trước khi tham gia.',
+                            ),
+                          ),
+                        ..._section('Nội dung cam kết', service.waiverContent),
                         const SizedBox(height: 24),
                         const LocalizedText('Đặt chỗ hiện chưa khả dụng.'),
                       ],
