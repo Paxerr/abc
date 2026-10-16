@@ -23,6 +23,7 @@ export function Auth() {
   const [otpCode, setOtpCode] = useState("");
   const [otpCooldown, setOtpCooldown] = useState(0);
   const [otpSessionExpiresAt, setOtpSessionExpiresAt] = useState<number | null>(null);
+  const [pendingUser, setPendingUser] = useState<User | null>(null);
 
   // General Feedback States
   const [banner, setBanner] = useState<string | null>(null);
@@ -33,6 +34,7 @@ export function Auth() {
   
   const navigate = useNavigate();
   const setAuth = useAuthStore(state => state.setAuth);
+  const setPendingToken = useAuthStore(state => state.setPendingToken);
 
   // 60-second OTP cooldown ticker
   useEffect(() => {
@@ -52,6 +54,7 @@ export function Auth() {
         console.warn('[Auth OTP] Phiên xác thực OTP 15 phút đã hết hạn. Đang chuyển về form đăng ký...');
         setRegStep('form');
         setOtpCode('');
+        setPendingUser(null);
         setOtpSessionExpiresAt(null);
         useAuthStore.getState().logout();
         setBanner('custom_error');
@@ -223,8 +226,9 @@ export function Auth() {
         locale: 'vi',
       };
 
-      // Set auth so subsequent /auth/otp/send and verify requests carry Authorization header
-      setAuth(userModel, authRes.accessToken);
+      // Store temporary registration token in unauthenticated state for OTP endpoints
+      setPendingUser(userModel);
+      setPendingToken(authRes.accessToken);
 
       console.log('[Bước 3/4] Đang yêu cầu Backend phát sinh và gửi mã OTP (/api/auth/otp/send)...');
       try {
@@ -282,6 +286,7 @@ export function Auth() {
       if (status === 401) {
         setRegStep('form');
         setOtpCode('');
+        setPendingUser(null);
         setOtpSessionExpiresAt(null);
         useAuthStore.getState().logout();
         setBanner('custom_error');
@@ -320,10 +325,9 @@ export function Auth() {
       await authService.verifyOtp({ code: cleanOtp });
       console.log('[Bước 3/4] Backend xác thực OTP thành công (200 OK)!');
 
-      // Update state: isEmailVerified = true
-      const currentUser = useAuthStore.getState().user;
-      if (currentUser) {
-        setAuth({ ...currentUser, isEmailVerified: true }, useAuthStore.getState().accessToken || '');
+      // Update state: user is now fully verified and authenticated
+      if (pendingUser) {
+        setAuth({ ...pendingUser, isEmailVerified: true }, useAuthStore.getState().accessToken || '');
       }
 
       setToastMessage('Đăng ký & Kích hoạt thành công!');
@@ -344,6 +348,7 @@ export function Auth() {
       if (status === 401) {
         setRegStep('form');
         setOtpCode('');
+        setPendingUser(null);
         setOtpSessionExpiresAt(null);
         useAuthStore.getState().logout();
         setBanner('custom_error');
@@ -786,7 +791,9 @@ export function Auth() {
                           onClick={() => {
                             setRegStep("form");
                             setOtpCode("");
+                            setPendingUser(null);
                             setOtpSessionExpiresAt(null);
+                            useAuthStore.getState().logout();
                             setBanner(null);
                             setErrorMessage(null);
                           }}
