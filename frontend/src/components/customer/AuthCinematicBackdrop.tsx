@@ -120,13 +120,6 @@ export const AuthCinematicBackdrop: React.FC<AuthCinematicBackdropProps> = ({
     };
   }, []);
 
-  const handleSelectScene = (index: number) => {
-    setCurrentIndex(index);
-    setProgressKey((k) => k + 1);
-  };
-
-  const activeScene = AUTH_SCENES[currentIndex];
-
   return (
     <>
       {/* Top Countdown Progress Line */}
@@ -168,35 +161,6 @@ export const AuthCinematicBackdrop: React.FC<AuthCinematicBackdropProps> = ({
 
         {/* Optical Contrast Scrim: Rich coastal gradient ensuring optimal text & card readability */}
         <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/85 via-slate-950/50 to-slate-950/70 pointer-events-none" />
-      </div>
-
-      {/* HUD Floating Scene Indicator Badge & Dots Controller (positioned next to DevRoleSwitcher) */}
-      <div className="fixed bottom-5 left-52 sm:left-56 z-40 hidden md:flex items-center gap-3 px-4 py-2 rounded-full bg-slate-950/75 backdrop-blur-md border border-white/20 text-white shadow-[0_8px_32px_rgba(0,0,0,0.4)] pointer-events-auto">
-        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-        <span className="font-mono text-xs font-bold text-cyan-300 tracking-wider">
-          {activeScene.badge}
-        </span>
-        <span className="text-white/30 text-xs">|</span>
-        <span className="text-xs font-semibold tracking-wide text-slate-100 max-w-[200px] truncate">
-          {activeScene.label}
-        </span>
-
-        {/* Clickable Dots to quickly switch scenes */}
-        <div className="flex items-center gap-1.5 ml-2 border-l border-white/20 pl-3">
-          {AUTH_SCENES.map((scene, idx) => (
-            <button
-              key={scene.id}
-              type="button"
-              onClick={() => handleSelectScene(idx)}
-              title={scene.label}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                idx === currentIndex
-                  ? 'w-6 bg-cyan-400 shadow-sm'
-                  : 'w-2 bg-white/40 hover:bg-white/80'
-              }`}
-            />
-          ))}
-        </div>
       </div>
     </>
   );
