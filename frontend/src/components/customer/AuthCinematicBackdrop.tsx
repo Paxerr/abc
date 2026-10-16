@@ -170,8 +170,8 @@ export const AuthCinematicBackdrop: React.FC<AuthCinematicBackdropProps> = ({
         <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/85 via-slate-950/50 to-slate-950/70 pointer-events-none" />
       </div>
 
-      {/* HUD Floating Scene Indicator Badge & Dots Controller at bottom-left */}
-      <div className="fixed bottom-6 left-6 z-40 hidden md:flex items-center gap-3 px-4 py-2.5 rounded-full bg-slate-950/75 backdrop-blur-md border border-white/20 text-white shadow-[0_8px_32px_rgba(0,0,0,0.4)] pointer-events-auto">
+      {/* HUD Floating Scene Indicator Badge & Dots Controller (positioned next to DevRoleSwitcher) */}
+      <div className="fixed bottom-5 left-52 sm:left-56 z-40 hidden md:flex items-center gap-3 px-4 py-2 rounded-full bg-slate-950/75 backdrop-blur-md border border-white/20 text-white shadow-[0_8px_32px_rgba(0,0,0,0.4)] pointer-events-auto">
         <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
         <span className="font-mono text-xs font-bold text-cyan-300 tracking-wider">
           {activeScene.badge}

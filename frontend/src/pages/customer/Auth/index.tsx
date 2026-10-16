@@ -149,7 +149,7 @@ export function Auth() {
         </aside>
       )}
 
-      <div className="w-full max-w-[1140px] grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center relative z-10 my-auto">
+      <div className="w-full max-w-[1180px] grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center relative z-10 -translate-y-6 sm:-translate-y-9 translate-x-3 sm:translate-x-8 lg:translate-x-14 my-auto">
         {/* Left Column: Coastal Brand Messaging */}
         <div className="lg:col-span-5 hidden lg:flex flex-col space-y-3">
           <h1 className="text-3xl xl:text-4xl font-extrabold text-white leading-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
@@ -161,7 +161,7 @@ export function Auth() {
         </div>
         
         {/* Right Column: Auth Form Card */}
-        <div className="lg:col-span-7 flex justify-center w-full">
+        <div className="lg:col-span-7 flex justify-center lg:justify-end w-full lg:pr-4">
           <div className="w-full max-w-md bg-surface-container-lowest/95 backdrop-blur-2xl rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.35)] border border-white/30 p-5 sm:p-6 space-y-3.5">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary shadow-sm">
