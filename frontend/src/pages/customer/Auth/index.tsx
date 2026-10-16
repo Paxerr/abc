@@ -128,7 +128,7 @@ export function Auth() {
   };
 
   return (
-    <main className="w-full min-h-screen pt-20 bg-slate-950 flex flex-col justify-center items-center relative overflow-x-hidden">
+    <main className="w-full flex-1 flex flex-col justify-center items-center relative overflow-hidden px-4 py-3 sm:py-6">
       {/* Dynamic Auto-Rotating Coastal Scene Backdrop (Same scenic imagery as Home page) */}
       <AuthCinematicBackdrop autoRotateInterval={5500} />
 
@@ -137,252 +137,258 @@ export function Auth() {
         <aside
           role="status"
           aria-live="polite"
-          className="fixed top-6 right-6 z-[9999] px-6 py-3.5 rounded-2xl bg-green-600 text-white shadow-[0_12px_32px_rgba(22,163,74,0.45)] animate-toast-slide-in flex items-center gap-2.5 pointer-events-auto border border-white/20"
+          className="fixed top-6 right-6 z-[9999] px-6 py-3 rounded-xl bg-green-600 text-white shadow-[0_12px_32px_rgba(22,163,74,0.45)] animate-toast-slide-in flex items-center gap-2.5 pointer-events-auto border border-white/20"
           style={{ backgroundColor: '#16a34a' }}
         >
-          <span className="material-symbols-outlined text-[22px] text-white" style={{ fontVariationSettings: "'FILL' 1" }}>
+          <span className="material-symbols-outlined text-[20px] text-white" style={{ fontVariationSettings: "'FILL' 1" }}>
             check_circle
           </span>
-          <span className="font-headline-sm text-sm font-semibold tracking-wide text-white">
+          <span className="text-sm font-semibold tracking-wide text-white">
             Đăng nhập thành công
           </span>
         </aside>
       )}
 
-      <div className="flex flex-col w-full relative z-10">
-        <div className="relative w-full py-space-2xl px-space-lg lg:px-margin flex justify-center items-center">
-          <div className="relative w-full max-w-[1280px] grid grid-cols-1 lg:grid-cols-12 gap-gutter-lg items-center">
-            {/* Left Column: Coastal Brand Messaging */}
-            <div className="lg:col-span-5 flex flex-col space-y-space-md">
-              <h1 className="font-headline-xl text-headline-xl text-white leading-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
-                Khám phá đại dương cùng <span className="text-cyan-400">DANASEA</span>
-              </h1>
-              <p className="font-body-lg text-body-lg text-slate-200 max-w-md drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
-                Cổng xác thực tập trung dành cho du khách trải nghiệm cano, lặn biển ngắm san hô Bán đảo Sơn Trà và nền tảng trải nghiệm &amp; thể thao biển Đà Nẵng.
-              </p>
+      <div className="w-full max-w-[1140px] grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center relative z-10 my-auto">
+        {/* Left Column: Coastal Brand Messaging */}
+        <div className="lg:col-span-5 hidden lg:flex flex-col space-y-3">
+          <h1 className="text-3xl xl:text-4xl font-extrabold text-white leading-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
+            Khám phá đại dương cùng <span className="text-cyan-400">DANASEA</span>
+          </h1>
+          <p className="text-sm xl:text-base text-slate-200 leading-relaxed max-w-md drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+            Cổng xác thực tập trung dành cho du khách trải nghiệm cano, lặn biển ngắm san hô Bán đảo Sơn Trà và nền tảng trải nghiệm &amp; thể thao biển Đà Nẵng.
+          </p>
+        </div>
+        
+        {/* Right Column: Auth Form Card */}
+        <div className="lg:col-span-7 flex justify-center w-full">
+          <div className="w-full max-w-md bg-surface-container-lowest/95 backdrop-blur-2xl rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.35)] border border-white/30 p-5 sm:p-6 space-y-3.5">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary shadow-sm">
+                <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>waves</span>
+              </div>
+              <span className="text-lg text-on-surface tracking-tight font-bold">DANA<span className="text-primary-container">SEA</span></span>
             </div>
             
-            {/* Right Column: Auth Form Card */}
-            <div className="lg:col-span-7 flex justify-center">
-              <div className="w-full max-w-xl bg-surface-container-lowest/95 backdrop-blur-2xl rounded-[28px] shadow-[0_25px_60px_rgba(0,0,0,0.35)] border border-white/30 p-space-xl sm:p-space-2xl space-y-space-lg">
-                <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center text-on-primary shadow-sm">
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>waves</span>
-                  </div>
-                  <span className="font-headline-md text-headline-md text-on-surface tracking-tight">DANA<span className="text-primary-container">SEA</span></span>
-                </div>
-                
-                <div className="relative p-1 bg-surface-container rounded-2xl flex items-center">
-                  <button className={`relative z-10 w-1/2 py-2.5 rounded-xl font-label-lg text-label-lg transition-all duration-200 flex items-center justify-center gap-2 ${activeTab === "login" ? "text-primary-container bg-surface-container-lowest shadow-sm" : "text-on-surface-variant hover:text-on-surface bg-transparent"}`} onClick={() => setActiveTab("login")}>
-                    <span className="material-symbols-outlined text-body-lg">login</span>
-                    Đăng nhập
-                  </button>
-                  <button className={`relative z-10 w-1/2 py-2.5 rounded-xl font-label-lg text-label-lg transition-all duration-200 flex items-center justify-center gap-2 ${activeTab === "register" ? "text-primary-container bg-surface-container-lowest shadow-sm" : "text-on-surface-variant hover:text-on-surface bg-transparent"}`} onClick={() => setActiveTab("register")}>
-                    <span className="material-symbols-outlined text-body-lg">person_add</span>
-                    Tạo tài khoản mới
-                  </button>
-                </div>
-                
-                {activeTab === "login" && (
-                  <div className="space-y-space-lg block">
-                    <div className="space-y-space-sm">
-                      {banner === 'locked' && (
-                        <div className="p-space-md rounded-2xl bg-error-container text-on-error-container flex items-start gap-2">
-                          <span className="material-symbols-outlined text-[20px] text-error flex-shrink-0 mt-0.5">lock_clock</span>
-                          <div>
-                            <p className="font-label-lg text-label-lg font-bold">Tài khoản tạm thời bị khóa</p>
-                            <p className="font-body-sm text-body-sm mt-0.5">Vui lòng liên hệ ban quản trị để được hỗ trợ mở khóa tài khoản.</p>
-                          </div>
-                        </div>
-                      )}
-                      {banner === 'wrong_creds' && (
-                        <div className="p-space-md rounded-2xl bg-error-container text-on-error-container flex items-start gap-2">
-                          <span className="material-symbols-outlined text-[20px] text-error flex-shrink-0 mt-0.5">error</span>
-                          <div>
-                            <p className="font-body-sm text-body-sm font-medium">Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại thông tin.</p>
-                          </div>
-                        </div>
-                      )}
-                      {banner === 'network_error' && (
-                        <div className="p-space-md rounded-2xl bg-error-container text-on-error-container flex items-start gap-2">
-                          <span className="material-symbols-outlined text-[20px] text-error flex-shrink-0 mt-0.5">cloud_off</span>
-                          <div>
-                            <p className="font-label-lg text-label-lg font-bold">Không thể kết nối đến máy chủ Backend</p>
-                            <p className="font-body-sm text-body-sm mt-0.5">{errorMessage || 'Vui lòng kiểm tra Docker và Backend Spring Boot (cổng 8080) đã được khởi động chưa.'}</p>
-                          </div>
-                        </div>
-                      )}
-                      {banner === 'custom_error' && (
-                        <div className="p-space-md rounded-2xl bg-error-container text-on-error-container flex items-start gap-2">
-                          <span className="material-symbols-outlined text-[20px] text-error flex-shrink-0 mt-0.5">warning</span>
-                          <p className="font-body-sm text-body-sm font-medium">{errorMessage}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Quick Demo Role Selector */}
-                    <div className="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/30 space-y-2.5">
-                      <div className="flex items-center justify-between">
-                        <span className="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
-                          <span className="material-symbols-outlined text-[16px] text-secondary">flash_on</span>
-                          Tài khoản thử nghiệm (1-Click Login)
-                        </span>
-                        <span className="text-[11px] font-mono text-outline">Pass: 123456</span>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <button
-                          type="button"
-                          disabled={isLoading}
-                          onClick={() => handleQuickLogin('customer')}
-                          className="p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 hover:border-primary text-left transition-all hover:shadow-md cursor-pointer group disabled:opacity-50"
-                        >
-                          <div className="flex items-center gap-1.5 text-primary font-bold font-label-sm text-label-sm">
-                            <span className="material-symbols-outlined text-[16px]">person</span>
-                            Khách hàng
-                          </div>
-                          <p className="font-label-sm text-[11px] text-on-surface-variant truncate mt-0.5">customer@danasea.vn</p>
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={isLoading}
-                          onClick={() => handleQuickLogin('vendor')}
-                          className="p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 hover:border-secondary text-left transition-all hover:shadow-md cursor-pointer group disabled:opacity-50"
-                        >
-                          <div className="flex items-center gap-1.5 text-secondary font-bold font-label-sm text-label-sm">
-                            <span className="material-symbols-outlined text-[16px]">sailing</span>
-                            Đối tác Vendor
-                          </div>
-                          <p className="font-label-sm text-[11px] text-on-surface-variant truncate mt-0.5">vendor@danasea.vn</p>
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={isLoading}
-                          onClick={() => handleQuickLogin('admin')}
-                          className="p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 hover:border-primary-container text-left transition-all hover:shadow-md cursor-pointer group disabled:opacity-50"
-                        >
-                          <div className="flex items-center gap-1.5 text-primary-container font-bold font-label-sm text-label-sm">
-                            <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
-                            Quản trị viên
-                          </div>
-                          <p className="font-label-sm text-[11px] text-on-surface-variant truncate mt-0.5">admin@danasea.vn</p>
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <form className="space-y-space-md" onSubmit={handleLoginSubmit}>
-                      <div className="space-y-1.5">
-                        <label className="font-label-md text-label-md text-on-surface flex items-center justify-between">
-                          <span>Địa chỉ Email hoặc Tên tài khoản</span>
-                          <span className="text-secondary font-label-sm text-label-sm">*Bắt buộc</span>
-                        </label>
-                        <div className="relative flex items-center">
-                          <span className="material-symbols-outlined absolute left-4 text-outline text-body-lg pointer-events-none">mail</span>
-                          <input 
-                            value={email} 
-                            onChange={e => setEmail(e.target.value)} 
-                            disabled={isLoading}
-                            className="w-full h-[52px] pl-11 pr-4 rounded-xl bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
-                            placeholder="Nhập email (vd: customer@danasea.vn)" 
-                            required 
-                            type="text" 
-                          />
+            <div className="relative p-1 bg-surface-container rounded-xl flex items-center">
+              <button 
+                type="button"
+                className={`relative z-10 w-1/2 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 ${activeTab === "login" ? "text-primary-container bg-surface-container-lowest shadow-sm" : "text-on-surface-variant hover:text-on-surface bg-transparent"}`} 
+                onClick={() => setActiveTab("login")}
+              >
+                <span className="material-symbols-outlined text-[17px]">login</span>
+                Đăng nhập
+              </button>
+              <button 
+                type="button"
+                className={`relative z-10 w-1/2 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 ${activeTab === "register" ? "text-primary-container bg-surface-container-lowest shadow-sm" : "text-on-surface-variant hover:text-on-surface bg-transparent"}`} 
+                onClick={() => setActiveTab("register")}
+              >
+                <span className="material-symbols-outlined text-[17px]">person_add</span>
+                Tạo tài khoản mới
+              </button>
+            </div>
+            
+            {activeTab === "login" && (
+              <div className="space-y-3 block">
+                {banner && (
+                  <div className="space-y-2">
+                    {banner === 'locked' && (
+                      <div className="p-2.5 rounded-xl bg-error-container text-on-error-container flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">lock_clock</span>
+                        <div>
+                          <p className="text-xs font-bold">Tài khoản tạm thời bị khóa</p>
+                          <p className="text-[11px] mt-0.5">Vui lòng liên hệ ban quản trị để được hỗ trợ mở khóa tài khoản.</p>
                         </div>
                       </div>
-                      
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <label className="font-label-md text-label-md text-on-surface">Mật khẩu</label>
-                          <a className="font-label-sm text-label-sm text-primary-container hover:underline cursor-pointer" onClick={() => navigate('/auth/forgot-password')}>
-                            Quên mật khẩu?
-                          </a>
-                        </div>
-                        <div className="relative flex items-center">
-                          <span className="material-symbols-outlined absolute left-4 text-outline text-body-lg pointer-events-none">lock</span>
-                          <input 
-                            value={password} 
-                            onChange={e => setPassword(e.target.value)} 
-                            disabled={isLoading}
-                            className="w-full h-[52px] pl-11 pr-12 rounded-xl bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
-                            placeholder="Nhập mật khẩu của bạn" 
-                            required 
-                            type="password" 
-                          />
+                    )}
+                    {banner === 'wrong_creds' && (
+                      <div className="p-2.5 rounded-xl bg-error-container text-on-error-container flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">error</span>
+                        <p className="text-xs font-medium">Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại thông tin.</p>
+                      </div>
+                    )}
+                    {banner === 'network_error' && (
+                      <div className="p-2.5 rounded-xl bg-error-container text-on-error-container flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">cloud_off</span>
+                        <div>
+                          <p className="text-xs font-bold">Không thể kết nối đến máy chủ Backend</p>
+                          <p className="text-[11px] mt-0.5">{errorMessage || 'Vui lòng kiểm tra Docker và Backend Spring Boot (cổng 8080) đã được khởi động chưa.'}</p>
                         </div>
                       </div>
-                      
-                      <button 
-                        className="w-full h-[52px] rounded-xl bg-primary-container text-on-primary font-label-lg text-label-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:bg-primary transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed" 
-                        type="submit"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <span className="material-symbols-outlined animate-spin text-body-lg">progress_activity</span>
-                            <span>Đang xác thực thông tin...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>Đăng nhập hệ sinh thái DANASEA</span>
-                            <span className="material-symbols-outlined text-body-lg">arrow_forward</span>
-                          </>
-                        )}
-                      </button>
-                    </form>
-                    
-                    <div className="pt-space-xs text-center">
-                      <p className="font-body-sm text-body-sm text-on-surface-variant">
-                        Chưa có tài khoản tham gia trải nghiệm? 
-                        <button type="button" className="text-primary-container font-semibold hover:underline bg-transparent border-0 cursor-pointer ml-1" onClick={() => setActiveTab("register")}>Đăng ký thành viên ngay</button>
-                      </p>
-                    </div>
+                    )}
+                    {banner === 'custom_error' && (
+                      <div className="p-2.5 rounded-xl bg-error-container text-on-error-container flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">warning</span>
+                        <p className="text-xs font-medium">{errorMessage}</p>
+                      </div>
+                    )}
                   </div>
                 )}
 
+                {/* Quick Demo Role Selector */}
+                <div className="p-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-on-surface uppercase tracking-wider flex items-center gap-1 text-[11px]">
+                      <span className="material-symbols-outlined text-[14px] text-secondary">flash_on</span>
+                      1-Click Login
+                    </span>
+                    <span className="text-[11px] font-mono text-outline">Pass: 123456</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <button
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => handleQuickLogin('customer')}
+                      className="p-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 hover:border-primary text-left transition-all hover:shadow-sm cursor-pointer group disabled:opacity-50"
+                    >
+                      <div className="flex items-center gap-1 text-primary font-bold text-xs">
+                        <span className="material-symbols-outlined text-[14px]">person</span>
+                        <span>Khách</span>
+                      </div>
+                      <p className="text-[10px] text-on-surface-variant truncate mt-0.5">customer</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => handleQuickLogin('vendor')}
+                      className="p-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 hover:border-secondary text-left transition-all hover:shadow-sm cursor-pointer group disabled:opacity-50"
+                    >
+                      <div className="flex items-center gap-1 text-secondary font-bold text-xs">
+                        <span className="material-symbols-outlined text-[14px]">sailing</span>
+                        <span>Vendor</span>
+                      </div>
+                      <p className="text-[10px] text-on-surface-variant truncate mt-0.5">vendor</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => handleQuickLogin('admin')}
+                      className="p-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 hover:border-primary-container text-left transition-all hover:shadow-sm cursor-pointer group disabled:opacity-50"
+                    >
+                      <div className="flex items-center gap-1 text-primary-container font-bold text-xs">
+                        <span className="material-symbols-outlined text-[14px]">admin_panel_settings</span>
+                        <span>Admin</span>
+                      </div>
+                      <p className="text-[10px] text-on-surface-variant truncate mt-0.5">admin</p>
+                    </button>
+                  </div>
+                </div>
+                
+                <form className="space-y-2.5" onSubmit={handleLoginSubmit}>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-on-surface flex items-center justify-between">
+                      <span>Địa chỉ Email hoặc Tên tài khoản</span>
+                      <span className="text-secondary text-[11px]">*Bắt buộc</span>
+                    </label>
+                    <div className="relative flex items-center">
+                      <span className="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">mail</span>
+                      <input 
+                        value={email} 
+                        onChange={e => setEmail(e.target.value)} 
+                        disabled={isLoading}
+                        className="w-full h-[42px] pl-10 pr-3 rounded-xl bg-surface-container-lowest text-on-surface text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
+                        placeholder="Nhập email (vd: customer@danasea.vn)" 
+                        required 
+                        type="text" 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-on-surface">Mật khẩu</label>
+                      <a className="text-[11px] text-primary-container hover:underline cursor-pointer" onClick={() => navigate('/auth/forgot-password')}>
+                        Quên mật khẩu?
+                      </a>
+                    </div>
+                    <div className="relative flex items-center">
+                      <span className="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">lock</span>
+                      <input 
+                        value={password} 
+                        onChange={e => setPassword(e.target.value)} 
+                        disabled={isLoading}
+                        className="w-full h-[42px] pl-10 pr-10 rounded-xl bg-surface-container-lowest text-on-surface text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
+                        placeholder="Nhập mật khẩu" 
+                        required 
+                        type="password" 
+                      />
+                    </div>
+                  </div>
+                  
+                  <button 
+                    className="w-full h-[44px] rounded-xl bg-primary-container text-on-primary text-sm font-semibold flex items-center justify-center gap-2 shadow-md hover:bg-primary transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed mt-1" 
+                    type="submit"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                        <span>Đang xác thực thông tin...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Đăng nhập hệ sinh thái DANASEA</span>
+                        <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+                
+                <div className="pt-1 text-center">
+                  <p className="text-xs text-on-surface-variant">
+                    Chưa có tài khoản tham gia trải nghiệm? 
+                    <button type="button" className="text-primary-container font-semibold hover:underline bg-transparent border-0 cursor-pointer ml-1" onClick={() => setActiveTab("register")}>Đăng ký thành viên ngay</button>
+                  </p>
+                </div>
+              </div>
+            )}
+
                 {activeTab === "register" && (
-                  <div className="space-y-space-md">
-                    <div className="space-y-1">
-                      <h3 className="font-headline-sm text-headline-sm text-on-surface">Đăng ký tài khoản du khách &amp; đối tác</h3>
-                      <p className="font-body-sm text-body-sm text-on-surface-variant">Điền đầy đủ thông tin chuẩn định danh để nhận vé QR chính chủ tại cảng biển Đà Nẵng.</p>
+                  <div className="space-y-3">
+                    <div className="space-y-0.5">
+                      <h3 className="text-sm font-bold text-on-surface">Đăng ký tài khoản du khách &amp; đối tác</h3>
+                      <p className="text-xs text-on-surface-variant">Điền thông tin để nhận mã QR vé điện tử chính chủ tại cảng Đà Nẵng.</p>
                     </div>
                     {banner === 'register_error' && (
-                      <div className="p-space-md rounded-2xl bg-error-container text-on-error-container">
-                        <p className="font-body-sm text-body-sm font-semibold">Địa chỉ email này đã được đăng ký trong hệ thống DANASEA.</p>
+                      <div className="p-2.5 rounded-xl bg-error-container text-on-error-container">
+                        <p className="text-xs font-semibold">Địa chỉ email này đã được đăng ký trong hệ thống DANASEA.</p>
                       </div>
                     )}
-                    <form className="space-y-space-md" onSubmit={handleRegisterSubmit}>
+                    <form className="space-y-2.5" onSubmit={handleRegisterSubmit}>
                       <div className="space-y-1">
-                        <label className="font-label-md text-label-md text-on-surface flex items-center justify-between">
+                        <label className="text-xs font-medium text-on-surface flex items-center justify-between">
                           <span>Họ và tên</span>
-                          <span className="text-secondary font-label-sm text-label-sm">*Bắt buộc</span>
+                          <span className="text-secondary text-[11px]">*Bắt buộc</span>
                         </label>
                         <div className="relative flex items-center">
-                          <span className="material-symbols-outlined absolute left-4 text-outline text-body-lg pointer-events-none">badge</span>
-                          <input className="w-full h-[50px] pl-11 pr-4 rounded-xl bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none focus:shadow-md transition-all placeholder:text-outline-variant" placeholder="Ví dụ: Nguyễn Hải Đăng" required type="text" />
+                          <span className="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">badge</span>
+                          <input className="w-full h-[42px] pl-10 pr-3 rounded-xl bg-surface-container-lowest text-on-surface text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant" placeholder="Ví dụ: Nguyễn Hải Đăng" required type="text" />
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <label className="font-label-md text-label-md text-on-surface flex items-center justify-between">
+                        <label className="text-xs font-medium text-on-surface flex items-center justify-between">
                           <span>Địa chỉ Email</span>
-                          <span className="text-secondary font-label-sm text-label-sm">*Bắt buộc</span>
+                          <span className="text-secondary text-[11px]">*Bắt buộc</span>
                         </label>
                         <div className="relative flex items-center">
-                          <span className="material-symbols-outlined absolute left-4 text-outline text-body-lg pointer-events-none">mail</span>
-                          <input className="w-full h-[50px] pl-11 pr-4 rounded-xl bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none focus:shadow-md transition-all placeholder:text-outline-variant" placeholder="ban@email.com" required type="email" />
+                          <span className="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">mail</span>
+                          <input className="w-full h-[42px] pl-10 pr-3 rounded-xl bg-surface-container-lowest text-on-surface text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant" placeholder="ban@email.com" required type="email" />
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <label className="font-label-md text-label-md text-on-surface flex items-center justify-between">
+                        <label className="text-xs font-medium text-on-surface flex items-center justify-between">
                           <span>Mật khẩu</span>
-                          <span className="text-secondary font-label-sm text-label-sm">*Bắt buộc</span>
+                          <span className="text-secondary text-[11px]">*Bắt buộc</span>
                         </label>
                         <div className="relative flex items-center">
-                          <span className="material-symbols-outlined absolute left-4 text-outline text-body-lg pointer-events-none">lock</span>
-                          <input className="w-full h-[50px] pl-11 pr-4 rounded-xl bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none focus:shadow-md transition-all placeholder:text-outline-variant" placeholder="Nhập mật khẩu" required type="password" />
+                          <span className="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">lock</span>
+                          <input className="w-full h-[42px] pl-10 pr-3 rounded-xl bg-surface-container-lowest text-on-surface text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant" placeholder="Nhập mật khẩu" required type="password" />
                         </div>
                       </div>
-                      <button className="w-full h-[52px] rounded-xl bg-surface-container-high text-on-surface font-label-lg text-label-lg font-semibold flex items-center justify-center gap-2 hover:bg-surface-dim transition-all duration-200 cursor-pointer" type="submit">
+                      <button className="w-full h-[44px] rounded-xl bg-primary-container text-on-primary text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary transition-all duration-200 cursor-pointer shadow-md mt-1" type="submit">
                         Tạo tài khoản miễn phí
                       </button>
                     </form>
@@ -391,8 +397,6 @@ export function Auth() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
     </main>
   );
 }

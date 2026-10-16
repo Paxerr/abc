@@ -55,19 +55,20 @@ export function CustomerLayout() {
   }, [location.hash]);
 
   const isHomePage = location.pathname === '/';
+  const isAuthPage = location.pathname === '/auth';
 
   return (
-    <div className={`${isHomePage ? 'bg-transparent' : 'bg-surface'} font-body-md text-on-surface min-h-full flex flex-col overflow-x-hidden`}>
+    <div className={`${isHomePage ? 'bg-transparent' : isAuthPage ? 'bg-slate-950' : 'bg-surface'} font-body-md text-on-surface min-h-screen flex flex-col overflow-x-hidden`}>
       <Header />
       {/* Bao bọc Outlet bằng một the div chứa key={location.pathname} để ép React render lại khi đổi route */}
       <div
         key={location.pathname}
         onAnimationEnd={() => setAnimationClass("")}
-        className={`flex-1 ${animationClass}`}
+        className={`flex-1 flex flex-col ${animationClass}`}
       >
         <Outlet />
       </div>
-      <Footer />
+      {!isAuthPage && <Footer />}
 
       {/* Global Floating Wishlist Toast Notification (Chuyển lên góc phải trên, tone màu nền cyan chủ đạo) */}
       {toastMessage && (
