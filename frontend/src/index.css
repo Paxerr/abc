@@ -50,6 +50,11 @@
   --color-on-secondary-fixed: #400200;
   --color-on-primary-fixed: #001f24;
   --color-surface-dim: #d6dbdc;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+  --color-green-700: #15803d;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
 
   --font-sans: 'Inter', sans-serif;
   --font-heading: 'Inter', sans-serif;
@@ -425,5 +430,48 @@
   transform-origin: top center;
   will-change: transform, opacity;
 }
+
+@keyframes toastSlideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(120%) scale(0.95);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(-8px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toastProgress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-toast-slide-in {
+  animation: toastSlideInRight 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-toast-progress {
+  animation: toastProgress 1.2s linear forwards;
+}
+
+@keyframes sceneCountdown {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
 
 
