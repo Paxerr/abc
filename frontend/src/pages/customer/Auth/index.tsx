@@ -133,13 +133,14 @@ export function Auth() {
         <aside
           role="status"
           aria-live="polite"
-          className="fixed top-6 right-6 z-[9999] px-5 py-3.5 rounded-2xl bg-emerald-600 text-white shadow-[0_12px_32px_rgba(5,150,105,0.4)] animate-toast-slide-in flex items-center gap-2.5 pointer-events-auto border border-emerald-400/30"
+          className="fixed top-6 right-6 z-[9999] px-6 py-3.5 rounded-2xl bg-green-600 text-white shadow-[0_12px_32px_rgba(22,163,74,0.45)] animate-toast-slide-in flex items-center gap-2.5 pointer-events-auto border border-white/20"
+          style={{ backgroundColor: '#16a34a' }}
         >
           <span className="material-symbols-outlined text-[22px] text-white" style={{ fontVariationSettings: "'FILL' 1" }}>
             check_circle
           </span>
           <span className="font-headline-sm text-sm font-semibold tracking-wide text-white">
-            Đăng nhập thành công!
+            Đăng nhập thành công
           </span>
         </aside>
       )}

@@ -50,6 +50,11 @@
   --color-on-secondary-fixed: #400200;
   --color-on-primary-fixed: #001f24;
   --color-surface-dim: #d6dbdc;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+  --color-green-700: #15803d;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
 
   --font-sans: 'Inter', sans-serif;
   --font-heading: 'Inter', sans-serif;
