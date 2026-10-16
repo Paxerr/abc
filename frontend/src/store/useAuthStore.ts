@@ -5,8 +5,10 @@ import { MOCK_TEST_ACCOUNTS } from '../mockData';
 
 interface AuthState {
   user: User | null;
+  accessToken: string | null;
   isAuthenticated: boolean;
-  login: (userData: User) => void;
+  setAuth: (user: User, token: string) => void;
+  login: (userData: User, token?: string) => void;
   logout: () => void;
   switchRole: (roleKey: 'customer' | 'vendor' | 'admin') => User;
 }
@@ -14,13 +16,33 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      user: MOCK_TEST_ACCOUNTS.customer,
-      isAuthenticated: true,
-      login: (userData) => set({ user: userData, isAuthenticated: true }),
-      logout: () => set({ user: null, isAuthenticated: false }),
+      user: null,
+      accessToken: null,
+      isAuthenticated: false,
+
+      setAuth: (user, token) => {
+        console.log('[useAuthStore] Setting authenticated user:', user.email, 'Role:', user.role);
+        set({ user, accessToken: token, isAuthenticated: true });
+      },
+
+      login: (userData, token) => {
+        console.log('[useAuthStore] login() invoked for:', userData.email);
+        set({
+          user: userData,
+          accessToken: token || null,
+          isAuthenticated: true,
+        });
+      },
+
+      logout: () => {
+        console.log('[useAuthStore] logout() invoked. Clearing state.');
+        set({ user: null, accessToken: null, isAuthenticated: false });
+      },
+
       switchRole: (roleKey) => {
         const targetUser = MOCK_TEST_ACCOUNTS[roleKey];
-        set({ user: targetUser, isAuthenticated: true });
+        console.log('[useAuthStore] switchRole() to:', roleKey);
+        set({ user: targetUser, accessToken: `mock_jwt_token_${roleKey}`, isAuthenticated: true });
         return targetUser;
       },
     }),

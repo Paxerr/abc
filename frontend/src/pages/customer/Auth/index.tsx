@@ -1,52 +1,121 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../store/useAuthStore";
-import { MOCK_TEST_ACCOUNTS } from "../../../mockData";
+import { authService } from "../../../services/authService";
+import type { User } from "../../../types";
 
 export function Auth() {
   const [activeTab, setActiveTab] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [banner, setBanner] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
-  const login = useAuthStore(state => state.login);
+  const setAuth = useAuthStore(state => state.setAuth);
+
+  const executeLogin = async (emailInput: string, passwordInput: string) => {
+    const trimmedEmail = emailInput.trim();
+    if (!trimmedEmail || !passwordInput) {
+      setBanner('wrong_creds');
+      setErrorMessage(null);
+      return;
+    }
+
+    setIsLoading(true);
+    setBanner(null);
+    setErrorMessage(null);
+
+    console.groupCollapsed(`%c[Auth Flow] Đang đăng nhập: ${trimmedEmail}`, 'color: #0284c7; font-weight: bold;');
+    console.log('[Bước 1/5] Kiểm tra tham số gửi đi:', { email: trimmedEmail, password: '***' });
+    console.log('[Bước 2/5] Đang gửi HTTP POST /api/auth/login tới Backend...');
+
+    try {
+      const authRes = await authService.login({
+        email: trimmedEmail,
+        password: passwordInput,
+      });
+
+      console.log('[Bước 3/5] Backend trả về kết quả thành công (200 OK):', authRes);
+
+      // Construct user model from AuthenticationResponse
+      const role = authRes.role;
+      const avatarUrl = role === 'ADMIN'
+        ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
+        : role === 'VENDOR'
+        ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'
+        : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150';
+
+      const userModel: User = {
+        id: authRes.userId,
+        email: authRes.email,
+        role: role,
+        fullName: trimmedEmail.split('@')[0],
+        avatarUrl: avatarUrl,
+        isEmailVerified: true,
+        isLocked: false,
+        phone: '',
+        passwordHash: '',
+        locale: 'vi',
+      };
+
+      console.log('[Bước 4/5] Lưu trữ Token và User vào Zustand Store (danasea_auth_storage):', {
+        userId: userModel.id,
+        role: userModel.role,
+        tokenLength: authRes.accessToken?.length,
+      });
+      setAuth(userModel, authRes.accessToken);
+
+      // Determine redirection route based on role
+      const destination = role === 'ADMIN' ? '/admin' : role === 'VENDOR' ? '/vendor' : '/';
+      console.log(`[Bước 5/5] Hoàn tất đăng nhập! Điều hướng tới: ${destination}`);
+      console.groupEnd();
+
+      navigate(destination);
+    } catch (err: any) {
+      console.groupEnd();
+      console.error('[Auth Flow] Lỗi đăng nhập thất bại:', err);
+
+      const status = err.response?.status;
+      const serverMessage = err.response?.data?.message || err.message;
+
+      if (status === 401) {
+        console.warn('[Auth Flow] Sai tài khoản hoặc mật khẩu (401 Unauthorized)');
+        setBanner('wrong_creds');
+      } else if (status === 403) {
+        console.warn('[Auth Flow] Tài khoản bị khóa (403 Forbidden)');
+        setBanner('locked');
+      } else if (!err.response || err.code === 'ERR_NETWORK') {
+        console.error('[Auth Flow] Không thể kết nối tới Backend (Network Error)');
+        setBanner('network_error');
+        setErrorMessage('Không thể kết nối đến máy chủ Backend (http://localhost:8080). Hãy đảm bảo Backend đã khởi động.');
+      } else {
+        console.error('[Auth Flow] Lỗi từ máy chủ:', serverMessage);
+        setBanner('custom_error');
+        setErrorMessage(serverMessage || 'Đăng nhập không thành công. Vui lòng thử lại.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleQuickLogin = (roleKey: 'customer' | 'vendor' | 'admin') => {
-    const target = MOCK_TEST_ACCOUNTS[roleKey];
-    login(target);
-    if (roleKey === 'admin') {
-      navigate('/admin');
-    } else if (roleKey === 'vendor') {
-      navigate('/vendor');
-    } else {
-      navigate('/');
-    }
+    const quickEmail = `${roleKey}@danasea.vn`;
+    const quickPass = 'Password123!';
+    setEmail(quickEmail);
+    setPassword(quickPass);
+    executeLogin(quickEmail, quickPass);
   };
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setBanner('wrong_creds');
-      return;
-    }
-    
-    const lower = email.trim().toLowerCase();
-    if (lower.includes('admin') || lower === 'admin') {
-      login(MOCK_TEST_ACCOUNTS.admin);
-      navigate('/admin');
-    } else if (lower.includes('vendor') || lower === 'vendor') {
-      login(MOCK_TEST_ACCOUNTS.vendor);
-      navigate('/vendor');
-    } else {
-      login(MOCK_TEST_ACCOUNTS.customer);
-      navigate('/');
-    }
+    executeLogin(email, password);
   };
 
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate register
+    // Simulate register for now (Branch 2: feat/auth-register will implement this)
     setBanner('register_error');
   };
 
@@ -112,13 +181,35 @@ export function Auth() {
                   <div className="space-y-space-lg block">
                     <div className="space-y-space-sm">
                       {banner === 'locked' && (
-                        <div className="p-space-md rounded-2xl bg-error-container text-on-error-container">
-                          <p className="font-label-lg text-label-lg font-bold">Tài khoản tạm thời bị khóa</p>
+                        <div className="p-space-md rounded-2xl bg-error-container text-on-error-container flex items-start gap-2">
+                          <span className="material-symbols-outlined text-[20px] text-error flex-shrink-0 mt-0.5">lock_clock</span>
+                          <div>
+                            <p className="font-label-lg text-label-lg font-bold">Tài khoản tạm thời bị khóa</p>
+                            <p className="font-body-sm text-body-sm mt-0.5">Vui lòng liên hệ ban quản trị để được hỗ trợ mở khóa tài khoản.</p>
+                          </div>
                         </div>
                       )}
                       {banner === 'wrong_creds' && (
-                        <div className="p-space-md rounded-2xl bg-error-container text-on-error-container">
-                          <p className="font-body-sm text-body-sm font-medium">Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại thông tin hoặc đặt lại mật khẩu.</p>
+                        <div className="p-space-md rounded-2xl bg-error-container text-on-error-container flex items-start gap-2">
+                          <span className="material-symbols-outlined text-[20px] text-error flex-shrink-0 mt-0.5">error</span>
+                          <div>
+                            <p className="font-body-sm text-body-sm font-medium">Email hoặc mật khẩu không chính xác. Mật khẩu mặc định của tài khoản thử nghiệm là: <span className="font-mono font-bold">Password123!</span></p>
+                          </div>
+                        </div>
+                      )}
+                      {banner === 'network_error' && (
+                        <div className="p-space-md rounded-2xl bg-error-container text-on-error-container flex items-start gap-2">
+                          <span className="material-symbols-outlined text-[20px] text-error flex-shrink-0 mt-0.5">cloud_off</span>
+                          <div>
+                            <p className="font-label-lg text-label-lg font-bold">Không thể kết nối đến máy chủ Backend</p>
+                            <p className="font-body-sm text-body-sm mt-0.5">{errorMessage || 'Vui lòng kiểm tra Docker và Backend Spring Boot (cổng 8080) đã được khởi động chưa.'}</p>
+                          </div>
+                        </div>
+                      )}
+                      {banner === 'custom_error' && (
+                        <div className="p-space-md rounded-2xl bg-error-container text-on-error-container flex items-start gap-2">
+                          <span className="material-symbols-outlined text-[20px] text-error flex-shrink-0 mt-0.5">warning</span>
+                          <p className="font-body-sm text-body-sm font-medium">{errorMessage}</p>
                         </div>
                       )}
                     </div>
@@ -130,12 +221,14 @@ export function Auth() {
                           <span className="material-symbols-outlined text-[16px] text-secondary">flash_on</span>
                           Tài khoản thử nghiệm (1-Click Login)
                         </span>
+                        <span className="text-[11px] font-mono text-outline">Pass: Password123!</span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <button
                           type="button"
+                          disabled={isLoading}
                           onClick={() => handleQuickLogin('customer')}
-                          className="p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 hover:border-primary text-left transition-all hover:shadow-md cursor-pointer group"
+                          className="p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 hover:border-primary text-left transition-all hover:shadow-md cursor-pointer group disabled:opacity-50"
                         >
                           <div className="flex items-center gap-1.5 text-primary font-bold font-label-sm text-label-sm">
                             <span className="material-symbols-outlined text-[16px]">person</span>
@@ -146,8 +239,9 @@ export function Auth() {
 
                         <button
                           type="button"
+                          disabled={isLoading}
                           onClick={() => handleQuickLogin('vendor')}
-                          className="p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 hover:border-secondary text-left transition-all hover:shadow-md cursor-pointer group"
+                          className="p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 hover:border-secondary text-left transition-all hover:shadow-md cursor-pointer group disabled:opacity-50"
                         >
                           <div className="flex items-center gap-1.5 text-secondary font-bold font-label-sm text-label-sm">
                             <span className="material-symbols-outlined text-[16px]">sailing</span>
@@ -158,8 +252,9 @@ export function Auth() {
 
                         <button
                           type="button"
+                          disabled={isLoading}
                           onClick={() => handleQuickLogin('admin')}
-                          className="p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 hover:border-primary-container text-left transition-all hover:shadow-md cursor-pointer group"
+                          className="p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 hover:border-primary-container text-left transition-all hover:shadow-md cursor-pointer group disabled:opacity-50"
                         >
                           <div className="flex items-center gap-1.5 text-primary-container font-bold font-label-sm text-label-sm">
                             <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
@@ -178,7 +273,15 @@ export function Auth() {
                         </label>
                         <div className="relative flex items-center">
                           <span className="material-symbols-outlined absolute left-4 text-outline text-body-lg pointer-events-none">mail</span>
-                          <input value={email} onChange={e => setEmail(e.target.value)} className="w-full h-[52px] pl-11 pr-4 rounded-xl bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all placeholder:text-outline-variant" placeholder="Nhập email hoặc gõ: customer, vendor, admin" required type="text" />
+                          <input 
+                            value={email} 
+                            onChange={e => setEmail(e.target.value)} 
+                            disabled={isLoading}
+                            className="w-full h-[52px] pl-11 pr-4 rounded-xl bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
+                            placeholder="Nhập email (vd: customer@danasea.vn)" 
+                            required 
+                            type="text" 
+                          />
                         </div>
                       </div>
                       
@@ -191,13 +294,34 @@ export function Auth() {
                         </div>
                         <div className="relative flex items-center">
                           <span className="material-symbols-outlined absolute left-4 text-outline text-body-lg pointer-events-none">lock</span>
-                          <input value={password} onChange={e => setPassword(e.target.value)} className="w-full h-[52px] pl-11 pr-12 rounded-xl bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none focus:shadow-md transition-all placeholder:text-outline-variant" placeholder="Nhập mật khẩu của bạn" required type="password" />
+                          <input 
+                            value={password} 
+                            onChange={e => setPassword(e.target.value)} 
+                            disabled={isLoading}
+                            className="w-full h-[52px] pl-11 pr-12 rounded-xl bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
+                            placeholder="Nhập mật khẩu của bạn" 
+                            required 
+                            type="password" 
+                          />
                         </div>
                       </div>
                       
-                      <button className="w-full h-[52px] rounded-xl bg-primary-container text-on-primary font-label-lg text-label-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:bg-primary transition-all duration-200 cursor-pointer" type="submit">
-                        <span>Đăng nhập hệ sinh thái DANASEA</span>
-                        <span className="material-symbols-outlined text-body-lg">arrow_forward</span>
+                      <button 
+                        className="w-full h-[52px] rounded-xl bg-primary-container text-on-primary font-label-lg text-label-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:bg-primary transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed" 
+                        type="submit"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <span className="material-symbols-outlined animate-spin text-body-lg">progress_activity</span>
+                            <span>Đang xác thực thông tin...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Đăng nhập hệ sinh thái DANASEA</span>
+                            <span className="material-symbols-outlined text-body-lg">arrow_forward</span>
+                          </>
+                        )}
                       </button>
                     </form>
                     
