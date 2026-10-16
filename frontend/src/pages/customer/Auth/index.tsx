@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { authService } from "../../../services/authService";
+import { AuthCinematicBackdrop } from "../../../components/customer/AuthCinematicBackdrop";
 import type { User } from "../../../types";
 
 export function Auth() {
@@ -127,7 +128,10 @@ export function Auth() {
   };
 
   return (
-    <main className="w-full min-h-screen pt-20 bg-surface flex flex-col justify-center items-center relative">
+    <main className="w-full min-h-screen pt-20 bg-slate-950 flex flex-col justify-center items-center relative overflow-x-hidden">
+      {/* Dynamic Auto-Rotating Coastal Scene Backdrop (Same scenic imagery as Home page) */}
+      <AuthCinematicBackdrop autoRotateInterval={5500} />
+
       {/* Toast thông báo đăng nhập thành công trượt từ bên phải sang trái */}
       {showSuccessToast && (
         <aside
@@ -145,39 +149,40 @@ export function Auth() {
         </aside>
       )}
 
-      <div className="flex flex-col w-full">
-        <div className="relative w-full overflow-hidden py-space-2xl px-space-lg lg:px-margin flex justify-center items-center">
-          <div className="absolute -top-40 -left-20 w-96 h-96 rounded-full bg-primary-fixed-dim/20 blur-3xl pointer-events-none"></div>
-          <div className="absolute top-1/2 -right-32 w-[30rem] h-[30rem] rounded-full bg-secondary-container/10 blur-3xl pointer-events-none"></div>
-          
-          <div className="relative w-full max-w-[1280px] grid grid-cols-1 lg:grid-cols-12 gap-gutter-lg items-center z-10">
+      <div className="flex flex-col w-full relative z-10">
+        <div className="relative w-full py-space-2xl px-space-lg lg:px-margin flex justify-center items-center">
+          <div className="relative w-full max-w-[1280px] grid grid-cols-1 lg:grid-cols-12 gap-gutter-lg items-center">
+            {/* Left Column: Coastal Brand Messaging */}
             <div className="lg:col-span-5 flex flex-col space-y-space-xl">
-              <div className="inline-flex items-center gap-space-xs px-space-md py-1.5 rounded-full bg-surface-container-low text-primary w-fit shadow-sm">
-                <span className="material-symbols-outlined text-headline-sm" style={{ fontVariationSettings: "'FILL' 1" }}>sailing</span>
-                <span className="font-label-sm text-label-sm uppercase tracking-wider">Nền tảng trải nghiệm &amp; thể thao biển Đà Nẵng</span>
+              <div className="inline-flex items-center gap-space-xs px-space-md py-1.5 rounded-full bg-slate-900/70 backdrop-blur-md border border-white/20 text-cyan-300 w-fit shadow-md">
+                <span className="material-symbols-outlined text-headline-sm text-cyan-400" style={{ fontVariationSettings: "'FILL' 1" }}>sailing</span>
+                <span className="font-label-sm text-label-sm uppercase tracking-wider font-semibold">Nền tảng trải nghiệm &amp; thể thao biển Đà Nẵng</span>
               </div>
               <div className="space-y-space-sm">
-                <h1 className="font-headline-xl text-headline-xl text-on-surface leading-tight">
-                  Khám phá đại dương cùng <span className="text-primary-container">DANASEA</span>
+                <h1 className="font-headline-xl text-headline-xl text-white leading-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
+                  Khám phá đại dương cùng <span className="text-cyan-400">DANASEA</span>
                 </h1>
-                <p className="font-body-lg text-body-lg text-on-surface-variant max-w-md">Cổng xác thực tập trung dành cho du khách trải nghiệm cano, lặn biển ngắm san hô Bán đảo Sơn Trà và nền tảng trải nghiệm &amp; thể thao biển Đà Nẵng.</p>
+                <p className="font-body-lg text-body-lg text-slate-200 max-w-md drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                  Cổng xác thực tập trung dành cho du khách trải nghiệm cano, lặn biển ngắm san hô Bán đảo Sơn Trà và nền tảng trải nghiệm &amp; thể thao biển Đà Nẵng.
+                </p>
               </div>
               
               <div className="space-y-space-md">
-                <div className="flex items-start gap-space-md p-space-md rounded-2xl bg-surface-container-low transition-all duration-200 hover:bg-surface-container hover:shadow-sm">
-                  <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-primary-container/10 flex items-center justify-center text-primary-container">
+                <div className="flex items-start gap-space-md p-space-md rounded-2xl bg-slate-900/60 backdrop-blur-md border border-white/15 text-white transition-all duration-300 hover:bg-slate-900/80 hover:border-cyan-400/40 shadow-lg">
+                  <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-300 border border-cyan-400/30">
                     <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>scuba_diving</span>
                   </div>
                   <div className="space-y-0.5">
-                    <h2 className="font-headline-sm text-headline-sm text-on-surface">Đặt trải nghiệm biển chính thống</h2>
-                    <p className="font-body-sm text-body-sm text-on-surface-variant">Lặn ngắm san hô Bãi Bụt, bay dù lượn Mỹ Khê, tour cano cao cấp đạt chuẩn cứu hộ quốc tế.</p>
+                    <h2 className="font-headline-sm text-headline-sm text-white font-semibold">Đặt trải nghiệm biển chính thống</h2>
+                    <p className="font-body-sm text-body-sm text-slate-300">Lặn ngắm san hô Bãi Bụt, bay dù lượn Mỹ Khê, tour cano cao cấp đạt chuẩn cứu hộ quốc tế.</p>
                   </div>
                 </div>
               </div>
             </div>
             
+            {/* Right Column: Auth Form Card */}
             <div className="lg:col-span-7 flex justify-center">
-              <div className="w-full max-w-xl bg-surface-container-lowest rounded-[24px] shadow-xl p-space-xl sm:p-space-2xl space-y-space-lg">
+              <div className="w-full max-w-xl bg-surface-container-lowest/95 backdrop-blur-2xl rounded-[28px] shadow-[0_25px_60px_rgba(0,0,0,0.35)] border border-white/30 p-space-xl sm:p-space-2xl space-y-space-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center text-on-primary shadow-sm">

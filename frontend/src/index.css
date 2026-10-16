@@ -464,5 +464,14 @@
   animation: toastProgress 1.2s linear forwards;
 }
 
+@keyframes sceneCountdown {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
 
 
