@@ -1348,4 +1348,19 @@ const englishTranslations = <String, String>{
       "A waiver must be accepted before participation.",
   "Được đánh giá cao": "Top rated",
   "/gói": "/package",
+  "Bạn đã nhớ mật khẩu?": "Remember your password?",
+  "Mật khẩu đủ mạnh": "Strong password",
+  "Mật khẩu khớp": "Passwords match",
+  "Nhập lại mã OTP": "Edit verification code",
+  "Đã cập nhật mật khẩu": "Password updated",
+  "Đăng nhập bằng mật khẩu mới để tiếp tục trải nghiệm.":
+      "Log in with your new password to pick up where you left off.",
+  "Quay lại đăng nhập": "Back to login",
+  "Kiểm tra email của bạn": "Check your email",
+  "Đừng lo, hãy nhập email tài khoản để nhận mã đặt lại mật khẩu.":
+      "No worries. Enter your account email and we will send you a reset code.",
+  "Nhập mã gồm 6 số được gửi đến email của bạn.":
+      "Enter the 6-digit code sent to your email.",
+  "Tạo mật khẩu an toàn để dùng cho lần đăng nhập tiếp theo.":
+      "Create a secure password for the next time you log in.",
 };
