@@ -23,6 +23,15 @@ export interface UserProfileResponse {
   isEmailVerified: boolean;
 }
 
+export interface RegisterCredentials {
+  email: string;
+  password: string;
+}
+
+export interface VerifyOtpPayload {
+  code: string;
+}
+
 export const authService = {
   /**
    * Log in with email and password
@@ -31,6 +40,31 @@ export const authService = {
     console.log('[authService] Initiating login for:', credentials.email);
     const response = await apiClient.post<AuthenticationResponse>('/auth/login', credentials);
     return response.data;
+  },
+
+  /**
+   * Register a new user account (CUSTOMER role)
+   */
+  async register(credentials: RegisterCredentials): Promise<AuthenticationResponse> {
+    console.log('[authService] Initiating registration for:', credentials.email);
+    const response = await apiClient.post<AuthenticationResponse>('/auth/register', credentials);
+    return response.data;
+  },
+
+  /**
+   * Send or resend OTP verification code to authenticated user's email
+   */
+  async sendVerificationOtp(): Promise<void> {
+    console.log('[authService] Requesting verification OTP (/auth/otp/send)...');
+    await apiClient.post('/auth/otp/send');
+  },
+
+  /**
+   * Verify 6-digit OTP code to activate email
+   */
+  async verifyOtp(payload: VerifyOtpPayload): Promise<void> {
+    console.log('[authService] Verifying OTP code:', payload.code);
+    await apiClient.post('/auth/otp/verify', payload);
   },
 
   /**
@@ -54,3 +88,4 @@ export const authService = {
     return response.data;
   },
 };
+
