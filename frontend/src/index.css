@@ -426,4 +426,38 @@
   will-change: transform, opacity;
 }
 
+@keyframes toastSlideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(120%) scale(0.95);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(-8px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toastProgress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-toast-slide-in {
+  animation: toastSlideInRight 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-toast-progress {
+  animation: toastProgress 1.2s linear forwards;
+}
+
+
 

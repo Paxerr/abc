@@ -11,6 +11,11 @@ export function Auth() {
   const [banner, setBanner] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [successToast, setSuccessToast] = useState<{
+    show: boolean;
+    roleName: string;
+    email: string;
+  } | null>(null);
   
   const navigate = useNavigate();
   const setAuth = useAuthStore(state => state.setAuth);
@@ -69,10 +74,21 @@ export function Auth() {
 
       // Determine redirection route based on role
       const destination = role === 'ADMIN' ? '/admin' : role === 'VENDOR' ? '/vendor' : '/';
-      console.log(`[Bước 5/5] Hoàn tất đăng nhập! Điều hướng tới: ${destination}`);
+      const roleLabel = role === 'ADMIN' ? 'Quản trị viên' : role === 'VENDOR' ? 'Đối tác Vendor' : 'Du khách';
+
+      // Trigger Slide-in Success Toast at top-right
+      setSuccessToast({
+        show: true,
+        roleName: roleLabel,
+        email: authRes.email,
+      });
+
+      console.log(`[Bước 5/5] Hoàn tất đăng nhập! Chuẩn bị điều hướng tới: ${destination}`);
       console.groupEnd();
 
-      navigate(destination);
+      setTimeout(() => {
+        navigate(destination);
+      }, 1200);
     } catch (err: any) {
       console.groupEnd();
       console.error('[Auth Flow] Lỗi đăng nhập thất bại:', err);
@@ -120,7 +136,39 @@ export function Auth() {
   };
 
   return (
-    <main className="w-full min-h-screen pt-20 bg-surface flex flex-col justify-center items-center">
+    <main className="w-full min-h-screen pt-20 bg-surface flex flex-col justify-center items-center relative">
+      {/* Toast thông báo đăng nhập thành công trượt từ bên phải sang trái */}
+      {successToast?.show && (
+        <aside
+          role="status"
+          aria-live="polite"
+          className="fixed top-6 right-6 z-[9999] max-w-sm sm:max-w-md w-[calc(100vw-3rem)] sm:w-auto p-4 rounded-2xl bg-surface-container-lowest/95 backdrop-blur-xl border border-emerald-500/40 shadow-[0_16px_40px_rgba(16,185,129,0.22)] animate-toast-slide-in flex flex-col gap-2.5 pointer-events-auto"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+              <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                check_circle
+              </span>
+            </div>
+            <div className="flex-1 min-w-0 pr-1">
+              <div className="flex items-center gap-2">
+                <h4 className="font-headline-sm text-sm font-bold text-on-surface">Đăng nhập thành công!</h4>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 uppercase tracking-wider">
+                  {successToast.roleName}
+                </span>
+              </div>
+              <p className="font-body-sm text-xs text-on-surface-variant truncate mt-0.5">
+                Chào mừng <span className="font-semibold text-on-surface">{successToast.email}</span> trở lại DANASEA.
+              </p>
+            </div>
+          </div>
+          {/* Thanh hiệu ứng thời gian trượt */}
+          <div className="w-full h-1 bg-emerald-500/15 rounded-full overflow-hidden">
+            <div className="h-full bg-emerald-500 rounded-full animate-toast-progress" />
+          </div>
+        </aside>
+      )}
+
       <div className="flex flex-col w-full">
         <div className="relative w-full overflow-hidden py-space-2xl px-space-lg lg:px-margin flex justify-center items-center">
           <div className="absolute -top-40 -left-20 w-96 h-96 rounded-full bg-primary-fixed-dim/20 blur-3xl pointer-events-none"></div>
