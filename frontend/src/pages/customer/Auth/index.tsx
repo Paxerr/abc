@@ -603,7 +603,6 @@ export function Auth() {
                   <>
                     <div className="space-y-0.5">
                       <h3 className="text-sm font-bold text-on-surface">Đăng ký tài khoản du khách &amp; đối tác</h3>
-                      <p className="text-xs text-on-surface-variant">Điền thông tin để trải nghiệm hệ sinh thái du lịch biển DANASEA.</p>
                     </div>
 
                     <form className="space-y-2.5" onSubmit={handleRegisterSubmit}>
@@ -612,17 +611,14 @@ export function Auth() {
                           <span>Họ và tên</span>
                           <span className="text-outline text-[11px] font-normal">Tùy chọn</span>
                         </label>
-                        <div className="relative flex items-center">
-                          <span className="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">badge</span>
-                          <input 
-                            value={regFullName}
-                            onChange={e => setRegFullName(e.target.value)}
-                            disabled={isLoading}
-                            className="w-full h-[40px] pl-10 pr-3 rounded-xl bg-surface-container-lowest text-on-surface text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
-                            placeholder="Ví dụ: Nguyễn Hải Đăng" 
-                            type="text" 
-                          />
-                        </div>
+                        <input 
+                          value={regFullName}
+                          onChange={e => setRegFullName(e.target.value)}
+                          disabled={isLoading}
+                          className="w-full h-[40px] px-3.5 rounded-xl bg-surface-container-lowest text-on-surface text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
+                          placeholder="Ví dụ: Nguyễn Hải Đăng" 
+                          type="text" 
+                        />
                       </div>
 
                       <div className="space-y-1">
@@ -630,18 +626,15 @@ export function Auth() {
                           <span>Địa chỉ Email</span>
                           <span className="text-secondary text-[11px]">*Bắt buộc</span>
                         </label>
-                        <div className="relative flex items-center">
-                          <span className="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">mail</span>
-                          <input 
-                            value={regEmail}
-                            onChange={e => setRegEmail(e.target.value)}
-                            disabled={isLoading}
-                            className="w-full h-[40px] pl-10 pr-3 rounded-xl bg-surface-container-lowest text-on-surface text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
-                            placeholder="ban@email.com" 
-                            required 
-                            type="email" 
-                          />
-                        </div>
+                        <input 
+                          value={regEmail}
+                          onChange={e => setRegEmail(e.target.value)}
+                          disabled={isLoading}
+                          className="w-full h-[40px] px-3.5 rounded-xl bg-surface-container-lowest text-on-surface text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
+                          placeholder="ban@email.com" 
+                          required 
+                          type="email" 
+                        />
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -650,18 +643,15 @@ export function Auth() {
                             <span>Mật khẩu</span>
                             <span className="text-secondary text-[11px]">*Bắt buộc</span>
                           </label>
-                          <div className="relative flex items-center">
-                            <span className="material-symbols-outlined absolute left-3 text-outline text-[16px] pointer-events-none">lock</span>
-                            <input 
-                              value={regPassword}
-                              onChange={e => setRegPassword(e.target.value)}
-                              disabled={isLoading}
-                              className="w-full h-[40px] pl-8 pr-2.5 rounded-xl bg-surface-container-lowest text-on-surface text-xs sm:text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
-                              placeholder="Tối thiểu 8 ký tự" 
-                              required 
-                              type="password" 
-                            />
-                          </div>
+                          <input 
+                            value={regPassword}
+                            onChange={e => setRegPassword(e.target.value)}
+                            disabled={isLoading}
+                            className="w-full h-[40px] px-3 rounded-xl bg-surface-container-lowest text-on-surface text-xs sm:text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
+                            placeholder="Tối thiểu 8 ký tự" 
+                            required 
+                            type="password" 
+                          />
                         </div>
 
                         <div className="space-y-1">
@@ -669,18 +659,15 @@ export function Auth() {
                             <span>Nhập lại</span>
                             <span className="text-secondary text-[11px]">*Bắt buộc</span>
                           </label>
-                          <div className="relative flex items-center">
-                            <span className="material-symbols-outlined absolute left-3 text-outline text-[16px] pointer-events-none">lock_reset</span>
-                            <input 
-                              value={regConfirmPassword}
-                              onChange={e => setRegConfirmPassword(e.target.value)}
-                              disabled={isLoading}
-                              className="w-full h-[40px] pl-8 pr-2.5 rounded-xl bg-surface-container-lowest text-on-surface text-xs sm:text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
-                              placeholder="Xác nhận lại" 
-                              required 
-                              type="password" 
-                            />
-                          </div>
+                          <input 
+                            value={regConfirmPassword}
+                            onChange={e => setRegConfirmPassword(e.target.value)}
+                            disabled={isLoading}
+                            className="w-full h-[40px] px-3 rounded-xl bg-surface-container-lowest text-on-surface text-xs sm:text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
+                            placeholder="Xác nhận lại" 
+                            required 
+                            type="password" 
+                          />
                         </div>
                       </div>
 
@@ -701,10 +688,7 @@ export function Auth() {
                             <span>Đang xử lý đăng ký...</span>
                           </>
                         ) : (
-                          <>
-                            <span>Tạo tài khoản &amp; Nhận mã OTP</span>
-                            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                          </>
+                          <span>Đăng ký</span>
                         )}
                       </button>
                     </form>
