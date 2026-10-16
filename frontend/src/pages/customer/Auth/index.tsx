@@ -22,6 +22,7 @@ export function Auth() {
   const [regStep, setRegStep] = useState<"form" | "otp">("form");
   const [otpCode, setOtpCode] = useState("");
   const [otpCooldown, setOtpCooldown] = useState(0);
+  const [otpSessionExpiresAt, setOtpSessionExpiresAt] = useState<number | null>(null);
 
   // General Feedback States
   const [banner, setBanner] = useState<string | null>(null);
@@ -41,6 +42,25 @@ export function Auth() {
     }
     return () => clearTimeout(timer);
   }, [otpCooldown]);
+
+  // 15-minute OTP session expiration timer: automatically reset to register form
+  useEffect(() => {
+    if (regStep !== 'otp' || !otpSessionExpiresAt) return;
+
+    const interval = setInterval(() => {
+      if (Date.now() >= otpSessionExpiresAt) {
+        console.warn('[Auth OTP] Phiên xác thực OTP 15 phút đã hết hạn. Đang chuyển về form đăng ký...');
+        setRegStep('form');
+        setOtpCode('');
+        setOtpSessionExpiresAt(null);
+        useAuthStore.getState().logout();
+        setBanner('custom_error');
+        setErrorMessage('Phiên xác thực đã hết hạn sau 15 phút. Vui lòng đăng ký lại.');
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [regStep, otpSessionExpiresAt]);
 
   // -------------------------------------------------------------
   // LOGIN FLOW (Preserved & Tested from feat/auth-login)
@@ -215,6 +235,7 @@ export function Auth() {
       }
 
       setOtpCooldown(60);
+      setOtpSessionExpiresAt(Date.now() + 15 * 60 * 1000);
       setRegStep('otp');
       console.log('[Bước 4/4] Chuyển giao diện sang bước nhập mã OTP 6 chữ số.');
       console.groupEnd();
@@ -247,6 +268,7 @@ export function Auth() {
     setIsLoading(true);
     setBanner(null);
     setErrorMessage(null);
+    setOtpCode(""); // Reset lại phần nhập OTP nếu người dùng bấm gửi lại mã
 
     console.groupCollapsed(`%c[Auth OTP] Yêu cầu gửi lại mã OTP tới: ${regEmail.trim()}`, 'color: #0284c7; font-weight: bold;');
     console.log('[Gửi lại OTP] Gửi HTTP POST /api/auth/otp/send...');
@@ -257,12 +279,20 @@ export function Auth() {
     } catch (err: any) {
       console.error('[Gửi lại OTP] Thất bại:', err);
       const status = err.response?.status;
-      if (status === 429) {
+      if (status === 401) {
+        setRegStep('form');
+        setOtpCode('');
+        setOtpSessionExpiresAt(null);
+        useAuthStore.getState().logout();
+        setBanner('custom_error');
+        setErrorMessage('Phiên xác thực đã hết hạn sau 15 phút. Vui lòng đăng ký lại.');
+      } else if (status === 429) {
         setErrorMessage('Bạn thao tác quá nhanh. Vui lòng chờ kết thúc thời gian chờ 60 giây.');
+        setBanner('custom_error');
       } else {
-        setErrorMessage('Không thể gửi lại mã OTP lúc này. Vui lòng thử lại sau.');
+        setErrorMessage(err.response?.data?.message || 'Không thể gửi lại mã OTP lúc này. Vui lòng thử lại sau.');
+        setBanner('custom_error');
       }
-      setBanner('custom_error');
     } finally {
       setIsLoading(false);
       console.groupEnd();
@@ -311,12 +341,16 @@ export function Auth() {
       const status = err.response?.status;
       const code = err.response?.data?.code;
 
-      if (status === 400 || code === 'INVALID_OTP') {
+      if (status === 401) {
+        setRegStep('form');
+        setOtpCode('');
+        setOtpSessionExpiresAt(null);
+        useAuthStore.getState().logout();
+        setBanner('custom_error');
+        setErrorMessage('Phiên xác thực đã hết hạn sau 15 phút. Vui lòng đăng ký lại.');
+      } else if (status === 400 || code === 'INVALID_OTP') {
         setBanner('custom_error');
         setErrorMessage('Mã OTP không chính xác hoặc đã hết hạn (tối đa 5 lần thử). Vui lòng thử lại.');
-      } else if (status === 401) {
-        setBanner('custom_error');
-        setErrorMessage('Phiên xác thực đã hết hạn. Vui lòng đăng nhập lại.');
       } else {
         setBanner('custom_error');
         setErrorMessage(err.response?.data?.message || 'Xác thực OTP thất bại. Vui lòng thử lại.');
@@ -426,8 +460,7 @@ export function Auth() {
                   </div>
                 )}
                 {banner === 'custom_error' && (
-                  <div className="p-2.5 rounded-xl bg-error-container text-on-error-container flex items-start gap-2">
-                    <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">warning</span>
+                  <div className="p-2.5 rounded-xl bg-error-container text-on-error-container">
                     <p className="text-xs font-medium">{errorMessage}</p>
                   </div>
                 )}
@@ -740,20 +773,23 @@ export function Auth() {
                         {isLoading ? (
                           <>
                             <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
-                            <span>Đang kích hoạt tài khoản...</span>
+                            <span>Đang xác nhận...</span>
                           </>
                         ) : (
-                          <>
-                            <span>Xác nhận &amp; Bắt đầu trải nghiệm</span>
-                            <span className="material-symbols-outlined text-[18px]">check</span>
-                          </>
+                          <span>Xác nhận</span>
                         )}
                       </button>
 
                       <div className="text-center pt-1">
                         <button
                           type="button"
-                          onClick={() => { setRegStep("form"); setBanner(null); setErrorMessage(null); }}
+                          onClick={() => {
+                            setRegStep("form");
+                            setOtpCode("");
+                            setOtpSessionExpiresAt(null);
+                            setBanner(null);
+                            setErrorMessage(null);
+                          }}
                           className="text-xs text-outline hover:text-on-surface transition-colors bg-transparent border-0 cursor-pointer flex items-center justify-center gap-1 mx-auto"
                         >
                           <span className="material-symbols-outlined text-[15px]">arrow_back</span>
