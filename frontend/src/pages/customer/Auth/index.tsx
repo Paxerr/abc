@@ -11,11 +11,7 @@ export function Auth() {
   const [banner, setBanner] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [successToast, setSuccessToast] = useState<{
-    show: boolean;
-    roleName: string;
-    email: string;
-  } | null>(null);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
   
   const navigate = useNavigate();
   const setAuth = useAuthStore(state => state.setAuth);
@@ -74,14 +70,9 @@ export function Auth() {
 
       // Determine redirection route based on role
       const destination = role === 'ADMIN' ? '/admin' : role === 'VENDOR' ? '/vendor' : '/';
-      const roleLabel = role === 'ADMIN' ? 'Quản trị viên' : role === 'VENDOR' ? 'Đối tác Vendor' : 'Du khách';
 
       // Trigger Slide-in Success Toast at top-right
-      setSuccessToast({
-        show: true,
-        roleName: roleLabel,
-        email: authRes.email,
-      });
+      setShowSuccessToast(true);
 
       console.log(`[Bước 5/5] Hoàn tất đăng nhập! Chuẩn bị điều hướng tới: ${destination}`);
       console.groupEnd();
@@ -138,34 +129,18 @@ export function Auth() {
   return (
     <main className="w-full min-h-screen pt-20 bg-surface flex flex-col justify-center items-center relative">
       {/* Toast thông báo đăng nhập thành công trượt từ bên phải sang trái */}
-      {successToast?.show && (
+      {showSuccessToast && (
         <aside
           role="status"
           aria-live="polite"
-          className="fixed top-6 right-6 z-[9999] max-w-sm sm:max-w-md w-[calc(100vw-3rem)] sm:w-auto p-4 rounded-2xl bg-surface-container-lowest/95 backdrop-blur-xl border border-emerald-500/40 shadow-[0_16px_40px_rgba(16,185,129,0.22)] animate-toast-slide-in flex flex-col gap-2.5 pointer-events-auto"
+          className="fixed top-6 right-6 z-[9999] px-5 py-3.5 rounded-2xl bg-emerald-600 text-white shadow-[0_12px_32px_rgba(5,150,105,0.4)] animate-toast-slide-in flex items-center gap-2.5 pointer-events-auto border border-emerald-400/30"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 flex items-center justify-center flex-shrink-0 shadow-sm">
-              <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                check_circle
-              </span>
-            </div>
-            <div className="flex-1 min-w-0 pr-1">
-              <div className="flex items-center gap-2">
-                <h4 className="font-headline-sm text-sm font-bold text-on-surface">Đăng nhập thành công!</h4>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 uppercase tracking-wider">
-                  {successToast.roleName}
-                </span>
-              </div>
-              <p className="font-body-sm text-xs text-on-surface-variant truncate mt-0.5">
-                Chào mừng <span className="font-semibold text-on-surface">{successToast.email}</span> trở lại DANASEA.
-              </p>
-            </div>
-          </div>
-          {/* Thanh hiệu ứng thời gian trượt */}
-          <div className="w-full h-1 bg-emerald-500/15 rounded-full overflow-hidden">
-            <div className="h-full bg-emerald-500 rounded-full animate-toast-progress" />
-          </div>
+          <span className="material-symbols-outlined text-[22px] text-white" style={{ fontVariationSettings: "'FILL' 1" }}>
+            check_circle
+          </span>
+          <span className="font-headline-sm text-sm font-semibold tracking-wide text-white">
+            Đăng nhập thành công!
+          </span>
         </aside>
       )}
 
