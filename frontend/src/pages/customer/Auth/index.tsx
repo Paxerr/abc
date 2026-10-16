@@ -102,7 +102,7 @@ export function Auth() {
 
   const handleQuickLogin = (roleKey: 'customer' | 'vendor' | 'admin') => {
     const quickEmail = `${roleKey}@danasea.vn`;
-    const quickPass = 'Password123!';
+    const quickPass = '123456';
     setEmail(quickEmail);
     setPassword(quickPass);
     executeLogin(quickEmail, quickPass);
@@ -193,7 +193,7 @@ export function Auth() {
                         <div className="p-space-md rounded-2xl bg-error-container text-on-error-container flex items-start gap-2">
                           <span className="material-symbols-outlined text-[20px] text-error flex-shrink-0 mt-0.5">error</span>
                           <div>
-                            <p className="font-body-sm text-body-sm font-medium">Email hoặc mật khẩu không chính xác. Mật khẩu mặc định của tài khoản thử nghiệm là: <span className="font-mono font-bold">Password123!</span></p>
+                            <p className="font-body-sm text-body-sm font-medium">Email hoặc mật khẩu không chính xác. Mật khẩu mặc định của tài khoản thử nghiệm là: <span className="font-mono font-bold">123456</span></p>
                           </div>
                         </div>
                       )}
@@ -221,7 +221,7 @@ export function Auth() {
                           <span className="material-symbols-outlined text-[16px] text-secondary">flash_on</span>
                           Tài khoản thử nghiệm (1-Click Login)
                         </span>
-                        <span className="text-[11px] font-mono text-outline">Pass: Password123!</span>
+                        <span className="text-[11px] font-mono text-outline">Pass: 123456</span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <button

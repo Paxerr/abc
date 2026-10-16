@@ -20,7 +20,7 @@ INSERT INTO users (
 (
     '11111111-1111-1111-1111-111111111111',
     'admin@danasea.vn',
-    '$2b$10$8pHoge4D/5s3b83qeGllTea6.U0HHHWWprzT0dHTWPGOAblVPfZZu',
+    '$2b$10$H9xvkrOcQcNdJLxTi7l9VOL0qScW9ImvUFFqXYe6N0DmEmvmCkL/C',
     'Quản Trị Viên Danasea',
     '0905000001',
     'ADMIN',
@@ -35,7 +35,7 @@ INSERT INTO users (
 (
     '22222222-2222-2222-2222-222222222222',
     'vendor@danasea.vn',
-    '$2b$10$8pHoge4D/5s3b83qeGllTea6.U0HHHWWprzT0dHTWPGOAblVPfZZu',
+    '$2b$10$H9xvkrOcQcNdJLxTi7l9VOL0qScW9ImvUFFqXYe6N0DmEmvmCkL/C',
     'Công Ty Biển Xanh Danasea',
     '0905000002',
     'VENDOR',
@@ -50,7 +50,7 @@ INSERT INTO users (
 (
     '33333333-3333-3333-3333-333333333333',
     'customer@danasea.vn',
-    '$2b$10$8pHoge4D/5s3b83qeGllTea6.U0HHHWWprzT0dHTWPGOAblVPfZZu',
+    '$2b$10$H9xvkrOcQcNdJLxTi7l9VOL0qScW9ImvUFFqXYe6N0DmEmvmCkL/C',
     'Nguyễn Văn Khách',
     '0905000003',
     'CUSTOMER',
