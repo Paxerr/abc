@@ -385,6 +385,10 @@
   animation: heroEntrance 1.25s cubic-bezier(0.16, 1, 0.3, 1) 0.55s backwards;
 }
 
+.animate-hero-4 {
+  animation: heroEntrance 1.3s cubic-bezier(0.16, 1, 0.3, 1) 0.75s backwards;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
