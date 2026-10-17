@@ -38,7 +38,7 @@ export function Auth() {
 
   // 60-second OTP cooldown ticker
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setTimeout>;
     if (otpCooldown > 0) {
       timer = setTimeout(() => setOtpCooldown(prev => prev - 1), 1000);
     }
