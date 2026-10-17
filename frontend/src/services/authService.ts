@@ -87,5 +87,23 @@ export const authService = {
     const response = await apiClient.get<UserProfileResponse>('/users/me');
     return response.data;
   },
+
+  /**
+   * Request password reset OTP code
+   */
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    console.log('[authService] Requesting forgot password OTP for:', email);
+    const response = await apiClient.post<{ message: string }>('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  /**
+   * Reset password with 6-digit OTP and new password
+   */
+  async resetPassword(payload: { email: string; otp: string; newPassword: string }): Promise<{ message: string }> {
+    console.log('[authService] Submitting reset password for:', payload.email);
+    const response = await apiClient.post<{ message: string }>('/auth/reset-password', payload);
+    return response.data;
+  },
 };
 
