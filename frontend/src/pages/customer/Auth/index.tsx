@@ -575,13 +575,10 @@ export function Auth() {
                     {isLoading ? (
                       <>
                         <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
-                        <span>Đang xác thực thông tin...</span>
+                        <span>Đang đăng nhập...</span>
                       </>
                     ) : (
-                      <>
-                        <span>Đăng nhập hệ sinh thái DANASEA</span>
-                        <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                      </>
+                      <span>Đăng nhập</span>
                     )}
                   </button>
                 </form>
@@ -607,9 +604,8 @@ export function Auth() {
 
                     <form className="space-y-2.5" onSubmit={handleRegisterSubmit}>
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-on-surface flex items-center justify-between">
-                          <span>Họ và tên</span>
-                          <span className="text-outline text-[11px] font-normal">Tùy chọn</span>
+                        <label className="text-xs font-medium text-on-surface block">
+                          Họ và tên
                         </label>
                         <input 
                           value={regFullName}
@@ -622,9 +618,8 @@ export function Auth() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-on-surface flex items-center justify-between">
-                          <span>Địa chỉ Email</span>
-                          <span className="text-secondary text-[11px]">*Bắt buộc</span>
+                        <label className="text-xs font-medium text-on-surface block">
+                          Địa chỉ Email
                         </label>
                         <input 
                           value={regEmail}
@@ -639,9 +634,8 @@ export function Auth() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <label className="text-xs font-medium text-on-surface flex items-center justify-between">
-                            <span>Mật khẩu</span>
-                            <span className="text-secondary text-[11px]">*Bắt buộc</span>
+                          <label className="text-xs font-medium text-on-surface block">
+                            Mật khẩu
                           </label>
                           <input 
                             value={regPassword}
@@ -655,9 +649,8 @@ export function Auth() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs font-medium text-on-surface flex items-center justify-between">
-                            <span>Nhập lại</span>
-                            <span className="text-secondary text-[11px]">*Bắt buộc</span>
+                          <label className="text-xs font-medium text-on-surface block">
+                            Nhập lại
                           </label>
                           <input 
                             value={regConfirmPassword}
