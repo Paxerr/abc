@@ -177,9 +177,9 @@ export function Auth() {
     const trimmedEmail = regEmail.trim();
     const trimmedFullName = regFullName.trim();
 
-    if (!trimmedEmail || !regPassword) {
+    if (!trimmedFullName || !trimmedEmail || !regPassword) {
       setBanner('custom_error');
-      setErrorMessage('Vui lòng điền đầy đủ Email và Mật khẩu.');
+      setErrorMessage('Vui lòng điền đầy đủ Họ và tên, Email và Mật khẩu.');
       return;
     }
 
@@ -528,9 +528,8 @@ export function Auth() {
                 
                 <form className="space-y-2.5" onSubmit={handleLoginSubmit}>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-on-surface flex items-center justify-between">
-                      <span>Địa chỉ Email hoặc Tên tài khoản</span>
-                      <span className="text-secondary text-[11px]">*Bắt buộc</span>
+                    <label className="text-xs font-medium text-on-surface">
+                      Địa chỉ Email hoặc Tên tài khoản
                     </label>
                     <div className="relative flex items-center">
                       <span className="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">mail</span>
@@ -604,13 +603,14 @@ export function Auth() {
 
                     <form className="space-y-2.5" onSubmit={handleRegisterSubmit}>
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-on-surface block">
+                        <label className="text-xs font-medium text-on-surface">
                           Họ và tên
                         </label>
                         <input 
                           value={regFullName}
                           onChange={e => setRegFullName(e.target.value)}
                           disabled={isLoading}
+                          required
                           className="w-full h-[40px] px-3.5 rounded-xl bg-surface-container-lowest text-on-surface text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
                           placeholder="Ví dụ: Nguyễn Hải Đăng" 
                           type="text" 
@@ -618,7 +618,7 @@ export function Auth() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-on-surface block">
+                        <label className="text-xs font-medium text-on-surface">
                           Địa chỉ Email
                         </label>
                         <input 
@@ -634,7 +634,7 @@ export function Auth() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <label className="text-xs font-medium text-on-surface block">
+                          <label className="text-xs font-medium text-on-surface">
                             Mật khẩu
                           </label>
                           <input 
@@ -649,7 +649,7 @@ export function Auth() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs font-medium text-on-surface block">
+                          <label className="text-xs font-medium text-on-surface">
                             Nhập lại
                           </label>
                           <input 
