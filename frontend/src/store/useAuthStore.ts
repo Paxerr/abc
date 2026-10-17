@@ -8,6 +8,7 @@ interface AuthState {
   accessToken: string | null;
   isAuthenticated: boolean;
   setAuth: (user: User, token: string) => void;
+  setPendingToken: (token: string) => void;
   login: (userData: User, token?: string) => void;
   logout: () => void;
   switchRole: (roleKey: 'customer' | 'vendor' | 'admin') => User;
@@ -23,6 +24,11 @@ export const useAuthStore = create<AuthState>()(
       setAuth: (user, token) => {
         console.log('[useAuthStore] Setting authenticated user:', user.email, 'Role:', user.role);
         set({ user, accessToken: token, isAuthenticated: true });
+      },
+
+      setPendingToken: (token) => {
+        console.log('[useAuthStore] Setting temporary registration token (unauthenticated) for OTP flow');
+        set({ user: null, accessToken: token, isAuthenticated: false });
       },
 
       login: (userData, token) => {

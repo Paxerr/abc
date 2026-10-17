@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { authService } from "../../../services/authService";
@@ -6,17 +6,68 @@ import { AuthCinematicBackdrop } from "../../../components/customer/AuthCinemati
 import type { User } from "../../../types";
 
 export function Auth() {
-  const [activeTab, setActiveTab] = useState("login");
+  const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  
+  // Login Form States
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
+  // Register Form States
+  const [regFullName, setRegFullName] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regConfirmPassword, setRegConfirmPassword] = useState("");
+  
+  // Register Sub-step: 'form' (enter info) -> 'otp' (verify 6-digit OTP)
+  const [regStep, setRegStep] = useState<"form" | "otp">("form");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const [otpSessionExpiresAt, setOtpSessionExpiresAt] = useState<number | null>(null);
+  const [pendingUser, setPendingUser] = useState<User | null>(null);
+
+  // General Feedback States
   const [banner, setBanner] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("Đăng nhập thành công");
   
   const navigate = useNavigate();
   const setAuth = useAuthStore(state => state.setAuth);
+  const setPendingToken = useAuthStore(state => state.setPendingToken);
 
+  // 60-second OTP cooldown ticker
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (otpCooldown > 0) {
+      timer = setTimeout(() => setOtpCooldown(prev => prev - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [otpCooldown]);
+
+  // 15-minute OTP session expiration timer: automatically reset to register form
+  useEffect(() => {
+    if (regStep !== 'otp' || !otpSessionExpiresAt) return;
+
+    const interval = setInterval(() => {
+      if (Date.now() >= otpSessionExpiresAt) {
+        console.warn('[Auth OTP] Phiên xác thực OTP 15 phút đã hết hạn. Đang chuyển về form đăng ký...');
+        setRegStep('form');
+        setOtpCode('');
+        setPendingUser(null);
+        setOtpSessionExpiresAt(null);
+        useAuthStore.getState().logout();
+        setBanner('custom_error');
+        setErrorMessage('Phiên xác thực đã hết hạn sau 15 phút. Vui lòng đăng ký lại.');
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [regStep, otpSessionExpiresAt]);
+
+  // -------------------------------------------------------------
+  // LOGIN FLOW (Preserved & Tested from feat/auth-login)
+  // -------------------------------------------------------------
   const executeLogin = async (emailInput: string, passwordInput: string) => {
     const trimmedEmail = emailInput.trim();
     if (!trimmedEmail || !passwordInput) {
@@ -41,7 +92,6 @@ export function Auth() {
 
       console.log('[Bước 3/5] Backend trả về kết quả thành công (200 OK):', authRes);
 
-      // Construct user model from AuthenticationResponse
       const role = authRes.role;
       const avatarUrl = role === 'ADMIN'
         ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
@@ -69,10 +119,8 @@ export function Auth() {
       });
       setAuth(userModel, authRes.accessToken);
 
-      // Determine redirection route based on role
       const destination = role === 'ADMIN' ? '/admin' : role === 'VENDOR' ? '/vendor' : '/';
-
-      // Trigger Slide-in Success Toast at top-right
+      setToastMessage("Đăng nhập thành công");
       setShowSuccessToast(true);
 
       console.log(`[Bước 5/5] Hoàn tất đăng nhập! Chuẩn bị điều hướng tới: ${destination}`);
@@ -121,18 +169,208 @@ export function Auth() {
     executeLogin(email, password);
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  // -------------------------------------------------------------
+  // REGISTER & OTP FLOW (Branch 2: feat/auth-register)
+  // -------------------------------------------------------------
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate register for now (Branch 2: feat/auth-register will implement this)
-    setBanner('register_error');
+    const trimmedEmail = regEmail.trim();
+    const trimmedFullName = regFullName.trim();
+
+    if (!trimmedFullName || !trimmedEmail || !regPassword) {
+      setBanner('custom_error');
+      setErrorMessage('Vui lòng điền đầy đủ Họ và tên, Email và Mật khẩu.');
+      return;
+    }
+
+    if (regPassword !== regConfirmPassword) {
+      setBanner('custom_error');
+      setErrorMessage('Mật khẩu xác nhận không khớp với mật khẩu đã nhập.');
+      return;
+    }
+
+    // Backend Regex validation: min 8, has lower, upper, digit, special char in [@$!%*?&]
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!strongPasswordRegex.test(regPassword)) {
+      setBanner('custom_error');
+      setErrorMessage('Mật khẩu tối thiểu 8 ký tự, gồm ít nhất 1 chữ thường, 1 chữ hoa, 1 số và 1 ký tự đặc biệt (@$!%*?&).');
+      return;
+    }
+
+    setIsLoading(true);
+    setBanner(null);
+    setErrorMessage(null);
+
+    console.groupCollapsed(`%c[Auth Register] Đang tạo tài khoản: ${trimmedEmail}`, 'color: #0284c7; font-weight: bold;');
+    console.log('[Bước 1/4] Kiểm tra dữ liệu đầu vào:', { email: trimmedEmail, fullName: trimmedFullName });
+    console.log('[Bước 2/4] Đang gửi HTTP POST /api/auth/register tới Backend...');
+
+    try {
+      const authRes = await authService.register({
+        email: trimmedEmail,
+        password: regPassword,
+      });
+
+      console.log('[Bước 2/4] Đăng ký thành công (200 OK)! Nhận token:', authRes);
+
+      const userModel: User = {
+        id: authRes.userId,
+        email: authRes.email,
+        role: authRes.role,
+        fullName: trimmedFullName || trimmedEmail.split('@')[0],
+        avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+        isEmailVerified: false,
+        isLocked: false,
+        phone: '',
+        passwordHash: '',
+        locale: 'vi',
+      };
+
+      // Store temporary registration token in unauthenticated state for OTP endpoints
+      setPendingUser(userModel);
+      setPendingToken(authRes.accessToken);
+
+      console.log('[Bước 3/4] Đang yêu cầu Backend phát sinh và gửi mã OTP (/api/auth/otp/send)...');
+      try {
+        await authService.sendVerificationOtp();
+        console.log('[Bước 3/4] Mã OTP đã được sinh và gửi thành công (202 Accepted).');
+      } catch (otpSendErr) {
+        console.warn('[Bước 3/4] Cảnh báo gửi OTP bước đầu:', otpSendErr);
+      }
+
+      setOtpCooldown(60);
+      setOtpSessionExpiresAt(Date.now() + 15 * 60 * 1000);
+      setRegStep('otp');
+      console.log('[Bước 4/4] Chuyển giao diện sang bước nhập mã OTP 6 chữ số.');
+      console.groupEnd();
+    } catch (err: any) {
+      console.groupEnd();
+      console.error('[Auth Register] Đăng ký thất bại:', err);
+
+      const status = err.response?.status;
+      const code = err.response?.data?.code;
+
+      if (status === 409 || code === 'EMAIL_ALREADY_USED') {
+        setBanner('register_error');
+      } else if (status === 400) {
+        setBanner('custom_error');
+        setErrorMessage(err.response?.data?.message || 'Dữ liệu đăng ký không hợp lệ. Vui lòng kiểm tra lại mật khẩu và email.');
+      } else if (!err.response || err.code === 'ERR_NETWORK') {
+        setBanner('network_error');
+        setErrorMessage('Không thể kết nối đến máy chủ Backend (http://localhost:8080).');
+      } else {
+        setBanner('custom_error');
+        setErrorMessage(err.response?.data?.message || 'Đăng ký không thành công. Vui lòng thử lại.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (otpCooldown > 0 || isLoading) return;
+    setIsLoading(true);
+    setBanner(null);
+    setErrorMessage(null);
+    setOtpCode(""); // Reset lại phần nhập OTP nếu người dùng bấm gửi lại mã
+
+    console.groupCollapsed(`%c[Auth OTP] Yêu cầu gửi lại mã OTP tới: ${regEmail.trim()}`, 'color: #0284c7; font-weight: bold;');
+    console.log('[Gửi lại OTP] Gửi HTTP POST /api/auth/otp/send...');
+    try {
+      await authService.sendVerificationOtp();
+      console.log('[Gửi lại OTP] Thành công (202 Accepted)! Bắt đầu đếm ngược 60s.');
+      setOtpCooldown(60);
+    } catch (err: any) {
+      console.error('[Gửi lại OTP] Thất bại:', err);
+      const status = err.response?.status;
+      if (status === 401) {
+        setRegStep('form');
+        setOtpCode('');
+        setPendingUser(null);
+        setOtpSessionExpiresAt(null);
+        useAuthStore.getState().logout();
+        setBanner('custom_error');
+        setErrorMessage('Phiên xác thực đã hết hạn sau 15 phút. Vui lòng đăng ký lại.');
+      } else if (status === 429) {
+        setErrorMessage('Bạn thao tác quá nhanh. Vui lòng chờ kết thúc thời gian chờ 60 giây.');
+        setBanner('custom_error');
+      } else {
+        setErrorMessage(err.response?.data?.message || 'Không thể gửi lại mã OTP lúc này. Vui lòng thử lại sau.');
+        setBanner('custom_error');
+      }
+    } finally {
+      setIsLoading(false);
+      console.groupEnd();
+    }
+  };
+
+  const handleVerifyOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanOtp = otpCode.trim();
+    if (cleanOtp.length !== 6) {
+      setBanner('custom_error');
+      setErrorMessage('Mã OTP phải bao gồm chính xác 6 chữ số.');
+      return;
+    }
+
+    setIsLoading(true);
+    setBanner(null);
+    setErrorMessage(null);
+
+    console.groupCollapsed(`%c[Auth OTP] Đang xác thực OTP: ${cleanOtp}`, 'color: #0284c7; font-weight: bold;');
+    console.log('[Bước 1/4] Kiểm tra mã OTP 6 chữ số:', cleanOtp);
+    console.log('[Bước 2/4] Đang gửi HTTP POST /api/auth/otp/verify tới Backend...');
+
+    try {
+      await authService.verifyOtp({ code: cleanOtp });
+      console.log('[Bước 3/4] Backend xác thực OTP thành công (200 OK)!');
+
+      // Update state: user is now fully verified and authenticated
+      if (pendingUser) {
+        setAuth({ ...pendingUser, isEmailVerified: true }, useAuthStore.getState().accessToken || '');
+      }
+
+      setToastMessage('Đăng ký & Kích hoạt thành công!');
+      setShowSuccessToast(true);
+
+      console.log('[Bước 4/4] Kích hoạt tài khoản hoàn tất! Điều hướng về trang chủ...');
+      console.groupEnd();
+
+      setTimeout(() => {
+        navigate('/');
+      }, 1200);
+    } catch (err: any) {
+      console.groupEnd();
+      console.error('[Auth OTP] Xác thực OTP thất bại:', err);
+      const status = err.response?.status;
+      const code = err.response?.data?.code;
+
+      if (status === 401) {
+        setRegStep('form');
+        setOtpCode('');
+        setPendingUser(null);
+        setOtpSessionExpiresAt(null);
+        useAuthStore.getState().logout();
+        setBanner('custom_error');
+        setErrorMessage('Phiên xác thực đã hết hạn sau 15 phút. Vui lòng đăng ký lại.');
+      } else if (status === 400 || code === 'INVALID_OTP') {
+        setBanner('custom_error');
+        setErrorMessage('Mã OTP không chính xác hoặc đã hết hạn (tối đa 5 lần thử). Vui lòng thử lại.');
+      } else {
+        setBanner('custom_error');
+        setErrorMessage(err.response?.data?.message || 'Xác thực OTP thất bại. Vui lòng thử lại.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <main className="w-full flex-1 flex flex-col justify-center items-center relative overflow-hidden px-4 py-3 sm:py-6">
-      {/* Dynamic Auto-Rotating Coastal Scene Backdrop (Same scenic imagery as Home page) */}
+      {/* Dynamic Auto-Rotating Coastal Scene Backdrop */}
       <AuthCinematicBackdrop autoRotateInterval={5500} />
 
-      {/* Toast thông báo đăng nhập thành công trượt từ bên phải sang trái */}
+      {/* Solid Green Success Toast */}
       {showSuccessToast && (
         <aside
           role="status"
@@ -144,7 +382,7 @@ export function Auth() {
             check_circle
           </span>
           <span className="text-sm font-semibold tracking-wide text-white">
-            Đăng nhập thành công
+            {toastMessage}
           </span>
         </aside>
       )}
@@ -170,11 +408,12 @@ export function Auth() {
               <span className="text-lg text-on-surface tracking-tight font-bold">DANA<span className="text-primary-container">SEA</span></span>
             </div>
             
+            {/* Tab Switcher (Login / Register) */}
             <div className="relative p-1 bg-surface-container rounded-xl flex items-center">
               <button 
                 type="button"
                 className={`relative z-10 w-1/2 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 ${activeTab === "login" ? "text-primary-container bg-surface-container-lowest shadow-sm" : "text-on-surface-variant hover:text-on-surface bg-transparent"}`} 
-                onClick={() => setActiveTab("login")}
+                onClick={() => { setActiveTab("login"); setBanner(null); setErrorMessage(null); }}
               >
                 <span className="material-symbols-outlined text-[17px]">login</span>
                 Đăng nhập
@@ -182,50 +421,60 @@ export function Auth() {
               <button 
                 type="button"
                 className={`relative z-10 w-1/2 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 ${activeTab === "register" ? "text-primary-container bg-surface-container-lowest shadow-sm" : "text-on-surface-variant hover:text-on-surface bg-transparent"}`} 
-                onClick={() => setActiveTab("register")}
+                onClick={() => { setActiveTab("register"); setBanner(null); setErrorMessage(null); }}
               >
                 <span className="material-symbols-outlined text-[17px]">person_add</span>
                 Tạo tài khoản mới
               </button>
             </div>
             
-            {activeTab === "login" && (
-              <div className="space-y-3 block">
-                {banner && (
-                  <div className="space-y-2">
-                    {banner === 'locked' && (
-                      <div className="p-2.5 rounded-xl bg-error-container text-on-error-container flex items-start gap-2">
-                        <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">lock_clock</span>
-                        <div>
-                          <p className="text-xs font-bold">Tài khoản tạm thời bị khóa</p>
-                          <p className="text-[11px] mt-0.5">Vui lòng liên hệ ban quản trị để được hỗ trợ mở khóa tài khoản.</p>
-                        </div>
-                      </div>
-                    )}
-                    {banner === 'wrong_creds' && (
-                      <div className="p-2.5 rounded-xl bg-error-container text-on-error-container flex items-start gap-2">
-                        <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">error</span>
-                        <p className="text-xs font-medium">Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại thông tin.</p>
-                      </div>
-                    )}
-                    {banner === 'network_error' && (
-                      <div className="p-2.5 rounded-xl bg-error-container text-on-error-container flex items-start gap-2">
-                        <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">cloud_off</span>
-                        <div>
-                          <p className="text-xs font-bold">Không thể kết nối đến máy chủ Backend</p>
-                          <p className="text-[11px] mt-0.5">{errorMessage || 'Vui lòng kiểm tra Docker và Backend Spring Boot (cổng 8080) đã được khởi động chưa.'}</p>
-                        </div>
-                      </div>
-                    )}
-                    {banner === 'custom_error' && (
-                      <div className="p-2.5 rounded-xl bg-error-container text-on-error-container flex items-start gap-2">
-                        <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">warning</span>
-                        <p className="text-xs font-medium">{errorMessage}</p>
-                      </div>
-                    )}
+            {/* Banner Messages */}
+            {banner && (
+              <div className="space-y-2">
+                {banner === 'locked' && (
+                  <div className="p-2.5 rounded-xl bg-error-container text-on-error-container flex items-start gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">lock_clock</span>
+                    <div>
+                      <p className="text-xs font-bold">Tài khoản tạm thời bị khóa</p>
+                      <p className="text-[11px] mt-0.5">Vui lòng liên hệ ban quản trị để được hỗ trợ mở khóa tài khoản.</p>
+                    </div>
                   </div>
                 )}
+                {banner === 'wrong_creds' && (
+                  <div className="p-2.5 rounded-xl bg-error-container text-on-error-container flex items-start gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">error</span>
+                    <p className="text-xs font-medium">Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại thông tin.</p>
+                  </div>
+                )}
+                {banner === 'register_error' && (
+                  <div className="p-2.5 rounded-xl bg-error-container text-on-error-container flex items-start gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">error</span>
+                    <div>
+                      <p className="text-xs font-bold">Email này đã được sử dụng</p>
+                      <p className="text-[11px] mt-0.5">Địa chỉ email đã tồn tại trong hệ sinh thái DANASEA. Vui lòng đăng nhập hoặc dùng email khác.</p>
+                    </div>
+                  </div>
+                )}
+                {banner === 'network_error' && (
+                  <div className="p-2.5 rounded-xl bg-error-container text-on-error-container flex items-start gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-error flex-shrink-0 mt-0.5">cloud_off</span>
+                    <div>
+                      <p className="text-xs font-bold">Không thể kết nối đến máy chủ Backend</p>
+                      <p className="text-[11px] mt-0.5">{errorMessage || 'Vui lòng kiểm tra Docker và Backend Spring Boot (cổng 8080) đã được khởi động chưa.'}</p>
+                    </div>
+                  </div>
+                )}
+                {banner === 'custom_error' && (
+                  <div className="p-2.5 rounded-xl bg-error-container text-on-error-container">
+                    <p className="text-xs font-medium">{errorMessage}</p>
+                  </div>
+                )}
+              </div>
+            )}
 
+            {/* TAB 1: LOGIN */}
+            {activeTab === "login" && (
+              <div className="space-y-3 block">
                 {/* Quick Demo Role Selector */}
                 <div className="p-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
@@ -279,9 +528,8 @@ export function Auth() {
                 
                 <form className="space-y-2.5" onSubmit={handleLoginSubmit}>
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-on-surface flex items-center justify-between">
-                      <span>Địa chỉ Email hoặc Tên tài khoản</span>
-                      <span className="text-secondary text-[11px]">*Bắt buộc</span>
+                    <label className="text-xs font-medium text-on-surface">
+                      Địa chỉ Email hoặc Tên tài khoản
                     </label>
                     <div className="relative flex items-center">
                       <span className="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">mail</span>
@@ -326,13 +574,10 @@ export function Auth() {
                     {isLoading ? (
                       <>
                         <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
-                        <span>Đang xác thực thông tin...</span>
+                        <span>Đang đăng nhập...</span>
                       </>
                     ) : (
-                      <>
-                        <span>Đăng nhập hệ sinh thái DANASEA</span>
-                        <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                      </>
+                      <span>Đăng nhập</span>
                     )}
                   </button>
                 </form>
@@ -340,63 +585,210 @@ export function Auth() {
                 <div className="pt-1 text-center">
                   <p className="text-xs text-on-surface-variant">
                     Chưa có tài khoản tham gia trải nghiệm? 
-                    <button type="button" className="text-primary-container font-semibold hover:underline bg-transparent border-0 cursor-pointer ml-1" onClick={() => setActiveTab("register")}>Đăng ký thành viên ngay</button>
+                    <button type="button" className="text-primary-container font-semibold hover:underline bg-transparent border-0 cursor-pointer ml-1" onClick={() => { setActiveTab("register"); setRegStep("form"); setBanner(null); setErrorMessage(null); }}>Đăng ký thành viên ngay</button>
                   </p>
                 </div>
               </div>
             )}
 
-                {activeTab === "register" && (
-                  <div className="space-y-3">
+            {/* TAB 2: REGISTER */}
+            {activeTab === "register" && (
+              <div className="space-y-3">
+                {/* SUB-STEP 1: Registration Form */}
+                {regStep === "form" && (
+                  <>
                     <div className="space-y-0.5">
                       <h3 className="text-sm font-bold text-on-surface">Đăng ký tài khoản du khách &amp; đối tác</h3>
-                      <p className="text-xs text-on-surface-variant">Điền thông tin để nhận mã QR vé điện tử chính chủ tại cảng Đà Nẵng.</p>
                     </div>
-                    {banner === 'register_error' && (
-                      <div className="p-2.5 rounded-xl bg-error-container text-on-error-container">
-                        <p className="text-xs font-semibold">Địa chỉ email này đã được đăng ký trong hệ thống DANASEA.</p>
-                      </div>
-                    )}
+
                     <form className="space-y-2.5" onSubmit={handleRegisterSubmit}>
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-on-surface flex items-center justify-between">
-                          <span>Họ và tên</span>
-                          <span className="text-secondary text-[11px]">*Bắt buộc</span>
+                        <label className="text-xs font-medium text-on-surface">
+                          Họ và tên
                         </label>
-                        <div className="relative flex items-center">
-                          <span className="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">badge</span>
-                          <input className="w-full h-[42px] pl-10 pr-3 rounded-xl bg-surface-container-lowest text-on-surface text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant" placeholder="Ví dụ: Nguyễn Hải Đăng" required type="text" />
-                        </div>
+                        <input 
+                          value={regFullName}
+                          onChange={e => setRegFullName(e.target.value)}
+                          disabled={isLoading}
+                          required
+                          className="w-full h-[40px] px-3.5 rounded-xl bg-surface-container-lowest text-on-surface text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
+                          placeholder="Ví dụ: Nguyễn Hải Đăng" 
+                          type="text" 
+                        />
                       </div>
+
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-on-surface flex items-center justify-between">
-                          <span>Địa chỉ Email</span>
-                          <span className="text-secondary text-[11px]">*Bắt buộc</span>
+                        <label className="text-xs font-medium text-on-surface">
+                          Địa chỉ Email
                         </label>
-                        <div className="relative flex items-center">
-                          <span className="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">mail</span>
-                          <input className="w-full h-[42px] pl-10 pr-3 rounded-xl bg-surface-container-lowest text-on-surface text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant" placeholder="ban@email.com" required type="email" />
+                        <input 
+                          value={regEmail}
+                          onChange={e => setRegEmail(e.target.value)}
+                          disabled={isLoading}
+                          className="w-full h-[40px] px-3.5 rounded-xl bg-surface-container-lowest text-on-surface text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
+                          placeholder="ban@email.com" 
+                          required 
+                          type="email" 
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-on-surface">
+                            Mật khẩu
+                          </label>
+                          <input 
+                            value={regPassword}
+                            onChange={e => setRegPassword(e.target.value)}
+                            disabled={isLoading}
+                            className="w-full h-[40px] px-3 rounded-xl bg-surface-container-lowest text-on-surface text-xs sm:text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
+                            placeholder="Tối thiểu 8 ký tự" 
+                            required 
+                            type="password" 
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-on-surface">
+                            Nhập lại
+                          </label>
+                          <input 
+                            value={regConfirmPassword}
+                            onChange={e => setRegConfirmPassword(e.target.value)}
+                            disabled={isLoading}
+                            className="w-full h-[40px] px-3 rounded-xl bg-surface-container-lowest text-on-surface text-xs sm:text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant disabled:opacity-60" 
+                            placeholder="Xác nhận lại" 
+                            required 
+                            type="password" 
+                          />
                         </div>
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium text-on-surface flex items-center justify-between">
-                          <span>Mật khẩu</span>
-                          <span className="text-secondary text-[11px]">*Bắt buộc</span>
-                        </label>
-                        <div className="relative flex items-center">
-                          <span className="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">lock</span>
-                          <input className="w-full h-[42px] pl-10 pr-3 rounded-xl bg-surface-container-lowest text-on-surface text-sm shadow-sm outline-none border border-outline-variant/30 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant" placeholder="Nhập mật khẩu" required type="password" />
-                        </div>
-                      </div>
-                      <button className="w-full h-[44px] rounded-xl bg-primary-container text-on-primary text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary transition-all duration-200 cursor-pointer shadow-md mt-1" type="submit">
-                        Tạo tài khoản miễn phí
+
+                      {/* Password Requirements Guidance */}
+                      <p className="text-[10px] text-on-surface-variant flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[13px] text-primary flex-shrink-0">info</span>
+                        <span>Mật khẩu 8+ ký tự, gồm chữ Hoa, Thường, Số và Ký tự đặc biệt (@$!%*?&).</span>
+                      </p>
+
+                      <button 
+                        className="w-full h-[42px] rounded-xl bg-primary-container text-on-primary text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary transition-all duration-200 cursor-pointer shadow-md mt-1 disabled:opacity-60 disabled:cursor-not-allowed" 
+                        type="submit"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                            <span>Đang xử lý đăng ký...</span>
+                          </>
+                        ) : (
+                          <span>Đăng ký</span>
+                        )}
                       </button>
+                    </form>
+
+                    <div className="pt-0.5 text-center">
+                      <p className="text-xs text-on-surface-variant">
+                        Đã có tài khoản DANASEA? 
+                        <button type="button" className="text-primary-container font-semibold hover:underline bg-transparent border-0 cursor-pointer ml-1" onClick={() => { setActiveTab("login"); setBanner(null); setErrorMessage(null); }}>Đăng nhập ngay</button>
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* SUB-STEP 2: OTP Verification */}
+                {regStep === "otp" && (
+                  <div className="space-y-3">
+                    <div className="text-center space-y-1">
+                      <div className="w-10 h-10 rounded-full bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 mx-auto flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[22px]">mark_email_read</span>
+                      </div>
+                      <h3 className="text-sm font-bold text-on-surface">Kích hoạt tài khoản</h3>
+                      <p className="text-xs text-on-surface-variant leading-relaxed">
+                        Mã xác thực OTP (6 chữ số) đã được gửi tới địa chỉ: <br />
+                        <span className="font-semibold text-primary-container">{regEmail}</span>
+                      </p>
+                    </div>
+
+                    <form className="space-y-3" onSubmit={handleVerifyOtpSubmit}>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-on-surface text-center block">
+                          Nhập mã xác thực 6 chữ số
+                        </label>
+                        <input 
+                          value={otpCode}
+                          onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          disabled={isLoading}
+                          maxLength={6}
+                          autoFocus
+                          className="w-full h-[46px] text-center font-mono text-xl font-bold tracking-[0.45em] rounded-xl bg-surface-container-lowest text-on-surface shadow-sm outline-none border border-outline-variant/40 focus:border-primary focus:shadow-md transition-all placeholder:text-outline-variant/40 placeholder:tracking-normal disabled:opacity-60" 
+                          placeholder="••••••" 
+                          required 
+                          type="text" 
+                        />
+                      </div>
+
+                      {/* Resend OTP Action & 60s Cooldown Countdown */}
+                      <div className="flex items-center justify-between text-xs pt-0.5">
+                        <span className="text-on-surface-variant">Chưa nhận được mã?</span>
+                        {otpCooldown > 0 ? (
+                          <span className="font-medium text-outline flex items-center gap-1 font-mono">
+                            <span className="material-symbols-outlined text-[14px]">timer</span>
+                            Gửi lại sau ({otpCooldown}s)
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={isLoading}
+                            onClick={handleResendOtp}
+                            className="text-primary-container font-semibold hover:underline bg-transparent border-0 cursor-pointer disabled:opacity-50"
+                          >
+                            Gửi lại mã OTP
+                          </button>
+                        )}
+                      </div>
+
+                      <button 
+                        className="w-full h-[42px] rounded-xl bg-primary-container text-on-primary text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary transition-all duration-200 cursor-pointer shadow-md disabled:opacity-60 disabled:cursor-not-allowed" 
+                        type="submit"
+                        disabled={isLoading || otpCode.length !== 6}
+                      >
+                        {isLoading ? (
+                          <>
+                            <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                            <span>Đang xác nhận...</span>
+                          </>
+                        ) : (
+                          <span>Xác nhận</span>
+                        )}
+                      </button>
+
+                      <div className="text-center pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRegStep("form");
+                            setOtpCode("");
+                            setPendingUser(null);
+                            setOtpSessionExpiresAt(null);
+                            useAuthStore.getState().logout();
+                            setBanner(null);
+                            setErrorMessage(null);
+                          }}
+                          className="text-xs text-outline hover:text-on-surface transition-colors bg-transparent border-0 cursor-pointer flex items-center justify-center gap-1 mx-auto"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">arrow_back</span>
+                          <span>Đổi địa chỉ email khác</span>
+                        </button>
+                      </div>
                     </form>
                   </div>
                 )}
               </div>
-            </div>
+            )}
           </div>
+        </div>
+      </div>
     </main>
   );
 }
+

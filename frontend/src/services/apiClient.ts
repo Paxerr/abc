@@ -63,11 +63,12 @@ apiClient.interceptors.response.use(
     console.error('Response Data:', responseData);
     console.groupEnd();
 
-    // Handle token expiration or unauthorized access
-    if (status === 401 && !url?.includes('/auth/login')) {
+    // Handle token expiration or unauthorized access (exclude all /auth/ routes)
+    if (status === 401 && !url?.includes('/auth/')) {
       console.warn('[API Auth] Session expired or unauthorized (401). Clearing credentials...');
       useAuthStore.getState().logout();
     }
+
 
     return Promise.reject(error);
   }
