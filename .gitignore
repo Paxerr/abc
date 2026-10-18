@@ -23,3 +23,5 @@ private/
 __pycache__/
 *.py[cod]
 .ruff_cache/
+cli-proxy/auths/
+cli-proxy/logs/

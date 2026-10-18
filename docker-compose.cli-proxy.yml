@@ -1,0 +1,27 @@
+services:
+  cli-proxy-api:
+    image: eceasy/cli-proxy-api:latest
+    container_name: cli-proxy-api
+    restart: unless-stopped
+    ports:
+      - "${CLIPROXYAPI_PORT:-8318}:8317"             # Cổng API & Web Management Panel (truy cập: http://localhost:8318/management.html)
+      - "8085:8085"                                 # Google Gemini / Vertex AI OAuth callback
+      - "1455:1455"                                 # OpenAI Codex OAuth callback
+      - "54545:54545"                               # Claude Code OAuth callback
+      - "${CLIPROXYAPI_AG_PORT:-51122}:51121"       # Antigravity OAuth callback
+    volumes:
+      - ./cli-proxy/config.yaml:/CLIProxyAPI/config.yaml
+      - ./cli-proxy/auths:/root/.cli-proxy-api
+      - ./cli-proxy/logs:/CLIProxyAPI/logs
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/127.0.0.1/8317' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - cli_proxy_net
+
+networks:
+  cli_proxy_net:
+    name: pbl6_cli_proxy_net
