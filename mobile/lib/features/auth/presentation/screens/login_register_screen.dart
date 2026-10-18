@@ -1,3 +1,4 @@
+import '../../../../core/auth/google_login.dart';
 import '../../../../core/auth/auth_session.dart';
 import 'verify_email_screen.dart';
 import 'package:mobile/core/l10n/app_localizations.dart';
@@ -49,6 +50,25 @@ class _LoginRegisterScreenState extends State<LoginRegisterScreen>
     _nameController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  Future<void> _googleLogin() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final token = await GoogleLogin.idToken();
+      if (token == null) return;
+      await AuthSession.instance.loginWithGoogle(token);
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (_) => false,
+      );
+    } catch (e) {
+      if (mounted) _error(e.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _submit() async {
@@ -266,7 +286,7 @@ class _LoginRegisterScreenState extends State<LoginRegisterScreen>
                             ),
                             const SizedBox(height: 12),
                             LocalizedText(
-                              'Đăng nhập mạng xã hội sắp ra mắt',
+                              'Facebook sắp ra mắt',
                               textAlign: TextAlign.center,
                               style: AppTypography.bodySm(
                                 color: AppColors.outline,
@@ -528,28 +548,13 @@ class _LoginRegisterScreenState extends State<LoginRegisterScreen>
     ],
   );
 
-  Widget _social(String provider, Widget icon) => Tooltip(
-    message: '$provider — ${tr(context, 'Sắp ra mắt')}',
-    child: Semantics(
-      label: '$provider — ${tr(context, 'Sắp ra mắt')}',
-      button: true,
-      enabled: false,
-      child: Container(
-        width: 54,
-        height: 54,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: .04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Center(child: icon),
-      ),
+  Widget _social(String provider, Widget icon) => IconButton(
+    tooltip: provider == 'Google' ? 'Google' : 'Facebook — Sắp ra mắt',
+    onPressed: provider == 'Google' && !_busy ? _googleLogin : null,
+    icon: icon,
+    style: IconButton.styleFrom(
+      backgroundColor: Colors.white,
+      fixedSize: const Size(54, 54),
     ),
   );
 }

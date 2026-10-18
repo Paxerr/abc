@@ -1,3 +1,4 @@
+import '../../../../core/auth/google_login.dart';
 import '../../../../core/auth/auth_session.dart';
 import 'verify_email_screen.dart';
 import 'package:vendor_mobile/core/l10n/app_localizations.dart';
@@ -21,6 +22,7 @@ class LoginRegisterScreen extends StatefulWidget {
 class _LoginRegisterScreenState extends State<LoginRegisterScreen> {
   final _authRepo = AuthSession.instance;
   bool _isLoginTab = true;
+  bool _googleBusy = false;
 
   // Login form
   final _loginFormKey = GlobalKey<FormState>();
@@ -55,8 +57,40 @@ class _LoginRegisterScreenState extends State<LoginRegisterScreen> {
     super.dispose();
   }
 
+  Future<void> _googleLogin() async {
+    if (_googleBusy || _isLoadingLogin || _isLoadingRegister) return;
+    if (!_isLoginTab && !_termsAgreed) {
+      showVendorToast(
+        context,
+        message: 'Vui lòng đồng ý với điều khoản hợp tác đối tác.',
+        isError: true,
+      );
+      return;
+    }
+    setState(() => _googleBusy = true);
+    try {
+      final token = await GoogleLogin.idToken();
+      if (token == null) return;
+      _authRepo.remember = _isLoginTab ? _rememberMe : true;
+      await _authRepo.loginWithGoogle(token);
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const VendorAccessScreen()),
+        (_) => false,
+      );
+    } catch (e) {
+      if (mounted)
+        showVendorToast(context, message: e.toString(), isError: true);
+    } finally {
+      if (mounted) setState(() => _googleBusy = false);
+    }
+  }
+
   Future<void> _handleLogin() async {
-    if (_isLoadingLogin || !_loginFormKey.currentState!.validate()) return;
+    if (_googleBusy ||
+        _isLoadingLogin ||
+        !_loginFormKey.currentState!.validate())
+      return;
     setState(() => _isLoadingLogin = true);
     try {
       _authRepo.remember = _rememberMe;
@@ -83,7 +117,9 @@ class _LoginRegisterScreenState extends State<LoginRegisterScreen> {
   }
 
   Future<void> _handleRegister() async {
-    if (_isLoadingRegister || !_registerFormKey.currentState!.validate())
+    if (_googleBusy ||
+        _isLoadingRegister ||
+        !_registerFormKey.currentState!.validate())
       return;
     if (!_termsAgreed) {
       showVendorToast(
@@ -202,6 +238,16 @@ class _LoginRegisterScreenState extends State<LoginRegisterScreen> {
 
                   const SizedBox(height: 20),
 
+                  OutlinedButton(
+                    onPressed:
+                        _googleBusy || _isLoadingLogin || _isLoadingRegister
+                        ? null
+                        : _googleLogin,
+                    child: LocalizedText(
+                      _googleBusy ? 'Đang đăng nhập...' : 'Tiếp tục với Google',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   // Security note footer
                   _buildSecurityFooter(),
                   const SizedBox(height: 24),
