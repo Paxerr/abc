@@ -1,6 +1,11 @@
+<div align="center">
+
 # DANASEA
 
-Danasea is an online booking and experience management platform tailored for coastal and marine tourism in Da Nang, Vietnam. The platform bridges travelers and local marine tour operators through real-time reservation scheduling, secure automated payments, ticket verification, and weather-aware policy handling.
+**Marine Tourism & Coastal Experience Management Platform**  
+*Da Nang, Vietnam*
+
+<br/>
 
 [![CI Status](https://github.com/capkimkhanh2k5/PBL6_HTTT/actions/workflows/ci.yml/badge.svg)](https://github.com/capkimkhanh2k5/PBL6_HTTT/actions/workflows/ci.yml)
 ![Java 21](https://img.shields.io/badge/Java-21-ED8B00?style=flat&logo=openjdk&logoColor=white)
@@ -16,6 +21,14 @@ Danasea is an online booking and experience management platform tailored for coa
 ![Nginx](https://img.shields.io/badge/Nginx-Reverse_Proxy-009639?style=flat&logo=nginx&logoColor=white)
 ![Tailscale](https://img.shields.io/badge/Tailscale-Funnel-24292E?style=flat&logo=tailscale&logoColor=white)
 
+<br/>
+
+<p align="center">
+  An online booking and experience management platform tailored for coastal and marine tourism in Da Nang, Vietnam. Connecting travelers and local tour operators through real-time scheduling, secure automated transactions, cryptographic ticket verification, and weather-aware policy handling.
+</p>
+
+</div>
+
 ---
 
 ## Overview
@@ -28,14 +41,6 @@ Coastal adventure tourism requires strict capacity management, weather contingen
 - **Weather Contingency & Dynamic Refunds:** Automated slot cancellation and customer refund workflows driven by marine weather monitoring (Open-Meteo API).
 - **Vendor Settlement & Disputes:** Transparent commission accounting, automated refund deduction, and structured arbitration workflows.
 - **AI Concierge:** Natural language itinerary recommendations and policy clarification powered by large language models.
-
----
-
-## Live Demo
-
-A production preview instance is deployed via an automated CI/CD pipeline:
-
-- **Application URL:** [https://danasea.tailfc3563.ts.net](https://danasea.tailfc3563.ts.net)
 
 ---
 
@@ -118,8 +123,14 @@ The application is structured as a **Modular Clean Monolith** following Hexagona
 
 ## Authors
 
-- **Cap Kim Khanh** ([@capkimkhanh2k5](https://github.com/capkimkhanh2k5)) — Lead Developer
-- Project PBL6 — Department of Information Technology, Da Nang University of Science and Technology (DUT)
+This project was developed as part of **PBL6 — Capstone Project in Information Technology**, Department of Information Technology, Da Nang University of Science and Technology (DUT).
+
+| Member | Role & Responsibilities |
+|---|---|
+| **Cap Kim Khanh** | Lead Developer — Backend, AI Integration, Infrastructure & DevOps |
+| **Dinh Minh Tue** | Full Stack Support, Data Engineering |
+| **Nguyen Cong Nhat** | Frontend Web Development |
+| **Nguyen Thi Anh Thu** | Mobile Application Development |
 
 ---
 
