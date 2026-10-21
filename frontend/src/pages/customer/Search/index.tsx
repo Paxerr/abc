@@ -355,30 +355,13 @@ export function Search() {
             )}
           </div>
 
-          {/* Large Title & Subtitle Directly Over Sea Backdrop */}
+          {/* Large Title Directly Over Sea Backdrop */}
           <div className="max-w-4xl">
-            <div className="flex items-center gap-2.5 mb-2.5">
-              <span className="px-3 py-0.5 rounded-full bg-cyan-400/20 backdrop-blur-md border border-cyan-300/40 text-cyan-200 text-xs font-mono font-bold uppercase tracking-wider drop-shadow-sm">
-                {categoryMeta ? categoryMeta.tag : (language === 'en' ? 'Ocean Catalog' : 'Danh mục biển')}
-              </span>
-              <span className="text-xs text-white/80 font-mono drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
-                {displayServices.length} {language === 'en' ? 'experiences available' : 'trải nghiệm sẵn sàng'}
-              </span>
-            </div>
-
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] drop-shadow-[0_8px_24px_rgba(0,0,0,0.7)] mb-2.5">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] drop-shadow-[0_8px_24px_rgba(0,0,0,0.7)] mb-2">
               {categoryMeta
                 ? (language === 'en' ? categoryMeta.titleEn : categoryMeta.titleVi)
                 : (language === 'en' ? 'EXPLORE DA NANG MARINE EXPERIENCES' : 'KHÁM PHÁ TRẢI NGHIỆM BIỂN ĐÀ NẴNG')}
             </h1>
-
-            <p className="text-sm sm:text-base text-white/95 leading-relaxed font-normal max-w-3xl drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.95)]">
-              {categoryMeta
-                ? (language === 'en' ? categoryMeta.descEn : categoryMeta.descVi)
-                : (language === 'en'
-                  ? 'Handpicked certified marine activities in Da Nang: sunrise SUP, coral scuba diving, speedboats, parasailing and luxury sunset yachts.'
-                  : 'Toàn bộ các gói hoạt động thể thao biển được thẩm định an toàn hàng hải: chèo SUP, lặn ngắm san hô Sơn Trà, dù bay, cano cao tốc và du thuyền hoàng hôn.')}
-            </p>
           </div>
         </section>
 

@@ -232,17 +232,6 @@ export const CinematicSceneBackdrop: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/40 via-slate-950/20 to-slate-950/60 pointer-events-none transition-opacity duration-700" />
       </div>
 
-      {/* HUD Floating Scene Indicator Badge */}
-      <div className="fixed bottom-6 left-6 z-40 pointer-events-none hidden md:flex items-center gap-3 px-4 py-2 rounded-full bg-slate-950/70 backdrop-blur-md border border-white/20 text-white shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-all duration-500">
-        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-        <span className="font-mono text-xs font-bold text-cyan-300 tracking-wider">
-          {activeScene.badge}
-        </span>
-        <span className="text-white/40 text-xs">|</span>
-        <span className="text-xs font-semibold tracking-wide text-slate-100">
-          {activeScene.label}
-        </span>
-      </div>
     </>
   );
 };
