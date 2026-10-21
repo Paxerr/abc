@@ -14,7 +14,9 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Objects;
@@ -31,6 +33,22 @@ class PostgreSqlMigrationIntegrationTest {
                     .withExposedPorts(5432)
                     .waitingFor(Wait.forListeningPort());
 
+    private static void waitForPostgres(String url, String user, String password) throws Exception {
+        long deadline = System.currentTimeMillis() + 60_000;
+        Exception lastEx = null;
+        while (System.currentTimeMillis() < deadline) {
+            try (Connection conn = DriverManager.getConnection(url, user, password);
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute("SELECT 1");
+                return;
+            } catch (Exception e) {
+                lastEx = e;
+                Thread.sleep(250);
+            }
+        }
+        throw new IllegalStateException("PostgreSQL did not become ready in time: " + (lastEx != null ? lastEx.getMessage() : "timeout"), lastEx);
+    }
+
     @Test
     void allMigrationsApplyAndValidateOnPostgreSql16() throws Exception {
         String jdbcUrl =
@@ -39,17 +57,20 @@ class PostgreSqlMigrationIntegrationTest {
                         + ":"
                         + POSTGRES.getFirstMappedPort()
                         + "/migration_test";
+        waitForPostgres(jdbcUrl, "migration_user", "migration_password");
 
         Flyway flyway =
                 Flyway.configure()
                         .dataSource(jdbcUrl, "migration_user", "migration_password")
                         .locations("classpath:db/migration")
+                        .connectRetries(30)
                         .load();
 
         Flyway legacy =
                 Flyway.configure()
                         .dataSource(jdbcUrl, "migration_user", "migration_password")
                         .locations("classpath:db/migration")
+                        .connectRetries(30)
                         .target("17")
                         .load();
         legacy.migrate();

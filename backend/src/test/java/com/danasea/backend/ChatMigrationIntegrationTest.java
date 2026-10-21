@@ -2,7 +2,9 @@ package com.danasea.backend;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.Statement;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -24,10 +26,27 @@ class ChatMigrationIntegrationTest {
             .withExposedPorts(5432)
             .waitingFor(Wait.forListeningPort());
 
+    private static void waitForPostgres(String url, String user, String password) throws Exception {
+        long deadline = System.currentTimeMillis() + 60_000;
+        Exception lastEx = null;
+        while (System.currentTimeMillis() < deadline) {
+            try (Connection conn = DriverManager.getConnection(url, user, password);
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute("SELECT 1");
+                return;
+            } catch (Exception e) {
+                lastEx = e;
+                Thread.sleep(250);
+            }
+        }
+        throw new IllegalStateException("PostgreSQL did not become ready in time: " + (lastEx != null ? lastEx.getMessage() : "timeout"), lastEx);
+    }
+
     @Test
     void v29MergesDuplicatesPreservesMessagesAndBackfillsSequence() throws Exception {
         String url = "jdbc:postgresql://" + POSTGRES.getHost() + ":" + POSTGRES.getFirstMappedPort() + "/chat_migration";
-        Flyway.configure().dataSource(url, "test", "test").target("28").load().migrate();
+        waitForPostgres(url, "test", "test");
+        Flyway.configure().dataSource(url, "test", "test").connectRetries(30).target("28").load().migrate();
         UUID customer = UUID.randomUUID(), vendor = UUID.randomUUID(), order = UUID.randomUUID();
         UUID first = UUID.randomUUID(), duplicate = UUID.randomUUID(), otherVendorConversation = UUID.randomUUID();
         try (var connection = DriverManager.getConnection(url, "test", "test")) {
@@ -47,7 +66,7 @@ class ChatMigrationIntegrationTest {
                 }
             }
         }
-        Flyway flyway = Flyway.configure().dataSource(url, "test", "test").target("29").load();
+        Flyway flyway = Flyway.configure().dataSource(url, "test", "test").connectRetries(30).target("29").load();
         assertTrue(flyway.migrate().success); flyway.validate();
         assertEquals("29", flyway.info().current().getVersion().getVersion());
         try (var connection = DriverManager.getConnection(url, "test", "test"); var statement = connection.createStatement()) {
