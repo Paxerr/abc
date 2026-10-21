@@ -2,8 +2,19 @@
 
 Danasea is an online booking and experience management platform tailored for coastal and marine tourism in Da Nang, Vietnam. The platform bridges travelers and local marine tour operators through real-time reservation scheduling, secure automated payments, ticket verification, and weather-aware policy handling.
 
-[![Build Status](https://github.com/capkimkhanh2k5/PBL6_HTTT/actions/workflows/ci.yml/badge.svg)](https://github.com/capkimkhanh2k5/PBL6_HTTT/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![CI Status](https://github.com/capkimkhanh2k5/PBL6_HTTT/actions/workflows/ci.yml/badge.svg)](https://github.com/capkimkhanh2k5/PBL6_HTTT/actions/workflows/ci.yml)
+![Java 21](https://img.shields.io/badge/Java-21-ED8B00?style=flat&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4-6DB33F?style=flat&logo=springboot&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?style=flat&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646C9A?style=flat&logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?style=flat&logo=tailwindcss&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?style=flat&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7.0-DC382D?style=flat&logo=redis&logoColor=white)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.12-FF6600?style=flat&logo=rabbitmq&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Container-2496ED?style=flat&logo=docker&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-Reverse_Proxy-009639?style=flat&logo=nginx&logoColor=white)
+![Tailscale](https://img.shields.io/badge/Tailscale-Funnel-24292E?style=flat&logo=tailscale&logoColor=white)
 
 ---
 
@@ -25,16 +36,6 @@ Coastal adventure tourism requires strict capacity management, weather contingen
 A production preview instance is deployed via an automated CI/CD pipeline:
 
 - **Application URL:** [https://danasea.tailfc3563.ts.net](https://danasea.tailfc3563.ts.net)
-
-### Demo Accounts
-
-The database is pre-seeded with test accounts for each system role:
-
-| Role | Username | Password | Purpose |
-|---|---|---|---|
-| Admin | `admin@danasea.vn` | `Password123!` | Platform management, dispute arbitration, settlements |
-| Vendor | `vendor@danasea.vn` | `Password123!` | Tour catalog, booking validation, payout tracking |
-| Customer | `customer@danasea.vn` | `Password123!` | Experience discovery, checkout, ticket access |
 
 ---
 
@@ -112,17 +113,6 @@ The application is structured as a **Modular Clean Monolith** following Hexagona
    - Frontend: `http://localhost:3000`
    - Backend API: `http://localhost:8080/api`
    - RabbitMQ Management: `http://localhost:15672` (default: `guest` / `guest`)
-
----
-
-## Automated Verification
-
-The test suite includes over 2,500 automated tests covering unit domain logic, concurrent seat allocation, and database schema migrations:
-
-```bash
-cd backend
-./mvnw clean verify
-```
 
 ---
 
