@@ -21,6 +21,7 @@ import { GuestGalleryMarquee } from "../../../components/customer/GuestGalleryMa
 import { ScrollToTopButton } from "../../../components/customer/ScrollToTopButton";
 import { CinematicSceneBackdrop } from "../../../components/customer/CinematicSceneBackdrop";
 import { ScrollReveal } from "../../../components/common/ScrollReveal";
+import { MarineWeatherPill } from "../../../components/customer/MarineWeatherPill";
 
 // AI Beach Data for Maritime Concierge
 const AI_BEACH_DATA: Record<string, any> = {
@@ -862,6 +863,11 @@ export function Home() {
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Real-time Marine Weather & Safety Pill */}
+          <div className="mt-4 flex justify-center w-full relative z-20">
+            <MarineWeatherPill />
           </div>
         </div>
       </section>
