@@ -208,7 +208,7 @@ class PaymentIntentPersistenceIntegrationTest extends BaseSecurityIntegrationTes
     private MasterOrderJpaEntity newOrder() {
         UUID customerId = UUID.randomUUID();
         UUID bookingId = UUID.randomUUID();
-        jdbc.update("INSERT INTO users(id,email,role,locale,created_at,updated_at) VALUES (?,?,?,'en',now(),now())",
+        jdbc.update("INSERT INTO users(id,email,role,locale,created_at,updated_at,session_version) VALUES (?,?,?,'en',now(),now(),0)",
                 customerId, "audit-" + customerId + "@example.com", "CUSTOMER");
         jdbc.update("INSERT INTO bookings(id,customer_id,status,total_amount,hold_expires_at,created_at,updated_at) VALUES (?,?,'PENDING_PAYMENT',500000,now()+interval '15 minutes',now(),now())",
                 bookingId, customerId);

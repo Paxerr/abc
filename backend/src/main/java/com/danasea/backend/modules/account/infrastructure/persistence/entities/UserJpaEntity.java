@@ -31,8 +31,8 @@ public class UserJpaEntity extends BaseJpaEntity {
 
     private Boolean isLocked;
 
-    @Column(name = "session_version", nullable = false)
-    private long sessionVersion;
+    @Column(name = "session_version", nullable = false, columnDefinition = "bigint default 0")
+    private long sessionVersion = 0L;
 
     @Column(nullable = false, length = 2)
     private String locale = "vi";

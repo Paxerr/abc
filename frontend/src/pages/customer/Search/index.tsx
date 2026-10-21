@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FEATURED_SERVICES, CATEGORIES, MOCK_IMAGES } from '../../../mockData';
 import { useWishlistStore } from '../../../store/useWishlistStore';
@@ -25,11 +25,12 @@ export function Search() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCatId);
   const [priceMax, setPriceMax] = useState<number>(1500000);
 
-  useEffect(() => {
-    if (initialCatId !== undefined) {
-      setSelectedCategory(initialCatId);
-    }
-  }, [initialCatId]);
+  // Sync selected category when the URL category param changes (adjust state during render)
+  const [prevCatId, setPrevCatId] = useState<string | null>(initialCatId);
+  if (initialCatId !== prevCatId) {
+    setPrevCatId(initialCatId);
+    setSelectedCategory(initialCatId);
+  }
   
   const displayServices = useMemo(() => {
     return FEATURED_SERVICES.filter(service => {
