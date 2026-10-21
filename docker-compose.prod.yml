@@ -1,16 +1,5 @@
 services:
-  # 1. Cloudflare Quick Tunnel (Mở ra Internet không cần mở port)
-  quick-tunnel:
-    image: cloudflare/cloudflared:latest
-    container_name: danasea-quick-tunnel
-    restart: unless-stopped
-    command: tunnel --no-autoupdate --url http://frontend:8080
-    networks:
-      - app
-    depends_on:
-      - frontend
-
-  # 2. Database & Message Broker (Chỉ bind 127.0.0.1, tuyệt đối bảo mật)
+  # 1. Database & Message Broker (Chỉ bind 127.0.0.1, tuyệt đối bảo mật)
   postgres:
     image: postgres:17-alpine
     container_name: danasea-postgres
@@ -61,7 +50,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # 3. Backend Spring Boot (Giới hạn heap tối đa 512MB cho máy 4GB RAM)
+  # 2. Backend Spring Boot (Giới hạn heap tối đa 512MB cho máy 4GB RAM)
   backend:
     image: ${IMAGE_PREFIX:-ghcr.io/capkimkhanh2k5/danasea}-backend:${IMAGE_TAG:-latest}
     container_name: danasea-backend
@@ -125,7 +114,7 @@ services:
       retries: 5
       start_period: 30s
 
-  # 4. Frontend Web (Nginx Reverse Proxy /api/ sang backend)
+  # 3. Frontend Web (Nginx Reverse Proxy /api/ sang backend)
   frontend:
     image: ${IMAGE_PREFIX:-ghcr.io/capkimkhanh2k5/danasea}-frontend:${IMAGE_TAG:-latest}
     container_name: danasea-frontend
