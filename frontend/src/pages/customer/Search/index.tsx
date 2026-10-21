@@ -1,310 +1,696 @@
-import { useState, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FEATURED_SERVICES, CATEGORIES, MOCK_IMAGES } from '../../../mockData';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { CinematicSceneBackdrop } from '../../../components/customer/CinematicSceneBackdrop';
+import { ScrollReveal } from '../../../components/common/ScrollReveal';
 import { useWishlistStore } from '../../../store/useWishlistStore';
+import { useLanguageStore } from '../../../store/useLanguageStore';
+import { serviceCatalogService, type ServiceQueryParams } from '../../../services/serviceCatalogService';
+import { categoryService } from '../../../services/categoryService';
+import type { ServiceSummaryDto } from '../../../types/service';
+import type { CategoryDto } from '../../../types/category';
+import { FEATURED_SERVICES, CATEGORIES, MOCK_IMAGES } from '../../../mockData';
+
+// Normalized experience item interface for seamless display
+interface DisplayExperience {
+  id: string;
+  name: string;
+  nameEn?: string;
+  description: string;
+  price: number;
+  promotionalPrice?: number | null;
+  rating: number;
+  reviewCount: number;
+  location: string;
+  imageUrl: string;
+  duration?: string;
+  badge?: string;
+  categoryId?: string;
+}
+
+// Category descriptions & slogans for cinematic FPT Play / Netflix-style category showcase
+const CATEGORY_META: Record<string, { titleVi: string; titleEn: string; descVi: string; descEn: string; tag: string }> = {
+  'cheo-sup-kayak': {
+    titleVi: 'CHÈO SUP & KAYAK ĐÀ NẴNG',
+    titleEn: 'STAND-UP PADDLEBOARDING & KAYAK',
+    descVi: 'Lướt êm trên mặt biển phẳng lặng sớm mai, đón ánh bình minh rạng rỡ và ngắm nhìn trọn vẹn vịnh biển Đà Nẵng.',
+    descEn: 'Glide peacefully across calm morning waters, embrace the sunrise and admire the pristine bay of Da Nang.',
+    tag: 'Đón Bình Minh',
+  },
+  'lan-ngam-san-ho': {
+    titleVi: 'LẶN NGẮM SAN HÔ BÁN ĐẢO SƠN TRÀ',
+    titleEn: 'CORAL REEF SCUBA & SEAWALKER',
+    descVi: 'Đắm mình trong làn nước pha lê, khám phá quần thể san hô đa sắc màu cùng huấn luyện viên PADI chuyên nghiệp.',
+    descEn: 'Dive into crystal-clear waters, exploring vibrant coral reefs guided by certified PADI master divers.',
+    tag: 'Sinh Thái Biển',
+  },
+  'cano-du-bay': {
+    titleVi: 'CANO LƯỚT SÓNG & BAY DÙ LƯỢN BIỂN',
+    titleEn: 'SPEEDBOAT & PARASAILING ADVENTURE',
+    descVi: 'Bay vút lên không trung ngắm toàn cảnh bờ biển Mỹ Khê và thử thách cano cao tốc lướt sóng cực phấn khích.',
+    descEn: 'Soar high above My Khe coastline and feel the rush of high-speed wave carving with maximum safety.',
+    tag: 'Cảm Giác Mạnh',
+  },
+  'mo-to-nuoc-jetski': {
+    titleVi: 'MÔ TÔ NƯỚC JETSKI CẢM GIÁC MẠNH',
+    titleEn: 'JETSKI HIGH-SPEED WAVE RIDING',
+    descVi: 'Tự tay cầm lái mô tô nước Yamaha công suất lớn, chinh phục từng con sóng vịnh biển với sự bảo hộ an toàn tuyệt đối.',
+    descEn: 'Take the helm of high-performance Yamaha jetskis, carving dynamic waves under professional marine surveillance.',
+    tag: 'Tốc Độ & Sóng',
+  },
+  'truot-phao-chuoi': {
+    titleVi: 'TRƯỢT PHAO CHUỐI TỐC ĐỘ CAO CHO NHÓM',
+    titleEn: 'GROUP BANANA BOAT WAVE RIDE',
+    descVi: 'Trải nghiệm phấn khích tột độ cùng hội bạn thân: lướt nhanh trên mặt nước, tạo bọt sóng trắng xóa ngập tràn tiếng cười.',
+    descEn: 'Exhilarating group ocean action: fast water-skimming turns, splashing foam and unforgettable shared laughter.',
+    tag: 'Nhóm & Bạn Bè',
+  },
+  'du-thuyen-ngam-hoang-hon': {
+    titleVi: 'DU THUYỀN HẠNG SANG NGẮM HOÀNG HÔN',
+    titleEn: 'LUXURY SUNSET CATAMARAN YACHT',
+    descVi: 'Hành trình lãng mạn trên vịnh Đà Nẵng: thưởng thức trà chiều, rượu vang và ngắm hoàng hôn buông xuống chân trời.',
+    descEn: 'A breathtaking romantic cruise across Da Nang Bay: afternoon tea, premium wine and golden sunset on the horizon.',
+    tag: 'Sang Trọng & Combo',
+  },
+};
 
 export function Search() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const categoryParam = searchParams.get('category');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { language, t } = useLanguageStore();
+  const { toggleWishlist, isInWishlist } = useWishlistStore();
 
-  // Map category slug from URL parameter to CATEGORIES id
-  const initialCatId = useMemo(() => {
-    if (!categoryParam) return null;
-    const lower = categoryParam.toLowerCase();
-    if (lower === 'sup') return 'cat-1';
-    if (lower === 'thrill' || lower.includes('cano') || lower.includes('jet')) return 'cat-2';
-    if (lower === 'diving' || lower.includes('lặn') || lower.includes('san hô')) return 'cat-3';
-    if (lower === 'kayak') return 'cat-4';
-    if (lower === 'combo' || lower.includes('đảo') || lower.includes('tour')) return 'cat-5';
-    const matched = CATEGORIES.find(c => c.id === categoryParam || c.name.toLowerCase().includes(lower));
-    return matched ? matched.id : null;
+  const categoryParam = searchParams.get('category');
+  const keywordParam = searchParams.get('q') || '';
+
+  // Local state
+  const [categories, setCategories] = useState<CategoryDto[]>([]);
+  const [services, setServices] = useState<DisplayExperience[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [keyword, setKeyword] = useState<string>(keywordParam);
+  const [selectedCategorySlug, setSelectedCategorySlug] = useState<string | null>(categoryParam);
+  const [priceMax, setPriceMax] = useState<number>(1500000);
+  const [sortBy, setSortBy] = useState<'rating_desc' | 'price_asc' | 'price_desc' | 'popular'>('popular');
+
+  // Staggered reveal tracker
+  const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
+
+  // 1. Fetch categories from Backend or Fallback
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCategories() {
+      try {
+        const remoteCats = await categoryService.getCategories();
+        if (isMounted && remoteCats && remoteCats.length > 0) {
+          setCategories(remoteCats);
+        } else if (isMounted) {
+          // Fallback to mock categories
+          const fallbackCats: CategoryDto[] = CATEGORIES.map((c, idx) => ({
+            id: `a0000001-0000-0000-0000-00000000000${idx + 1}`,
+            name: c.name,
+            nameEn: c.name,
+            slug: c.id === 'cat-1' ? 'cheo-sup-kayak' : c.id === 'cat-2' ? 'cano-du-bay' : c.id === 'cat-3' ? 'lan-ngam-san-ho' : c.id === 'cat-4' ? 'cheo-sup-kayak' : 'du-thuyen-ngam-hoang-hon',
+            iconUrl: c.icon,
+            isActive: true,
+          }));
+          setCategories(fallbackCats);
+        }
+      } catch (err) {
+        console.warn('[Search] Lỗi nạp danh mục, sử dụng fallback:', err);
+      }
+    }
+    loadCategories();
+    return () => { isMounted = false; };
+  }, []);
+
+  // 2. Synchronize URL query parameter when changed
+  useEffect(() => {
+    setSelectedCategorySlug(categoryParam);
   }, [categoryParam]);
 
-  const { toggleWishlist, isInWishlist } = useWishlistStore();
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCatId);
-  const [priceMax, setPriceMax] = useState<number>(1500000);
+  // Resolve matching category entity from selectedCategorySlug
+  const matchedCategory = useMemo(() => {
+    if (!selectedCategorySlug) return null;
+    const lower = selectedCategorySlug.toLowerCase();
 
-  // Sync selected category when the URL category param changes (adjust state during render)
-  const [prevCatId, setPrevCatId] = useState<string | null>(initialCatId);
-  if (initialCatId !== prevCatId) {
-    setPrevCatId(initialCatId);
-    setSelectedCategory(initialCatId);
-  }
-  
+    // Direct match by slug or id
+    const direct = categories.find(c => c.slug?.toLowerCase() === lower || c.id === selectedCategorySlug);
+    if (direct) return direct;
+
+    // Aliases mapping (sup, diving, thrill, combo, kayak)
+    if (lower === 'sup' || lower.includes('kayak')) {
+      return categories.find(c => c.slug?.includes('sup') || c.slug?.includes('kayak')) || categories[0];
+    }
+    if (lower === 'diving' || lower.includes('lan') || lower.includes('san-ho')) {
+      return categories.find(c => c.slug?.includes('lan') || c.slug?.includes('san-ho')) || categories[1];
+    }
+    if (lower === 'thrill' || lower.includes('cano') || lower.includes('jetski') || lower.includes('du-bay')) {
+      return categories.find(c => c.slug?.includes('cano') || c.slug?.includes('jetski')) || categories[2];
+    }
+    if (lower === 'combo' || lower.includes('du-thuyen') || lower.includes('hoang-hon')) {
+      return categories.find(c => c.slug?.includes('du-thuyen')) || categories[5];
+    }
+
+    return null;
+  }, [selectedCategorySlug, categories]);
+
+  // 3. Fetch services from Backend with fallback
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchServices() {
+      setIsLoading(true);
+      console.groupCollapsed('%c[Search Page] Nạp dữ liệu trải nghiệm biển...', 'color: #0284c7; font-weight: bold;');
+      console.log('[Bước 1/3] Khởi tạo bộ lọc tìm kiếm:', {
+        categoryId: matchedCategory?.id,
+        categorySlug: selectedCategorySlug,
+        keyword,
+        sortBy,
+      });
+
+      try {
+        const queryParams: ServiceQueryParams = {
+          size: 24,
+          ...(matchedCategory?.id ? { categoryId: matchedCategory.id } : {}),
+          ...(keyword.trim() ? { keyword: keyword.trim() } : {}),
+          ...(sortBy === 'price_asc' || sortBy === 'price_desc' || sortBy === 'rating_desc' ? { sortBy } : {}),
+        };
+
+        const response = await serviceCatalogService.getServices(queryParams);
+
+        if (isMounted) {
+          if (response && response.content && response.content.length > 0) {
+            console.log(`[Bước 2/3] Backend trả về ${response.content.length} dịch vụ trực tiếp`);
+            const mapped: DisplayExperience[] = response.content.map((item, idx) => ({
+              id: item.id,
+              name: item.name,
+              description: item.shortDescription || 'Trải nghiệm thể thao biển chuẩn an toàn hàng hải tại vịnh Đà Nẵng.',
+              price: item.price,
+              promotionalPrice: item.promotionalPrice,
+              rating: item.averageRating || 4.95,
+              reviewCount: item.reviewCount || 150,
+              location: item.address ? item.address.split(',')[0] : 'Bãi biển Mỹ Khê',
+              imageUrl: item.primaryImageUrl || 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=800&q=80',
+              duration: '120 phút',
+              badge: idx === 0 ? 'Bán chạy nhất' : idx === 1 ? 'Khuyên dùng' : 'Chuẩn PADI',
+              categoryId: matchedCategory?.id,
+            }));
+            setServices(mapped);
+          } else {
+            console.log('[Bước 2/3] Backend rỗng hoặc đang chạy kiểm thử -> Sử dụng fallback thông minh từ mockData');
+            // Intelligent fallback from mockData
+            const filteredMock = FEATURED_SERVICES.filter(item => {
+              if (matchedCategory && item.categoryId) {
+                // If matchedCategory is cat-1, filter
+                const matchesMockCat = (matchedCategory.slug?.includes('sup') && item.categoryId === 'cat-1') ||
+                  (matchedCategory.slug?.includes('cano') && item.categoryId === 'cat-2') ||
+                  (matchedCategory.slug?.includes('lan') && item.categoryId === 'cat-3') ||
+                  (matchedCategory.slug?.includes('du-thuyen') && item.categoryId === 'cat-5');
+                if (!matchesMockCat && selectedCategorySlug) return false;
+              }
+              if (keyword.trim()) {
+                const kw = keyword.toLowerCase();
+                const matchName = item.name.toLowerCase().includes(kw);
+                const matchDesc = (item.description || '').toLowerCase().includes(kw);
+                if (!matchName && !matchDesc) return false;
+              }
+              return true;
+            });
+
+            const mappedMock: DisplayExperience[] = filteredMock.map((item, idx) => {
+              const img = MOCK_IMAGES.find(i => i.serviceId === item.id && i.isPrimary)?.imageUrl ||
+                'https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=800&q=80';
+              return {
+                id: item.id,
+                name: item.name,
+                description: item.description || 'Trải nghiệm thể thao biển cao cấp tại Đà Nẵng.',
+                price: item.basePrice,
+                rating: item.avgRating || 4.9,
+                reviewCount: item.ratingCount || 98,
+                location: item.locationName,
+                imageUrl: img,
+                duration: `${item.durationMinutes || 90} phút`,
+                badge: idx === 0 ? 'Phổ biến' : undefined,
+                categoryId: item.categoryId,
+              };
+            });
+            setServices(mappedMock);
+          }
+          console.log('[Bước 3/3] Hoàn tất nạp dữ liệu trải nghiệm cho trang Search');
+          console.groupEnd();
+        }
+      } catch (err) {
+        console.groupEnd();
+        console.warn('[Search] Lỗi nạp dịch vụ:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    fetchServices();
+    return () => { isMounted = false; };
+  }, [matchedCategory, selectedCategorySlug, keyword, sortBy]);
+
+  // Client-side filtering by max price & sorting if needed
   const displayServices = useMemo(() => {
-    return FEATURED_SERVICES.filter(service => {
-      if (selectedCategory && service.categoryId !== selectedCategory) return false;
-      if (service.basePrice > priceMax) return false;
-      return true;
-    });
-  }, [selectedCategory, priceMax]);
+    let result = [...services];
+    if (priceMax < 1500000) {
+      result = result.filter(s => s.price <= priceMax);
+    }
+    if (sortBy === 'price_asc') {
+      result.sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price_desc') {
+      result.sort((a, b) => b.price - a.price);
+    } else if (sortBy === 'rating_desc') {
+      result.sort((a, b) => b.rating - a.rating);
+    }
+    return result;
+  }, [services, priceMax, sortBy]);
+
+  // ScrollReveal observer for smooth staggered card entrance
+  useEffect(() => {
+    if (isLoading || displayServices.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('data-card-id');
+            if (id) {
+              setRevealedIds((prev) => new Set([...prev, id]));
+            }
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -50px 0px' }
+    );
+
+    const cards = document.querySelectorAll('[data-card-id]');
+    cards.forEach((card) => observer.observe(card));
+
+    return () => observer.disconnect();
+  }, [isLoading, displayServices]);
+
+  // Category change handler
+  const handleSelectCategory = (slug: string | null) => {
+    setSelectedCategorySlug(slug);
+    if (slug) {
+      setSearchParams({ category: slug });
+    } else {
+      setSearchParams({});
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Category metadata for showcase header
+  const categoryMeta = useMemo(() => {
+    if (!matchedCategory && !selectedCategorySlug) return null;
+    const key = matchedCategory?.slug || selectedCategorySlug || '';
+    if (CATEGORY_META[key]) return CATEGORY_META[key];
+
+    // Fuzzy matching
+    for (const [k, v] of Object.entries(CATEGORY_META)) {
+      if (key.includes(k) || k.includes(key)) return v;
+    }
+
+    return {
+      titleVi: matchedCategory?.name.toUpperCase() || 'DANH MỤC TRẢI NGHIỆM BIỂN',
+      titleEn: matchedCategory?.nameEn?.toUpperCase() || 'MARINE EXPERIENCE CATEGORY',
+      descVi: 'Khám phá tất cả các gói hoạt động thể thao biển được yêu thích nhất tại Đà Nẵng.',
+      descEn: 'Explore all popular water sports and ocean adventures in Da Nang.',
+      tag: 'Chuẩn An Toàn',
+    };
+  }, [matchedCategory, selectedCategorySlug]);
 
   return (
-    <main className="w-full pt-20 bg-surface flex-1"><div className="flex flex-col w-full">
-      {/* Top Ambient Banner / Weather Condition Ticker */}
-      <section className="w-full bg-surface-container-low py-2.5 px-4 sm:px-8 lg:px-12 shadow-sm">
-        <div className="max-w-[1440px] w-full mx-auto flex flex-wrap items-center justify-between gap-space-sm font-body-sm text-body-sm text-on-surface-variant">
-          <div className="flex items-center gap-space-sm flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-label-sm text-label-sm font-bold border border-emerald-200">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Thời tiết biển
-            </span>
-            <span className="hidden sm:inline-block">Chiều cao sóng: <strong>0.5m</strong></span>
-            <span className="hidden md:inline-block">•</span>
-            <span className="hidden md:inline-block">Tốc độ gió: <strong>12 km/h</strong></span>
-            <span className="hidden lg:inline-block">•</span>
-            <span className="hidden lg:inline-block">Lượng mưa: <strong>0.0 mm</strong></span>
+    <main className="w-full text-white min-h-screen relative overflow-x-clip bg-slate-950 pb-24">
+      {/* Dynamic Deep Ocean Backdrop matching Homepage */}
+      <CinematicSceneBackdrop />
+
+      {/* Optical ambient dark gradient to ensure ultra-sharp readability */}
+      <div className="fixed inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/40 to-slate-950/80 pointer-events-none z-10" />
+
+      <div className="relative z-20 max-w-[1520px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28">
+
+        {/* =========================================================================
+            CINEMATIC CATEGORY SHOWCASE BANNER (FPT PLAY / NETFLIX STYLE)
+           ========================================================================= */}
+        <section data-scene="bays" className="mb-8 select-none">
+          {/* Breadcrumb Navigation */}
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-cyan-200/80 mb-3">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1 hover:text-white transition-colors py-1"
+            >
+              <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+              <span>{language === 'en' ? 'Back to Home' : 'Trang chủ'}</span>
+            </Link>
+            <span>/</span>
+            <button
+              onClick={() => handleSelectCategory(null)}
+              className={`hover:text-white transition-colors py-1 ${!selectedCategorySlug ? 'text-white font-semibold' : ''}`}
+            >
+              {language === 'en' ? 'All Marine Experiences' : 'Tất cả trải nghiệm biển'}
+            </button>
+            {matchedCategory && (
+              <>
+                <span>/</span>
+                <span className="text-white font-bold truncate">
+                  {language === 'en' ? matchedCategory.nameEn || matchedCategory.name : matchedCategory.name}
+                </span>
+              </>
+            )}
           </div>
-          <div className="flex items-center gap-space-md">
-            <span className="flex items-center gap-1 text-secondary font-label-md text-label-md font-semibold">
-              <span className="material-symbols-outlined text-[16px]">schedule</span>
-              Cập nhật: 05:00 hôm nay
-            </span>
-          </div>
-        </div>
-      </section>
-      
-      {/* Horizontal Sticky Search Capsule Container (Phương án 1) */}
-      <section className="sticky top-20 z-40 bg-surface/98 w-full border-b border-outline-variant/20 shadow-sm transition-all duration-300 transform-gpu will-change-transform">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 py-2 sm:py-2.5">
-          <div className="bg-surface-container-lowest rounded-2xl p-2.5 md:p-3 shadow-[0_8px_24px_-4px_rgba(16,47,58,0.08)] border border-outline-variant/30">
-            <form className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-              {/* Region Dropdown */}
-              <div className="md:col-span-4 flex items-center gap-3 px-4 py-3 rounded-full bg-surface-container-low hover:bg-surface-container transition-colors">
-                <span className="material-symbols-outlined text-secondary text-[24px]">explore</span>
-              <div className="flex flex-col min-w-0 flex-1">
-                <label className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Khu vực biển</label>
-                <select className="bg-transparent font-label-lg text-label-lg text-on-surface outline-none cursor-pointer truncate">
-                  <option value="all">Bãi biển Mỹ Khê, Sơn Trà, Non Nước</option>
-                  <option value="mykhe">Bãi biển Mỹ Khê (SUP & Surf)</option>
-                  <option value="sontra">Bán đảo Sơn Trà & Bãi Rạng</option>
-                  <option value="nonnuoc">Bãi biển Non Nước & Ngũ Hành Sơn</option>
-                  <option value="namo">Rạn Nam Ô hoang sơ</option>
-                </select>
-              </div>
-            </div>
-            {/* Date & Time Slot */}
-            <div className="md:col-span-3 flex items-center gap-3 px-4 py-3 rounded-full bg-surface-container-low hover:bg-surface-container transition-colors">
-              <span className="material-symbols-outlined text-primary-container text-[24px]">wb_twilight</span>
-              <div className="flex flex-col min-w-0 flex-1">
-                <label className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Khởi hành</label>
-                <div className="font-label-lg text-label-lg text-on-surface truncate flex items-center gap-1.5">
-                  <span className="">Ngày mai</span>
-                  <span className="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant text-[11px] font-bold">05:30 Bình minh</span>
-                </div>
-              </div>
-            </div>
-            {/* Guest count */}
-            <div className="md:col-span-3 flex items-center gap-3 px-4 py-3 rounded-full bg-surface-container-low hover:bg-surface-container transition-colors">
-              <span className="material-symbols-outlined text-secondary text-[24px]">group</span>
-              <div className="flex flex-col min-w-0 flex-1">
-                <label className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Số lượng khách</label>
-                <div className="flex items-center justify-between pr-2">
-                  <span className="font-label-lg text-label-lg text-on-surface">2 người (1 SUP đôi / 2 ván)</span>
-                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant">tune</span>
-                </div>
-              </div>
-            </div>
-            {/* Submit Button */}
-            <div className="md:col-span-2">
-              <button className="w-full h-[52px] rounded-full bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-[0_8px_20px_rgba(255,115,92,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-transform" type="button">
-                <span className="material-symbols-outlined text-[20px]">search</span>
-                <span className="">Tìm kiếm</span>
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </section>
-      
-      {/* Results Control Bar */}
-      <section className="w-full max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 py-1 sm:py-1.5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-lowest px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed shrink-0">
-              <span className="material-symbols-outlined text-[18px]">waves</span>
-            </div>
-            <div>
-              <h1 className="font-headline-sm text-headline-sm text-on-surface tracking-tight font-bold text-base sm:text-lg">
-                Tìm thấy {displayServices.length} kết quả phù hợp
-              </h1>
-            </div>
-          </div>
-          {/* Controls: List/Map Switch & Sorting Dropdown */}
-          <div className="flex flex-wrap items-center gap-space-sm">
-            <div className="flex items-center gap-2 bg-surface-container-low px-3.5 py-1.5 rounded-full">
-              <span className="font-label-sm text-label-sm text-on-surface-variant">Sắp xếp:</span>
-              <select className="bg-transparent font-label-sm text-label-sm text-on-surface font-bold outline-none cursor-pointer">
-                <option value="popular">Phổ biến nhất</option>
-                <option value="price_asc">Giá thấp đến cao</option>
-                <option value="rating_desc">Đánh giá cao nhất</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      {/* Main Content Layout (Sidebar Filter + Experience Grid) */}
-      <section className="w-full max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 pt-2 pb-14">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-start">
-          
-          {/* Left Sidebar: Filter Column */}
-          <aside className="lg:col-span-3 flex flex-col gap-space-lg bg-surface-container-lowest p-space-lg rounded-xl shadow-[0_4px_20px_-2px_rgba(16,47,58,0.05)] sticky top-[172px]">
-            <div className="flex items-center justify-between pb-space-sm">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-secondary">tune</span>
-                <h2 className="font-headline-sm text-headline-sm text-on-surface">Bộ lọc tìm kiếm</h2>
-              </div>
-              <button 
-                onClick={() => { setSelectedCategory(null); setPriceMax(1500000); }} 
-                className="font-label-sm text-label-sm text-primary hover:underline" type="button"
-              >
-                Xóa tất cả
-              </button>
-            </div>
-            
-            {/* 1. Activity Types */}
-            <div className="flex flex-col gap-space-xs">
-              <label className="font-label-lg text-label-lg text-on-surface flex items-center justify-between">
-                <span className="">Loại hoạt động</span>
-              </label>
-              <div className="flex flex-col gap-2 mt-1">
-                {CATEGORIES.map(cat => (
-                  <label key={cat.id} className={`flex items-center gap-2.5 cursor-pointer font-body-sm text-body-sm transition-colors ${selectedCategory === cat.id ? 'text-secondary font-semibold' : 'text-on-surface-variant hover:text-on-surface'}`}>
-                    <input 
-                      checked={selectedCategory === cat.id} 
-                      onChange={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
-                      className="w-4 h-4 rounded accent-secondary cursor-pointer" type="checkbox"
-                    />
-                    <span>{cat.name}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div className="w-full h-px bg-surface-container"></div>
-            
-            {/* 2. Price Range Slider */}
-            <div className="flex flex-col gap-space-xs">
-              <div className="flex items-center justify-between">
-                <label className="font-label-lg text-label-lg text-on-surface">Mức giá tối đa (VND)</label>
-                <span className="font-label-sm text-label-sm text-primary-container font-bold">
-                  {priceMax >= 1500000 ? "Tất cả mức giá" : `${priceMax.toLocaleString('vi-VN')} đ`}
+
+          {/* Large Showcase Title & Subtitle */}
+          <div className="bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-slate-900/40 backdrop-blur-xl border border-white/15 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-2xl relative overflow-hidden">
+            {/* Ambient water reflection glow */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 max-w-4xl">
+              <div className="flex items-center gap-2.5 mb-2.5">
+                <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 text-xs font-mono font-bold uppercase tracking-wider">
+                  {categoryMeta ? categoryMeta.tag : (language === 'en' ? 'Ocean Catalog' : 'Danh mục biển')}
+                </span>
+                <span className="text-xs text-slate-300 font-mono">
+                  {displayServices.length} {language === 'en' ? 'experiences available' : 'trải nghiệm sẵn sàng'}
                 </span>
               </div>
-              <input 
-                value={priceMax}
-                onChange={(e) => setPriceMax(Number(e.target.value))}
-                className="w-full accent-primary cursor-pointer mt-2" 
-                max="1500000" min="200000" step="50000" type="range"
-              />
-              <div className="flex justify-between font-label-sm text-label-sm text-on-surface-variant">
-                <span className="">200.000 đ</span>
-                <span className="">1.5M+ đ</span>
-              </div>
+
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight uppercase drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] mb-3">
+                {categoryMeta
+                  ? (language === 'en' ? categoryMeta.titleEn : categoryMeta.titleVi)
+                  : (language === 'en' ? 'EXPLORE DA NANG MARINE EXPERIENCES' : 'KHÁM PHÁ TRẢI NGHIỆM BIỂN ĐÀ NẴNG')}
+              </h1>
+
+              <p className="text-sm sm:text-base text-slate-200/90 leading-relaxed font-normal max-w-3xl drop-shadow-sm">
+                {categoryMeta
+                  ? (language === 'en' ? categoryMeta.descEn : categoryMeta.descVi)
+                  : (language === 'en'
+                    ? 'Handpicked certified marine activities in Da Nang: sunrise SUP, coral scuba diving, speedboats, parasailing and luxury sunset yachts.'
+                    : 'Toàn bộ các gói hoạt động thể thao biển được thẩm định an toàn hàng hải: chèo SUP, lặn ngắm san hô Sơn Trà, dù bay, cano cao tốc và du thuyền hoàng hôn.')}
+              </p>
             </div>
-            
-          </aside>
-          
-          {/* Right Column: Results Grid & Interactive Views */}
-          <main className="lg:col-span-9 flex flex-col gap-space-xl">
-            {/* Default Grid View Container */}
-            {displayServices.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-space-lg">
-                {displayServices.map(service => {
-                  const image = MOCK_IMAGES.find(i => i.serviceId === service.id && i.isPrimary)?.imageUrl || "https://via.placeholder.com/400";
-                  return (
-                    <article key={service.id} className="flex flex-col bg-surface-container-lowest rounded-lg overflow-hidden shadow-[0_4px_20px_-2px_rgba(16,47,58,0.05)] hover:shadow-[0_12px_32px_-4px_rgba(16,47,58,0.08)] hover:-translate-y-1 transition-all duration-300 group">
-                      <div className="relative w-full aspect-[4/3] overflow-hidden bg-surface-container cursor-pointer" onClick={() => navigate(`/tour/${service.id}`)}>
-                        <img src={image} alt={service.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
-                          <span className="px-3 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold shadow-sm">
-                            {service.status === 'APPROVED' ? 'Đang mở' : 'Hết chỗ'}
+
+            {/* Quick Category Switcher Pills */}
+            <div className="mt-6 pt-5 border-t border-white/10 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+              <button
+                type="button"
+                onClick={() => handleSelectCategory(null)}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                  !selectedCategorySlug
+                    ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-lg shadow-cyan-500/25 scale-105'
+                    : 'bg-white/10 text-slate-200 hover:bg-white/20 hover:text-white'
+                }`}
+              >
+                {language === 'en' ? 'All Activities' : 'Tất cả'}
+              </button>
+
+              {categories.map((cat) => {
+                const isSelected = selectedCategorySlug === cat.slug || matchedCategory?.id === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleSelectCategory(cat.slug || cat.id)}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-lg shadow-cyan-500/25 scale-105'
+                        : 'bg-white/10 text-slate-200 hover:bg-white/20 hover:text-white'
+                    }`}
+                  >
+                    <span>{language === 'en' ? cat.nameEn || cat.name : cat.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            STICKY FILTER & CONTROLS CAPSULE
+           ========================================================================= */}
+        <section className="sticky top-20 z-30 mb-8">
+          <div className="bg-slate-900/85 backdrop-blur-xl border border-white/15 rounded-2xl p-3 sm:p-4 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Search Input Box */}
+            <div className="w-full md:w-auto flex-1 flex items-center gap-2 bg-slate-950/60 rounded-xl px-3.5 py-2 border border-white/10 focus-within:border-cyan-400 transition-colors">
+              <span className="material-symbols-outlined text-cyan-400 text-[20px]">search</span>
+              <input
+                type="text"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder={language === 'en' ? 'Search by activity, location (e.g., My Khe, Son Tra)...' : 'Tìm trải nghiệm, bãi biển (Mỹ Khê, Sơn Trà, Hòn Sụp)...'}
+                className="bg-transparent text-sm text-white placeholder-slate-400 outline-none w-full"
+              />
+              {keyword && (
+                <button
+                  type="button"
+                  onClick={() => setKeyword('')}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              )}
+            </div>
+
+            {/* Filter Controls: Max Price Slider & Sort Dropdown */}
+            <div className="w-full md:w-auto flex flex-wrap items-center justify-between sm:justify-end gap-3 text-xs">
+              {/* Price Filter */}
+              <div className="flex items-center gap-2 bg-slate-950/60 rounded-xl px-3 py-1.5 border border-white/10">
+                <span className="text-slate-300">{language === 'en' ? 'Max Price:' : 'Giá tối đa:'}</span>
+                <span className="font-bold text-cyan-300">
+                  {priceMax >= 1500000 ? (language === 'en' ? 'All' : 'Tất cả') : `${(priceMax / 1000).toLocaleString('vi-VN')}k`}
+                </span>
+                <input
+                  type="range"
+                  min="200000"
+                  max="1500000"
+                  step="50000"
+                  value={priceMax}
+                  onChange={(e) => setPriceMax(Number(e.target.value))}
+                  className="w-20 sm:w-24 accent-cyan-400 cursor-pointer"
+                />
+              </div>
+
+              {/* Sort By Dropdown */}
+              <div className="flex items-center gap-1.5 bg-slate-950/60 rounded-xl px-3 py-2 border border-white/10">
+                <span className="text-slate-300">{language === 'en' ? 'Sort:' : 'Sắp xếp:'}</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="bg-transparent text-white font-semibold outline-none cursor-pointer"
+                >
+                  <option value="popular" className="bg-slate-900 text-white">
+                    {language === 'en' ? 'Most Popular' : 'Phổ biến nhất'}
+                  </option>
+                  <option value="rating_desc" className="bg-slate-900 text-white">
+                    {language === 'en' ? 'Top Rated ★' : 'Đánh giá cao nhất ★'}
+                  </option>
+                  <option value="price_asc" className="bg-slate-900 text-white">
+                    {language === 'en' ? 'Price: Low to High' : 'Giá: Thấp đến Cao'}
+                  </option>
+                  <option value="price_desc" className="bg-slate-900 text-white">
+                    {language === 'en' ? 'Price: High to Low' : 'Giá: Cao đến Thấp'}
+                  </option>
+                </select>
+              </div>
+
+              {/* Reset Filter Button */}
+              {(selectedCategorySlug || keyword || priceMax < 1500000 || sortBy !== 'popular') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleSelectCategory(null);
+                    setKeyword('');
+                    setPriceMax(1500000);
+                    setSortBy('popular');
+                  }}
+                  className="text-cyan-300 hover:text-white transition-colors underline underline-offset-2 font-semibold"
+                >
+                  {language === 'en' ? 'Reset' : 'Đặt lại'}
+                </button>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            EXPERIENCES RESULTS GRID WITH SMOOTH SCROLL REVEAL (60 FPS)
+           ========================================================================= */}
+        <section data-scene="sports">
+          {isLoading ? (
+            /* Skeleton Loading State */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-slate-900/70 border border-white/10 rounded-2xl overflow-hidden p-3 animate-pulse"
+                >
+                  <div className="aspect-[4/3] rounded-xl bg-slate-800 mb-3" />
+                  <div className="h-4 bg-slate-800 rounded w-3/4 mb-2" />
+                  <div className="h-3 bg-slate-800 rounded w-1/2 mb-4" />
+                  <div className="h-5 bg-slate-800 rounded w-1/3" />
+                </div>
+              ))}
+            </div>
+          ) : displayServices.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {displayServices.map((service, idx) => {
+                const isSaved = isInWishlist(service.id);
+                const isRevealed = revealedIds.has(service.id);
+
+                return (
+                  <article
+                    key={service.id}
+                    data-card-id={service.id}
+                    style={{
+                      transitionDelay: `${(idx % 4) * 75}ms`,
+                    }}
+                    className={`group flex flex-col bg-white/95 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl overflow-hidden border border-white/20 shadow-xl hover:shadow-[0_20px_35px_rgba(0,0,0,0.4)] hover:-translate-y-2 hover:border-cyan-400/50 transition-all duration-400 ease-out ${
+                      isRevealed
+                        ? 'opacity-100 translate-y-0'
+                        : 'opacity-0 translate-y-8'
+                    }`}
+                  >
+                    {/* Image Box */}
+                    <div
+                      className="relative aspect-[4/3] overflow-hidden bg-slate-800 cursor-pointer"
+                      onClick={() => navigate(`/tour/${service.id}`)}
+                    >
+                      <img
+                        src={service.imageUrl}
+                        alt={service.name}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-600 ease-out pointer-events-none"
+                      />
+
+                      {/* Optical scrim on image bottom */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
+
+                      {/* Top Badges */}
+                      <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">
+                        {service.badge && (
+                          <span className="px-2.5 py-0.5 rounded-full bg-cyan-600 text-white text-[11px] font-bold shadow-md">
+                            {service.badge}
                           </span>
-                        </div>
-                        {(() => {
-                          const isSaved = isInWishlist(service.id);
-                          return (
-                            <button
-                              aria-label={isSaved ? "Bỏ lưu khỏi yêu thích" : "Lưu vào yêu thích"}
-                              className={`absolute top-3 right-3 w-9 h-9 rounded-full backdrop-blur-md flex items-center justify-center transition-all shadow-md cursor-pointer hover:scale-110 active:scale-95 ${
-                                isSaved
-                                  ? "bg-white text-red-500 ring-2 ring-red-100"
-                                  : "bg-surface-container-lowest/90 text-on-surface-variant hover:text-red-500"
-                              }`}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                toggleWishlist(service.id, service.name);
-                              }}
-                              type="button"
-                            >
-                              <span
-                                className={`material-symbols-outlined text-[20px] transition-transform ${isSaved ? "text-red-500" : ""}`}
-                                style={{ fontVariationSettings: isSaved ? "'FILL' 1" : "'FILL' 0" }}
-                              >
-                                favorite
-                              </span>
-                            </button>
-                          );
-                        })()}
-                        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-on-primary text-[12px] font-medium bg-gradient-to-t from-on-background/80 to-transparent p-2 rounded-lg">
-                          <span className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[14px]">location_on</span>
-                            {service.locationName}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[14px]">schedule</span>
-                            {service.durationMinutes} phút
-                          </span>
-                        </div>
+                        )}
                       </div>
-                      <div className="p-space-md flex flex-col flex-1 justify-between gap-space-sm cursor-pointer" onClick={() => navigate(`/tour/${service.id}`)}>
+
+                      {/* Top Right Wishlist Heart */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleWishlist(service.id, service.name);
+                        }}
+                        aria-label="Toggle wishlist"
+                        className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-slate-950/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform shadow-md cursor-pointer z-10"
+                      >
+                        <span className={`text-base ${isSaved ? 'text-rose-500' : 'text-white'}`}>
+                          {isSaved ? '♥' : '♡'}
+                        </span>
+                      </button>
+
+                      {/* Bottom Info on Image */}
+                      <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-white text-xs font-medium">
+                        <span className="flex items-center gap-1 drop-shadow-md">
+                          <span className="material-symbols-outlined text-[14px] text-cyan-300">location_on</span>
+                          <span className="truncate">{service.location}</span>
+                        </span>
+                        {service.duration && (
+                          <span className="flex items-center gap-1 drop-shadow-md">
+                            <span className="material-symbols-outlined text-[14px] text-amber-300">schedule</span>
+                            <span>{service.duration}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Content Box */}
+                    <div
+                      className="p-4 flex-1 flex flex-col justify-between cursor-pointer text-slate-900 dark:text-white"
+                      onClick={() => navigate(`/tour/${service.id}`)}
+                    >
+                      <div>
+                        {/* Rating Row */}
+                        <div className="flex items-center justify-between mb-1.5 text-xs">
+                          <div className="flex items-center gap-1 text-amber-500 font-bold">
+                            <span>★</span>
+                            <span className="text-slate-800 dark:text-slate-200">{service.rating.toFixed(2)}</span>
+                            <span className="text-slate-500 dark:text-slate-400 font-normal">({service.reviewCount})</span>
+                          </div>
+                          <span className="text-[11px] text-cyan-600 dark:text-cyan-400 font-semibold uppercase tracking-wider">
+                            {language === 'en' ? 'Maritime Verified' : 'Chuẩn An Toàn'}
+                          </span>
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="font-extrabold text-base leading-snug line-clamp-2 text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors">
+                          {service.name}
+                        </h3>
+
+                        {/* Description */}
+                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                          {service.description}
+                        </p>
+                      </div>
+
+                      {/* Price & Action Row */}
+                      <div className="mt-4 pt-3 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between">
                         <div>
-                          <div className="flex items-center justify-between mb-1.5">
-                            <div className="flex items-center gap-1">
-                              <span className="material-symbols-outlined text-primary-container text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                              <span className="font-label-lg text-label-lg text-on-surface">4.9</span>
-                              <span className="font-body-sm text-body-sm text-on-surface-variant">(128 đánh giá)</span>
-                            </div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                            {language === 'en' ? 'From' : 'Đơn giá từ'}
                           </div>
-                          <h3 className="font-headline-sm text-headline-sm text-on-surface group-hover:text-secondary transition-colors line-clamp-2">
-                            {service.name}
-                          </h3>
-                          <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 line-clamp-2">
-                            {service.description}
-                          </p>
-                        </div>
-                        <div className="pt-space-xs flex items-center justify-between gap-2 border-t border-surface-container">
-                          <div>
-                            <span className="font-label-sm text-label-sm text-on-surface-variant block">Đơn giá trọn gói</span>
-                            <div className="flex items-baseline gap-1">
-                              <span className="font-headline-md text-headline-md text-primary-container font-extrabold">{service.basePrice.toLocaleString('vi-VN')}đ</span>
-                              <span className="font-body-sm text-body-sm text-primary-container font-medium">/ người</span>
-                            </div>
+                          <div className="flex items-baseline gap-1">
+                            <span className="font-black text-lg text-rose-600 dark:text-rose-400">
+                              {service.price.toLocaleString('vi-VN')}₫
+                            </span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                              /{language === 'en' ? 'guest' : 'khách'}
+                            </span>
                           </div>
-                          <button onClick={(e) => { e.stopPropagation(); navigate(`/tour/${service.id}`); }} className="px-4 py-2.5 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:scale-[1.03] active:scale-[0.98] transition-all shadow-sm flex items-center gap-1" type="button">
-                            <span className="">Xem chi tiết</span>
-                            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                          </button>
                         </div>
+
+                        {/* Booking Details Arrow Button */}
+                        <span className="w-9 h-9 rounded-full bg-cyan-500/10 dark:bg-cyan-400/20 text-cyan-700 dark:text-cyan-300 flex items-center justify-center group-hover:bg-cyan-500 group-hover:text-white transition-all duration-200">
+                          <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                        </span>
                       </div>
-                    </article>
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-20">
-                <span className="material-symbols-outlined text-[64px] text-outline mb-4">search_off</span>
-                <h3 className="font-headline-md text-on-surface">Không tìm thấy kết quả nào</h3>
-                <p className="font-body-md text-on-surface-variant mt-2">Vui lòng điều chỉnh lại bộ lọc để xem thêm các dịch vụ khác.</p>
-                <button onClick={() => { setSelectedCategory(null); setPriceMax(1500000); }} className="mt-6 px-6 py-2 bg-primary text-on-primary rounded-full hover:bg-primary-container transition-colors font-label-lg">Xóa bộ lọc</button>
-              </div>
-            )}
-            
-          </main>
-        </div>
-      </section>
-    </div></main>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            /* Empty State */
+            <div className="bg-slate-900/80 backdrop-blur-xl border border-white/15 rounded-3xl p-12 text-center max-w-xl mx-auto my-12 shadow-2xl">
+              <span className="material-symbols-outlined text-cyan-400 text-[64px] mb-3">search_off</span>
+              <h2 className="text-xl font-bold text-white mb-2">
+                {language === 'en' ? 'No marine experiences found' : 'Không tìm thấy trải nghiệm phù hợp'}
+              </h2>
+              <p className="text-sm text-slate-300 mb-6 leading-relaxed">
+                {language === 'en'
+                  ? 'Try expanding your price range or clearing keyword filters to view other exciting ocean adventures.'
+                  : 'Hãy thử nới rộng mức giá lọc hoặc xóa từ khóa tìm kiếm để khám phá các hoạt động biển hấp dẫn khác.'}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  handleSelectCategory(null);
+                  setKeyword('');
+                  setPriceMax(1500000);
+                  setSortBy('popular');
+                }}
+                className="px-6 py-2.5 rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/30 hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+              >
+                {language === 'en' ? 'Show All Experiences' : 'Xem tất cả trải nghiệm biển'}
+              </button>
+            </div>
+          )}
+        </section>
+
+      </div>
+    </main>
   );
 }
+
+export default Search;

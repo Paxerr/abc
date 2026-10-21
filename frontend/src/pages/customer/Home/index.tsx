@@ -22,7 +22,6 @@ import { ScrollToTopButton } from "../../../components/customer/ScrollToTopButto
 import { CinematicSceneBackdrop } from "../../../components/customer/CinematicSceneBackdrop";
 import { ScrollReveal } from "../../../components/common/ScrollReveal";
 import { MarineWeatherPill } from "../../../components/customer/MarineWeatherPill";
-import { CategoryBar } from "../../../components/customer/CategoryBar";
 import { serviceCatalogService } from "../../../services/serviceCatalogService";
 import type { ServiceSummaryDto } from "../../../types/service";
 import type { FlashSaleExperience, ActivityCardData } from "../../../data/customerHomeData";
@@ -964,10 +963,6 @@ export function Home() {
             <MarineWeatherPill />
           </div>
 
-          {/* Dynamic Sea Sports Category Quick Bar */}
-          <div className="mt-5 w-full max-w-5xl mx-auto relative z-20">
-            <CategoryBar />
-          </div>
         </div>
       </section>
 
@@ -1000,7 +995,7 @@ export function Home() {
               subtitle={language === 'en'
                 ? 'Glide peacefully across mirrored morning waters and greet the sunrise'
                 : 'Lướt êm trên mặt biển phẳng lặng sớm mai, đón ánh bình minh rạng rỡ'}
-              categorySlug="sup"
+              categorySlug="cheo-sup-kayak"
               experiences={supKayakList}
             />
           </div>
@@ -1036,7 +1031,7 @@ export function Home() {
               subtitle={language === 'en'
                 ? 'Immerse into rich coral biodiversity guided by certified master divers'
                 : 'Đắm mình trong làn nước pha lê và quần thể san hô đa dạng sắc màu'}
-              categorySlug="diving"
+              categorySlug="lan-ngam-san-ho"
               experiences={divingList}
             />
 
@@ -1046,7 +1041,7 @@ export function Home() {
               subtitle={language === 'en'
                 ? 'All-inclusive marine days, sunset luxury yachts & beach camping'
                 : 'Trọn gói trải nghiệm 1 ngày, du thuyền ngắm hoàng hôn và cắm trại ven biển'}
-              categorySlug="combo"
+              categorySlug="du-thuyen-ngam-hoang-hon"
               experiences={COMBO_SUNSET_EXPERIENCES}
             />
           </div>
@@ -1082,7 +1077,7 @@ export function Home() {
               subtitle={language === 'en'
                 ? 'Parasailing, jet skis and speedboat wave carving with maximum safety'
                 : 'Dù lượn ngắm vịnh biển, mô tô nước 1800cc và cano xé sóng cực phấn khích'}
-              categorySlug="thrill"
+              categorySlug="cano-du-bay"
               experiences={THRILL_EXPERIENCES}
             />
           </div>
