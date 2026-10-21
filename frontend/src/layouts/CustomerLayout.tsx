@@ -16,42 +16,39 @@ export function CustomerLayout() {
   const location = useLocation();
   const [prevPath, setPrevPath] = useState(location.pathname);
   const [animationClass, setAnimationClass] = useState("animate-fade-in-up");
-  const { toastMessage, clearToast } = useWishlistStore();
-  const [toastVisible, setToastVisible] = useState(false);
-  const [toastText, setToastText] = useState<string | null>(null);
+  const { toastMessage, toastTimestamp, clearToast } = useWishlistStore();
+  const [currentToast, setCurrentToast] = useState<{ text: string; id: number } | null>(null);
+  const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    if (toastMessage) {
-      setToastText(toastMessage);
-      const frame = requestAnimationFrame(() => {
-        setToastVisible(true);
-      });
+    if (toastMessage && toastTimestamp) {
+      setIsExiting(false);
+      setCurrentToast({ text: toastMessage, id: toastTimestamp });
 
-      const hideTimer = setTimeout(() => {
-        setToastVisible(false);
-      }, 2600);
+      // After 2.5s, trigger exit slide-out animation to the right
+      const exitTimer = setTimeout(() => {
+        setIsExiting(true);
+      }, 2500);
 
+      // After 2.5s + 380ms = 2880ms, clean up
       const clearTimer = setTimeout(() => {
         clearToast();
-        setToastText(null);
-      }, 3050);
+        setCurrentToast(null);
+      }, 2880);
 
       return () => {
-        cancelAnimationFrame(frame);
-        clearTimeout(hideTimer);
+        clearTimeout(exitTimer);
         clearTimeout(clearTimer);
       };
-    } else {
-      setToastVisible(false);
     }
-  }, [toastMessage, clearToast]);
+  }, [toastMessage, toastTimestamp, clearToast]);
 
   const handleCloseToast = () => {
-    setToastVisible(false);
+    setIsExiting(true);
     setTimeout(() => {
       clearToast();
-      setToastText(null);
-    }, 400);
+      setCurrentToast(null);
+    }, 350);
   };
 
   if (location.pathname !== prevPath) {
@@ -98,12 +95,11 @@ export function CustomerLayout() {
       {!isAuthPage && <Footer />}
 
       {/* Global Floating Wishlist Toast Notification (Carousel slide: right-to-left in, left-to-right out) */}
-      {toastText && (
+      {currentToast && (
         <div
-          className={`fixed top-24 right-5 sm:top-24 sm:right-8 z-[99999] bg-emerald-500/35 backdrop-blur-xl text-white px-4 py-2.5 rounded-2xl shadow-[0_12px_36px_-4px_rgba(5,150,105,0.35)] flex items-center gap-3 border border-emerald-400/40 transition-all duration-400 ease-out transform-gpu pointer-events-auto ${
-            toastVisible
-              ? 'translate-x-0 opacity-100'
-              : 'translate-x-[150%] opacity-0'
+          key={currentToast.id}
+          className={`fixed top-24 right-5 sm:top-24 sm:right-8 z-[99999] bg-emerald-500/35 backdrop-blur-xl text-white px-4 py-2.5 rounded-2xl shadow-[0_12px_36px_-4px_rgba(5,150,105,0.35)] flex items-center gap-3 border border-emerald-400/40 transform-gpu pointer-events-auto ${
+            isExiting ? 'animate-toast-slide-out' : 'animate-toast-slide-in'
           }`}
         >
           <div className="w-7 h-7 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
@@ -115,7 +111,7 @@ export function CustomerLayout() {
             </span>
           </div>
           <span className="font-semibold text-xs sm:text-sm text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] whitespace-nowrap pr-1">
-            {toastText}
+            {currentToast.text}
           </span>
           <button
             onClick={handleCloseToast}

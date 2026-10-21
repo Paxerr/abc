@@ -464,6 +464,22 @@
   will-change: transform, opacity;
 }
 
+@keyframes toastSlideOutRight {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(130%) scale(0.95);
+  }
+}
+
+.animate-toast-slide-out {
+  animation: toastSlideOutRight 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
+
 .animate-toast-progress {
   animation: toastProgress 1.2s linear forwards;
 }
