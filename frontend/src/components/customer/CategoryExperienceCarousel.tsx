@@ -64,10 +64,11 @@ export function CategoryExperienceCarousel({
 
   useEffect(() => {
     if (!emblaApi) return;
-    onSelect();
+    const frame = requestAnimationFrame(onSelect);
     emblaApi.on('select', onSelect);
     emblaApi.on('reInit', onSelect);
     return () => {
+      cancelAnimationFrame(frame);
       emblaApi.off('select', onSelect);
       emblaApi.off('reInit', onSelect);
     };

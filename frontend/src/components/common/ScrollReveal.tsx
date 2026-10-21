@@ -7,6 +7,9 @@ interface ScrollRevealProps {
   duration?: number;
 }
 
+const prefersReducedMotion = (): boolean =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 export const ScrollReveal: React.FC<ScrollRevealProps> = ({
   children,
   delay = 0,
@@ -14,16 +17,12 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
   className = '',
 }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const [isRendered, setIsRendered] = useState(false);
+  const [reducedMotion] = useState(prefersReducedMotion);
+  const [isVisible, setIsVisible] = useState(reducedMotion);
+  const [isRendered, setIsRendered] = useState(reducedMotion);
 
   useEffect(() => {
-    // Respect user's motion preferences
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setIsVisible(true);
-      setIsRendered(true);
-      return;
-    }
+    if (reducedMotion) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -50,7 +49,7 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
     }
 
     return () => observer.disconnect();
-  }, [delay, duration]);
+  }, [delay, duration, reducedMotion]);
 
   // Clean styles once animation has completed
   if (isRendered) {

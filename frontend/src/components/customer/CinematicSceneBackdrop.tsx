@@ -155,7 +155,6 @@ export const CinematicSceneBackdrop: React.FC = () => {
         // If the focal point (viewport center) is inside this section, it's 100% active
         if (rect.top <= viewportMid && rect.bottom >= viewportMid) {
           bestScene = scene;
-          minDistance = 0;
           break;
         }
 
