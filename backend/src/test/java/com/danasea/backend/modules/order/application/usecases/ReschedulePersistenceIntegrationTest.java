@@ -49,6 +49,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -81,11 +82,18 @@ class ReschedulePersistenceIntegrationTest extends BaseE2ETest {
 
     @BeforeEach
     void prepare() {
+        var departure = OffsetDateTime.now(ZoneOffset.ofHours(7)).plusDays(3);
         oldId = slotA1TomorrowMorning.getId();
         targetId = slotA1TomorrowAfternoon.getId();
         subId = paidSubOrder.getId();
+        slotA1TomorrowMorning.setDate(departure.toLocalDate());
+        slotA1TomorrowMorning.setStartTime(departure.toLocalTime().withNano(0));
+        slotA1TomorrowMorning.setEndTime(departure.plusHours(2).toLocalTime().withNano(0));
         slotA1TomorrowMorning.setBookedCount(4);
         serviceSlotRepository.saveAndFlush(slotA1TomorrowMorning);
+        slotA1TomorrowAfternoon.setDate(departure.plusDays(1).toLocalDate());
+        slotA1TomorrowAfternoon.setStartTime(departure.toLocalTime().withNano(0));
+        slotA1TomorrowAfternoon.setEndTime(departure.plusHours(2).toLocalTime().withNano(0));
         slotA1TomorrowAfternoon.setBookedCount(0);
         slotA1TomorrowAfternoon.setCapacity(10);
         serviceSlotRepository.saveAndFlush(slotA1TomorrowAfternoon);
