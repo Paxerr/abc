@@ -17,15 +17,42 @@ export function CustomerLayout() {
   const [prevPath, setPrevPath] = useState(location.pathname);
   const [animationClass, setAnimationClass] = useState("animate-fade-in-up");
   const { toastMessage, clearToast } = useWishlistStore();
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastText, setToastText] = useState<string | null>(null);
 
   useEffect(() => {
     if (toastMessage) {
-      const timer = setTimeout(() => {
+      setToastText(toastMessage);
+      const frame = requestAnimationFrame(() => {
+        setToastVisible(true);
+      });
+
+      const hideTimer = setTimeout(() => {
+        setToastVisible(false);
+      }, 2600);
+
+      const clearTimer = setTimeout(() => {
         clearToast();
-      }, 3000);
-      return () => clearTimeout(timer);
+        setToastText(null);
+      }, 3050);
+
+      return () => {
+        cancelAnimationFrame(frame);
+        clearTimeout(hideTimer);
+        clearTimeout(clearTimer);
+      };
+    } else {
+      setToastVisible(false);
     }
   }, [toastMessage, clearToast]);
+
+  const handleCloseToast = () => {
+    setToastVisible(false);
+    setTimeout(() => {
+      clearToast();
+      setToastText(null);
+    }, 400);
+  };
 
   if (location.pathname !== prevPath) {
     const prevOrder = PAGE_ORDER[prevPath] ?? 0;
@@ -70,10 +97,16 @@ export function CustomerLayout() {
       </div>
       {!isAuthPage && <Footer />}
 
-      {/* Global Floating Wishlist Toast Notification (Nền xanh lá nhạt trong suốt, chữ trắng) */}
-      {toastMessage && (
-        <div className="fixed top-24 right-5 sm:top-24 sm:right-8 z-[99999] bg-emerald-500/35 backdrop-blur-xl text-white px-4 py-3 rounded-2xl shadow-[0_12px_36px_-4px_rgba(5,150,105,0.35)] flex items-center gap-3 border border-emerald-400/40 animate-fade-in-down">
-          <div className="w-8 h-8 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+      {/* Global Floating Wishlist Toast Notification (Carousel slide: right-to-left in, left-to-right out) */}
+      {toastText && (
+        <div
+          className={`fixed top-24 right-5 sm:top-24 sm:right-8 z-[99999] bg-emerald-500/35 backdrop-blur-xl text-white px-4 py-2.5 rounded-2xl shadow-[0_12px_36px_-4px_rgba(5,150,105,0.35)] flex items-center gap-3 border border-emerald-400/40 transition-all duration-400 ease-out transform-gpu pointer-events-auto ${
+            toastVisible
+              ? 'translate-x-0 opacity-100'
+              : 'translate-x-[150%] opacity-0'
+          }`}
+        >
+          <div className="w-7 h-7 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
             <span
               className="material-symbols-outlined text-rose-400 text-[18px]"
               style={{ fontVariationSettings: "'FILL' 1" }}
@@ -81,15 +114,15 @@ export function CustomerLayout() {
               favorite
             </span>
           </div>
-          <span className="font-medium text-xs sm:text-sm text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] line-clamp-1 max-w-xs sm:max-w-md pr-1">
-            {toastMessage}
+          <span className="font-semibold text-xs sm:text-sm text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] whitespace-nowrap pr-1">
+            {toastText}
           </span>
           <button
-            onClick={clearToast}
+            onClick={handleCloseToast}
             className="ml-auto p-1 rounded-full text-white/70 hover:text-white hover:bg-white/20 cursor-pointer transition-colors"
             aria-label="Close toast"
           >
-            <span className="material-symbols-outlined text-[18px]">close</span>
+            <span className="material-symbols-outlined text-[16px]">close</span>
           </button>
         </div>
       )}

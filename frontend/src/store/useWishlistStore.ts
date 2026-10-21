@@ -27,13 +27,13 @@ export const useWishlistStore = create<WishlistState>()(
         if (exists) {
           set({
             wishlistIds: current.filter((id) => id !== serviceId),
-            toastMessage: `Đã bỏ lưu "${serviceName || 'trải nghiệm'}" khỏi danh sách yêu thích!`,
+            toastMessage: "Đã bỏ lưu khỏi yêu thích!",
           });
           return false;
         } else {
           set({
             wishlistIds: [...current, serviceId],
-            toastMessage: `Đã lưu "${serviceName || 'trải nghiệm'}" vào danh sách yêu thích!`,
+            toastMessage: "Đã lưu vào yêu thích!",
           });
           return true;
         }
@@ -42,7 +42,7 @@ export const useWishlistStore = create<WishlistState>()(
       removeFromWishlist: (serviceId: string, serviceName?: string) => {
         set({
           wishlistIds: get().wishlistIds.filter((id) => id !== serviceId),
-          toastMessage: `Đã bỏ lưu "${serviceName || 'trải nghiệm'}" khỏi danh sách yêu thích!`,
+          toastMessage: "Đã bỏ lưu khỏi yêu thích!",
         });
       },
 
