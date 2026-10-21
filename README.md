@@ -48,60 +48,9 @@ Coastal adventure tourism requires strict capacity management, weather contingen
 
 The platform is designed around a **Modular Clean Monolith** adhering to Hexagonal Architecture (Ports & Adapters) principles. The diagram below illustrates the end-to-end request flow across presentation, edge, core domain modules, data layers, and external providers:
 
-```mermaid
-flowchart TD
-    subgraph Clients ["Presentation Tier"]
-        Web["Web Application (React 18, TypeScript)"]
-        Mobile["Mobile Applications (React Native, Expo)"]
-    end
-
-    subgraph Edge ["Edge & Ingress Tier"]
-        Tunnel["Tailscale Funnel (Public TLS Endpoint)"]
-        Proxy["Nginx (Reverse Proxy & Static Asset Server)"]
-    end
-
-    subgraph Backend ["Backend Tier — Modular Clean Monolith (Spring Boot 3.4, Java 21)"]
-        Security["Security Layer (JWT, Cookie Origin Validation, RBAC)"]
-        
-        subgraph Domains ["Domain Modules"]
-            Booking["Booking & Orders (Slot Locking, Multi-Vendor Cart)"]
-            Checkin["Check-in & Disputes (HMAC QR Verification, Arbitration)"]
-            Settlement["Settlement Engine (Vendor Payouts, Commission Ledger)"]
-            Intelligence["Services & Safeguards (Weather Monitor, AI Concierge)"]
-        end
-    end
-
-    subgraph Storage ["Data & Messaging Tier"]
-        DB[("PostgreSQL 17 (Primary Relational Store)")]
-        Cache[("Redis 7 (Distributed Locking & Cache)")]
-        Queue[("RabbitMQ 3.12 (Asynchronous Event Bus)")]
-    end
-
-    subgraph Providers ["External Ecosystem"]
-        Payments["Payment Providers (VNPay, PayPal)"]
-        WeatherAPI["Open-Meteo Marine API"]
-        AIProviders["LLM Providers (Gemini, Groq)"]
-    end
-
-    Web --> Tunnel
-    Mobile --> Tunnel
-    Tunnel --> Proxy
-    Proxy --> Security
-    Security --> Booking
-    Security --> Checkin
-    Security --> Settlement
-    Security --> Intelligence
-
-    Booking --> DB
-    Booking --> Cache
-    Checkin --> DB
-    Settlement --> DB
-    Intelligence --> Queue
-
-    Booking -.-> Payments
-    Intelligence -.-> WeatherAPI
-    Intelligence -.-> AIProviders
-```
+<p align="center">
+  <img src="assets/system-architecture.svg" alt="DANASEA System Architecture" width="100%"/>
+</p>
 
 ---
 

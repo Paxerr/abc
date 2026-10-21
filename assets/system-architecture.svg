@@ -1,0 +1,195 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 720" width="100%" height="100%">
+  <defs>
+    <style>
+      .tier-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+      .card-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 13px; font-weight: 700; }
+      .card-sub   { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 11px; font-weight: 400; }
+      .item-text  { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 10.5px; font-weight: 500; }
+      .conn-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 9.5px; font-weight: 600; fill: #64748B; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#64748B"/>
+    </marker>
+    <marker id="arrow-dash" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#94A3B8"/>
+    </marker>
+    <filter id="card-shadow" x="-4%" y="-6%" width="108%" height="116%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.04"/>
+    </filter>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="920" height="720" rx="16" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+
+  <!-- ======================================================== -->
+  <!-- 1. PRESENTATION TIER (CLIENTS)                           -->
+  <!-- ======================================================== -->
+  <g id="tier-clients">
+    <rect x="180" y="28" width="560" height="96" rx="12" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.2"/>
+    <text x="196" y="47" class="tier-title" fill="#475569">Presentation Tier (Clients)</text>
+
+    <!-- Web App Card -->
+    <rect x="196" y="56" width="254" height="54" rx="8" fill="#EEF2FF" stroke="#A5B4FC" stroke-width="1.2" filter="url(#card-shadow)"/>
+    <text x="212" y="77" class="card-title" fill="#312E81">Web Application</text>
+    <text x="212" y="96" class="card-sub" fill="#4F46E5">React 18 · TypeScript · Vite · Tailwind CSS</text>
+
+    <!-- Mobile App Card -->
+    <rect x="470" y="56" width="254" height="54" rx="8" fill="#EEF2FF" stroke="#A5B4FC" stroke-width="1.2" filter="url(#card-shadow)"/>
+    <text x="486" y="77" class="card-title" fill="#312E81">Mobile Applications</text>
+    <text x="486" y="96" class="card-sub" fill="#4F46E5">React Native · Expo (Customer &amp; Vendor)</text>
+  </g>
+
+  <!-- Connectors: Clients -> Edge -->
+  <path d="M 323 110 L 323 138 Q 323 148 333 148 L 440 148 Q 450 148 450 155 L 450 162" fill="none" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 597 110 L 597 138 Q 597 148 587 148 L 470 148 Q 460 148 460 155 L 460 162" fill="none" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="465" y="142" class="conn-label" text-anchor="middle">HTTPS / TLS</text>
+
+  <!-- ======================================================== -->
+  <!-- 2. EDGE & INGRESS TIER                                   -->
+  <!-- ======================================================== -->
+  <g id="tier-edge">
+    <rect x="210" y="162" width="500" height="84" rx="12" fill="#FAF5FF" stroke="#E9D5FF" stroke-width="1.2"/>
+    <text x="226" y="181" class="tier-title" fill="#7E22CE">Edge &amp; Ingress Tier</text>
+
+    <!-- Tailscale Funnel Card -->
+    <rect x="226" y="190" width="220" height="44" rx="8" fill="#FFFFFF" stroke="#C084FC" stroke-width="1.2" filter="url(#card-shadow)"/>
+    <text x="240" y="208" class="card-title" fill="#581C87">Tailscale Funnel</text>
+    <text x="240" y="223" class="card-sub" fill="#7E22CE">Public TLS · Zero-Trust Ingress</text>
+
+    <!-- Connector: Tailscale -> Nginx -->
+    <path d="M 446 212 L 468 212" fill="none" stroke="#A855F7" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- Nginx Proxy Card -->
+    <rect x="474" y="190" width="220" height="44" rx="8" fill="#FFFFFF" stroke="#C084FC" stroke-width="1.2" filter="url(#card-shadow)"/>
+    <text x="488" y="208" class="card-title" fill="#581C87">Nginx Reverse Proxy</text>
+    <text x="488" y="223" class="card-sub" fill="#7E22CE">Static Host · Forwarded Headers</text>
+  </g>
+
+  <!-- Connector: Edge -> Backend -->
+  <path d="M 584 234 L 584 250 Q 584 258 574 258 L 470 258 Q 460 258 460 264 L 460 272" fill="none" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="495" y="254" class="conn-label" text-anchor="middle">Reverse Proxy /api/ Pass</text>
+
+  <!-- ======================================================== -->
+  <!-- 3. BACKEND TIER (MODULAR CLEAN MONOLITH)                 -->
+  <!-- ======================================================== -->
+  <g id="tier-backend">
+    <rect x="30" y="272" width="860" height="236" rx="14" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.4"/>
+    <text x="48" y="292" class="tier-title" fill="#1E293B">Backend Tier — Modular Clean Monolith (Spring Boot 3.4 · Java 21 LTS)</text>
+
+    <!-- Security & Access Layer Card -->
+    <rect x="250" y="300" width="420" height="42" rx="8" fill="#FEF3C7" stroke="#FBBF24" stroke-width="1.2" filter="url(#card-shadow)"/>
+    <text x="266" y="318" class="card-title" fill="#78350F">Security &amp; Access Control Layer</text>
+    <text x="266" y="333" class="card-sub" fill="#92400E">Stateless JWT · Cookie Origin Validation · RBAC (Customer / Vendor / Admin)</text>
+
+    <!-- Connector: Security -> Domains -->
+    <path d="M 460 342 L 460 358" fill="none" stroke="#D97706" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- Domain Modules Sub-Container -->
+    <rect x="44" y="358" width="832" height="138" rx="10" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.2"/>
+    <text x="58" y="374" class="tier-title" fill="#64748B">Core Domain Modules (Ports &amp; Adapters)</text>
+
+    <!-- Module 1: Booking & Orders -->
+    <rect x="56" y="382" width="194" height="102" rx="8" fill="#F0F9FF" stroke="#BAE6FD" stroke-width="1.2"/>
+    <text x="68" y="401" class="card-title" fill="#0369A1">Booking &amp; Orders</text>
+    <text x="68" y="420" class="item-text" fill="#0284C7">• Atomic Slot Capacity</text>
+    <text x="68" y="437" class="item-text" fill="#0284C7">• Multi-Vendor Cart</text>
+    <text x="68" y="454" class="item-text" fill="#0284C7">• Dual Payment Orchestrator</text>
+    <text x="68" y="471" class="item-text" fill="#0284C7">• Idempotency Protection</text>
+
+    <!-- Module 2: Check-in & Verification -->
+    <rect x="262" y="382" width="194" height="102" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.2"/>
+    <text x="274" y="401" class="card-title" fill="#15803D">Check-in &amp; Verification</text>
+    <text x="274" y="420" class="item-text" fill="#16A34A">• HMAC-SHA256 QR Signer</text>
+    <text x="274" y="437" class="item-text" fill="#16A34A">• Constant-Time Verify</text>
+    <text x="274" y="454" class="item-text" fill="#16A34A">• Anti-Replay Token Hash</text>
+    <text x="274" y="471" class="item-text" fill="#16A34A">• Concurrency Guard Locks</text>
+
+    <!-- Module 3: Disputes & Settlement -->
+    <rect x="468" y="382" width="194" height="102" rx="8" fill="#FEFCE8" stroke="#FEF08A" stroke-width="1.2"/>
+    <text x="480" y="401" class="card-title" fill="#A16207">Disputes &amp; Settlement</text>
+    <text x="480" y="420" class="item-text" fill="#CA8A04">• 7-Day Dispute Window</text>
+    <text x="480" y="437" class="item-text" fill="#CA8A04">• Tiered Refund Engine</text>
+    <text x="480" y="454" class="item-text" fill="#CA8A04">• Vendor Payout Ledger</text>
+    <text x="480" y="471" class="item-text" fill="#CA8A04">• Automated Net Deductions</text>
+
+    <!-- Module 4: Services & Safeguards -->
+    <rect x="674" y="382" width="190" height="102" rx="8" fill="#FAF5FF" stroke="#E9D5FF" stroke-width="1.2"/>
+    <text x="686" y="401" class="card-title" fill="#7E22CE">Services &amp; AI</text>
+    <text x="686" y="420" class="item-text" fill="#9333EA">• Marine Weather Monitor</text>
+    <text x="686" y="437" class="item-text" fill="#9333EA">• Auto Force Majeure</text>
+    <text x="686" y="454" class="item-text" fill="#9333EA">• AI Travel Concierge</text>
+    <text x="686" y="471" class="item-text" fill="#9333EA">• Dual-Tier LLM Router</text>
+  </g>
+
+  <!-- Connectors: Backend -> Storage -->
+  <path d="M 153 484 L 153 538" fill="none" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 359 484 L 359 514 Q 359 524 330 524 L 285 524 Q 275 524 275 532 L 275 538" fill="none" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 565 484 L 565 514 Q 565 524 500 524 L 200 524 Q 185 524 185 532 L 185 538" fill="none" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 769 484 L 769 514 Q 769 524 640 524 L 430 524 Q 420 524 420 532 L 420 538" fill="none" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ======================================================== -->
+  <!-- 4. DATA & MESSAGING TIER (PERSISTENCE)                   -->
+  <!-- ======================================================== -->
+  <g id="tier-storage">
+    <rect x="30" y="542" width="470" height="150" rx="12" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.2"/>
+    <text x="46" y="561" class="tier-title" fill="#15803D">Data &amp; Messaging Tier (Private Docker Network)</text>
+
+    <!-- PostgreSQL Card -->
+    <rect x="46" y="570" width="138" height="106" rx="8" fill="#FFFFFF" stroke="#4ADE80" stroke-width="1.2" filter="url(#card-shadow)"/>
+    <text x="58" y="591" class="card-title" fill="#14532D">PostgreSQL 17</text>
+    <text x="58" y="608" class="item-text" fill="#166534">Primary Relational DB</text>
+    <text x="58" y="626" class="item-text" fill="#64748B">• 38 Flyway Migrations</text>
+    <text x="58" y="643" class="item-text" fill="#64748B">• ACID Transactions</text>
+    <text x="58" y="660" class="item-text" fill="#64748B">• Row-level Locks</text>
+
+    <!-- Redis Card -->
+    <rect x="196" y="570" width="138" height="106" rx="8" fill="#FFFFFF" stroke="#F87171" stroke-width="1.2" filter="url(#card-shadow)"/>
+    <text x="208" y="591" class="card-title" fill="#991B1B">Redis 7.0</text>
+    <text x="208" y="608" class="item-text" fill="#B91C1C">In-Memory Cache</text>
+    <text x="208" y="626" class="item-text" fill="#64748B">• Distributed Locks</text>
+    <text x="208" y="643" class="item-text" fill="#64748B">• Session Management</text>
+    <text x="208" y="660" class="item-text" fill="#64748B">• Sliding Rate Limits</text>
+
+    <!-- RabbitMQ Card -->
+    <rect x="346" y="570" width="140" height="106" rx="8" fill="#FFFFFF" stroke="#FB923C" stroke-width="1.2" filter="url(#card-shadow)"/>
+    <text x="358" y="591" class="card-title" fill="#9A3412">RabbitMQ 3.12</text>
+    <text x="358" y="608" class="item-text" fill="#C2410C">Message Broker</text>
+    <text x="358" y="626" class="item-text" fill="#64748B">• Event-Driven Pub/Sub</text>
+    <text x="358" y="643" class="item-text" fill="#64748B">• Async Email Delivery</text>
+    <text x="358" y="660" class="item-text" fill="#64748B">• Guaranteed Delivery</text>
+  </g>
+
+  <!-- ======================================================== -->
+  <!-- 5. EXTERNAL ECOSYSTEM TIER                               -->
+  <!-- ======================================================== -->
+  <g id="tier-external">
+    <rect x="520" y="542" width="370" height="150" rx="12" fill="#FFF7ED" stroke="#FDBA74" stroke-width="1.2"/>
+    <text x="536" y="561" class="tier-title" fill="#9A3412">External Ecosystem &amp; Third-Party APIs</text>
+
+    <!-- Payment Providers Card -->
+    <rect x="536" y="570" width="104" height="106" rx="8" fill="#FFFFFF" stroke="#FED7AA" stroke-width="1.2" filter="url(#card-shadow)"/>
+    <text x="546" y="591" class="card-title" fill="#9A3412">Payments</text>
+    <text x="546" y="612" class="item-text" fill="#64748B">• VNPay (QR)</text>
+    <text x="546" y="630" class="item-text" fill="#64748B">• PayPal API</text>
+    <text x="546" y="648" class="item-text" fill="#64748B">• IPN Webhooks</text>
+
+    <!-- Marine Weather Card -->
+    <rect x="652" y="570" width="104" height="106" rx="8" fill="#FFFFFF" stroke="#BAE6FD" stroke-width="1.2" filter="url(#card-shadow)"/>
+    <text x="662" y="591" class="card-title" fill="#0369A1">Weather</text>
+    <text x="662" y="612" class="item-text" fill="#64748B">• Open-Meteo</text>
+    <text x="662" y="630" class="item-text" fill="#64748B">• Marine API</text>
+    <text x="662" y="648" class="item-text" fill="#64748B">• Wave Height</text>
+
+    <!-- AI Providers Card -->
+    <rect x="768" y="570" width="108" height="106" rx="8" fill="#FFFFFF" stroke="#E9D5FF" stroke-width="1.2" filter="url(#card-shadow)"/>
+    <text x="778" y="591" class="card-title" fill="#7E22CE">AI Engine</text>
+    <text x="778" y="612" class="item-text" fill="#64748B">• Google Gemini</text>
+    <text x="778" y="630" class="item-text" fill="#64748B">• Groq Llama 3</text>
+    <text x="778" y="648" class="item-text" fill="#64748B">• CLI Proxy Hub</text>
+  </g>
+
+  <!-- Connectors: Backend -> External (Dashed) -->
+  <path d="M 210 484 L 210 514 Q 210 528 350 528 L 570 528 Q 588 528 588 540 L 588 564" fill="none" stroke="#94A3B8" stroke-width="1.4" stroke-dasharray="4,4" marker-end="url(#arrow-dash)"/>
+  <path d="M 730 484 L 730 514 Q 730 528 710 528 L 704 528 Q 704 540 704 564" fill="none" stroke="#94A3B8" stroke-width="1.4" stroke-dasharray="4,4" marker-end="url(#arrow-dash)"/>
+  <path d="M 810 484 L 810 538" fill="none" stroke="#94A3B8" stroke-width="1.4" stroke-dasharray="4,4" marker-end="url(#arrow-dash)"/>
+</svg>
