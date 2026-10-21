@@ -32,6 +32,11 @@ export interface VerifyOtpPayload {
   code: string;
 }
 
+export interface GoogleLoginPayload {
+  credential?: string;
+  idToken?: string;
+}
+
 export const authService = {
   /**
    * Log in with email and password
@@ -48,6 +53,18 @@ export const authService = {
   async register(credentials: RegisterCredentials): Promise<AuthenticationResponse> {
     console.log('[authService] Initiating registration for:', credentials.email);
     const response = await apiClient.post<AuthenticationResponse>('/auth/register', credentials);
+    return response.data;
+  },
+
+  /**
+   * Log in or auto-register via Google OAuth2 credential / ID token (POST /api/auth/oauth2/google)
+   */
+  async loginWithGoogle(credentialOrIdToken: string): Promise<AuthenticationResponse> {
+    console.log('[authService] Initiating Google OAuth2 login (/auth/oauth2/google)...');
+    const response = await apiClient.post<AuthenticationResponse>('/auth/oauth2/google', {
+      credential: credentialOrIdToken,
+      idToken: credentialOrIdToken,
+    });
     return response.data;
   },
 
@@ -87,5 +104,22 @@ export const authService = {
     const response = await apiClient.get<UserProfileResponse>('/users/me');
     return response.data;
   },
-};
 
+  /**
+   * Request password reset OTP code
+   */
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    console.log('[authService] Requesting forgot password OTP for:', email);
+    const response = await apiClient.post<{ message: string }>('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  /**
+   * Reset password with 6-digit OTP and new password
+   */
+  async resetPassword(payload: { email: string; otp: string; newPassword: string }): Promise<{ message: string }> {
+    console.log('[authService] Submitting reset password for:', payload.email);
+    const response = await apiClient.post<{ message: string }>('/auth/reset-password', payload);
+    return response.data;
+  },
+};

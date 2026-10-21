@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { authService } from "../../../services/authService";
 import { AuthCinematicBackdrop } from "../../../components/customer/AuthCinematicBackdrop";
+import { GoogleLoginButton } from "../../../components/customer/GoogleLoginButton";
 import type { User } from "../../../types";
 
 export function Auth() {
@@ -167,6 +168,94 @@ export function Auth() {
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     executeLogin(email, password);
+  };
+
+  // -------------------------------------------------------------
+  // GOOGLE OAUTH2 LOGIN FLOW (POST /api/auth/oauth2/google)
+  // -------------------------------------------------------------
+  const handleGoogleLoginSuccess = async (credential: string) => {
+    if (!credential) {
+      console.warn('[Google Auth] Không nhận được credential từ Google');
+      return;
+    }
+
+    setIsLoading(true);
+    setBanner(null);
+    setErrorMessage(null);
+
+    console.groupCollapsed('%c[Google Auth Flow] Đang xác thực với Backend...', 'color: #ea4335; font-weight: bold;');
+    console.log('[Bước 1/4] Gửi credential tới Backend: POST /api/auth/oauth2/google');
+
+    try {
+      const authRes = await authService.loginWithGoogle(credential);
+      console.log('[Bước 2/4] Backend xác thực thành công:', authRes);
+
+      let userModel: User;
+      try {
+        useAuthStore.getState().setPendingToken(authRes.accessToken);
+        const profile = await authService.getMyProfile();
+        userModel = {
+          id: profile.id,
+          email: profile.email,
+          role: profile.role,
+          fullName: profile.fullName || authRes.email.split('@')[0],
+          avatarUrl: profile.avatarUrl || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+          isEmailVerified: profile.isEmailVerified,
+          isLocked: false,
+          phone: '',
+          passwordHash: '',
+          locale: profile.locale || 'vi',
+        };
+      } catch (profileErr) {
+        console.warn('[Google Auth] Không lấy được profile từ /users/me, sử dụng payload cơ bản:', profileErr);
+        userModel = {
+          id: authRes.userId,
+          email: authRes.email,
+          role: authRes.role,
+          fullName: authRes.email.split('@')[0],
+          avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+          isEmailVerified: true,
+          isLocked: false,
+          phone: '',
+          passwordHash: '',
+          locale: 'vi',
+        };
+      }
+
+      console.log('[Bước 3/4] Lưu trữ Token và User vào Zustand Store');
+      setAuth(userModel, authRes.accessToken);
+
+      const destination = userModel.role === 'ADMIN' ? '/admin' : userModel.role === 'VENDOR' ? '/vendor' : '/';
+      setToastMessage("Đăng nhập Google thành công");
+      setShowSuccessToast(true);
+
+      console.log(`[Bước 4/4] Điều hướng tới: ${destination}`);
+      console.groupEnd();
+
+      setTimeout(() => {
+        navigate(destination);
+      }, 1200);
+    } catch (err: any) {
+      console.groupEnd();
+      console.error('[Google Auth] Lỗi đăng nhập Google thất bại:', err);
+      const status = err.response?.status;
+      const serverMessage = err.response?.data?.message || err.message;
+
+      if (status === 401) {
+        setBanner('custom_error');
+        setErrorMessage('Mã xác thực Google không hợp lệ hoặc đã hết hạn.');
+      } else if (status === 403) {
+        setBanner('locked');
+      } else if (!err.response || err.code === 'ERR_NETWORK') {
+        setBanner('network_error');
+        setErrorMessage('Không thể kết nối đến máy chủ Backend (http://localhost:8080). Hãy đảm bảo Backend đã khởi động.');
+      } else {
+        setBanner('custom_error');
+        setErrorMessage(serverMessage || 'Đăng nhập Google không thành công. Vui lòng thử lại.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // -------------------------------------------------------------
@@ -581,6 +670,27 @@ export function Auth() {
                     )}
                   </button>
                 </form>
+
+                {/* Divider */}
+                <div className="relative my-3 flex items-center">
+                  <div className="flex-1 border-t border-outline-variant/30" />
+                  <span className="flex-shrink-0 px-3 text-[11px] text-outline font-medium uppercase tracking-wider whitespace-nowrap">
+                    hoặc tiếp tục với
+                  </span>
+                  <div className="flex-1 border-t border-outline-variant/30" />
+                </div>
+
+                {/* Google Sign In */}
+                <GoogleLoginButton
+                  mode="login"
+                  isLoading={isLoading}
+                  disabled={isLoading}
+                  onSuccess={handleGoogleLoginSuccess}
+                  onError={(msg) => {
+                    setBanner('custom_error');
+                    setErrorMessage(msg);
+                  }}
+                />
                 
                 <div className="pt-1 text-center">
                   <p className="text-xs text-on-surface-variant">
@@ -685,6 +795,27 @@ export function Auth() {
                         )}
                       </button>
                     </form>
+
+                    {/* Divider */}
+                    <div className="relative my-3 flex items-center">
+                      <div className="flex-1 border-t border-outline-variant/30" />
+                      <span className="flex-shrink-0 px-3 text-[11px] text-outline font-medium uppercase tracking-wider whitespace-nowrap">
+                        hoặc đăng ký bằng
+                      </span>
+                      <div className="flex-1 border-t border-outline-variant/30" />
+                    </div>
+
+                    {/* Google Sign In */}
+                    <GoogleLoginButton
+                      mode="register"
+                      isLoading={isLoading}
+                      disabled={isLoading}
+                      onSuccess={handleGoogleLoginSuccess}
+                      onError={(msg) => {
+                        setBanner('custom_error');
+                        setErrorMessage(msg);
+                      }}
+                    />
 
                     <div className="pt-0.5 text-center">
                       <p className="text-xs text-on-surface-variant">
