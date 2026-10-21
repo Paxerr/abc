@@ -63,7 +63,7 @@ public class SubOrderJpaEntity extends BaseJpaEntity {
     @Enumerated(EnumType.STRING)
     private RefundReason cancellationReason;
 
-    @Column(name = "cancellation_policy_version", nullable = false, length = 40)
+    @Column(name = "cancellation_policy_version", nullable = false, length = 40, columnDefinition = "varchar(40) default 'STANDARD_24H_V2'")
     private String cancellationPolicyVersion = "STANDARD_24H_V2";
 
     @Column(name = "waiver_required")
@@ -98,7 +98,7 @@ public class SubOrderJpaEntity extends BaseJpaEntity {
     @Column(name = "vendor_notified_at")
     private OffsetDateTime vendorNotifiedAt;
 
-    @Column(name = "reschedule_version", nullable = false)
+    @Column(name = "reschedule_version", nullable = false, columnDefinition = "bigint default 0")
     private Long rescheduleVersion = 0L;
 
     @Column(name = "rescheduled_at")

@@ -31,7 +31,7 @@ public class ConversationJpaEntity extends BaseJpaEntity {
     @Column(name = "master_order_id")
     private UUID masterOrderId;
 
-    @Column(name = "last_message_sequence", nullable = false)
+    @Column(name = "last_message_sequence", nullable = false, columnDefinition = "bigint default 0")
     @Builder.Default
     private Long lastMessageSequence = 0L;
 

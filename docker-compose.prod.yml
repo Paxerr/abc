@@ -1,0 +1,149 @@
+services:
+  # 1. Database & Message Broker (Chỉ bind 127.0.0.1, tuyệt đối bảo mật)
+  postgres:
+    image: postgres:17-alpine
+    container_name: danasea-postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5433:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7.0-alpine
+    container_name: danasea-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      - data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: danasea-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    networks:
+      - data
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Backend Spring Boot (Giới hạn heap tối đa 512MB cho máy 4GB RAM)
+  backend:
+    image: ${IMAGE_PREFIX:-ghcr.io/capkimkhanh2k5/danasea}-backend:${IMAGE_TAG:-latest}
+    container_name: danasea-backend
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m -XX:+UseG1GC"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      APP_JWT_SECRET: ${APP_JWT_SECRET}
+      APP_PAYMENT_WEBHOOK_SECRET: ${APP_PAYMENT_WEBHOOK_SECRET:-local-development-payment-webhook-secret-change-me}
+      APP_VNPAY_API_URL: ${APP_VNPAY_API_URL:-https://sandbox.vnpayment.vn/merchant_webapi/api/transaction}
+      APP_VNPAY_IP_ADDRESS: ${APP_VNPAY_IP_ADDRESS:-127.0.0.1}
+      APP_PAYPAL_MODE: ${APP_PAYPAL_MODE:-sandbox}
+      APP_PAYPAL_CLIENT_ID: ${APP_PAYPAL_CLIENT_ID}
+      APP_PAYPAL_CLIENT_SECRET: ${APP_PAYPAL_CLIENT_SECRET}
+      APP_PAYPAL_WEBHOOK_ID: ${APP_PAYPAL_WEBHOOK_ID:-}
+      APP_PAYPAL_BASE_URL: ${APP_PAYPAL_BASE_URL:-https://api-m.sandbox.paypal.com}
+      APP_PAYPAL_RETURN_URL: ${APP_PAYPAL_RETURN_URL:-http://localhost:3000/payment/success}
+      APP_PAYPAL_CANCEL_URL: ${APP_PAYPAL_CANCEL_URL:-http://localhost:3000/payment/cancel}
+      VNPAY_TMN_CODE: ${VNPAY_TMN_CODE}
+      VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET}
+      VNPAY_PAY_URL: ${VNPAY_PAY_URL:-https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+      VNPAY_RETURN_URL: ${VNPAY_RETURN_URL:-http://localhost:3000/payment/vnpay-return}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      AI_CLIPROXY_ENABLED: ${AI_CLIPROXY_ENABLED:-true}
+      AI_CLIPROXY_BASE_URL: ${AI_CLIPROXY_BASE_URL:-http://host.docker.internal:8318/v1}
+      AI_CLIPROXY_API_KEY: ${AI_CLIPROXY_API_KEY:-sk-cliproxy-pbl6-local-key}
+      AI_CLIPROXY_MODEL: ${AI_CLIPROXY_MODEL:-gemini-2.5-flash}
+      AI_CLIPROXY_FALLBACK_MODEL: ${AI_CLIPROXY_FALLBACK_MODEL:-openai/gpt-oss-120b}
+      GROQ_API_KEYS: ${GROQ_API_KEYS:-}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
+      GROQ_FALLBACK_MODEL: ${GROQ_FALLBACK_MODEL:-llama-3.1-8b-instant}
+      GROQ_MODERATION_MODEL: ${GROQ_MODERATION_MODEL:-meta-llama/llama-prompt-guard-2-86m}
+      APP_JWT_ACCESS_TOKEN_MINUTES: ${APP_JWT_ACCESS_TOKEN_MINUTES:-60}
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-https://danasea.tailfc3563.ts.net}
+      SPRING_REDIS_HOST: redis
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      OPEN_METEO_BASE_URL: ${OPEN_METEO_BASE_URL}
+      OPEN_METEO_MARINE_BASE_URL: ${OPEN_METEO_MARINE_BASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - app
+      - data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # 3. Frontend Web (Nginx Reverse Proxy /api/ sang backend)
+  frontend:
+    image: ${IMAGE_PREFIX:-ghcr.io/capkimkhanh2k5/danasea}-frontend:${IMAGE_TAG:-latest}
+    container_name: danasea-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - app
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+
+volumes:
+  postgres_data:
+
+networks:
+  app:
+  data:
+    internal: false

@@ -5,7 +5,7 @@
 **/target/
 **/node_modules/
 **/dist/
-.github
+.github/modernize/
 .vscode
 .postman
 .DS_Store
@@ -23,3 +23,5 @@ private/
 __pycache__/
 *.py[cod]
 .ruff_cache/
+cli-proxy/auths/
+cli-proxy/logs/

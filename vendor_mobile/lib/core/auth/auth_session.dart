@@ -137,6 +137,26 @@ class AuthSession {
     }
   }
 
+  Future<void> loginWithGoogle(String idToken) async {
+    if (idToken.trim().isEmpty)
+      throw AuthFailure('Thiếu thông tin xác thực Google.');
+    await clear();
+    try {
+      await request(
+        '/api/auth/oauth2/google',
+        method: 'POST',
+        data: {'idToken': idToken},
+        authenticated: false,
+        retry: false,
+      );
+      await loadProfile();
+      await _save();
+    } catch (_) {
+      await clear();
+      rethrow;
+    }
+  }
+
   Future<void> login(String email, String password) async {
     await request(
       '/api/auth/login',

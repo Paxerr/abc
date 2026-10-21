@@ -11,6 +11,10 @@ import '../widgets/booking_slot_sheet.dart';
 class ExperienceDetailScreen extends StatefulWidget {
   final ServiceModel service;
   final VoidCallback? onAddToCart;
+  final Future<void> Function()? onToggleFavorite;
+  final bool favoriteBusy;
+  final VoidCallback? onOpenVendor;
+  final VoidCallback? onOpenBooking;
   final Function(ServiceModel service, ServiceSlotModel slot, int guests)?
       onBookNow;
 
@@ -18,6 +22,10 @@ class ExperienceDetailScreen extends StatefulWidget {
     super.key,
     required this.service,
     this.onAddToCart,
+    this.onToggleFavorite,
+    this.favoriteBusy = false,
+    this.onOpenVendor,
+    this.onOpenBooking,
     this.onBookNow,
   });
 
@@ -51,6 +59,10 @@ class _ExperienceDetailScreenState extends State<ExperienceDetailScreen> {
   }
 
   void _openBookingSheet() {
+    if (widget.onOpenBooking != null) {
+      widget.onOpenBooking!();
+      return;
+    }
     final slots =
         MockDatabaseData.getSlotsForService(widget.service.id, DateTime.now());
     showModalBottomSheet(
@@ -190,7 +202,9 @@ class _ExperienceDetailScreenState extends State<ExperienceDetailScreen> {
                         spacing: 8,
                         runSpacing: 6,
                         children: [
-                          Container(
+                          GestureDetector(
+                            onTap: widget.onOpenVendor,
+                            child: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
@@ -211,6 +225,7 @@ class _ExperienceDetailScreenState extends State<ExperienceDetailScreen> {
                                   ),
                                 ),
                               ],
+                            ),
                             ),
                           ),
                           Container(
@@ -610,15 +625,19 @@ class _ExperienceDetailScreenState extends State<ExperienceDetailScreen> {
                               AppColors.surface.withValues(alpha: 0.85),
                           child: IconButton(
                             icon: Icon(
-                              _isFavorite
+                              (widget.onToggleFavorite != null ? widget.service.isFavorite : _isFavorite)
                                   ? Icons.favorite
                                   : Icons.favorite_border,
-                              color: _isFavorite
+                              color: (widget.onToggleFavorite != null ? widget.service.isFavorite : _isFavorite)
                                   ? AppColors.primary
                                   : AppColors.onSurface,
                             ),
-                            onPressed: () {
-                              setState(() => _isFavorite = !_isFavorite);
+                            onPressed: widget.favoriteBusy ? null : () async {
+                              if (widget.onToggleFavorite != null) {
+                                await widget.onToggleFavorite!();
+                              } else {
+                                setState(() => _isFavorite = !_isFavorite);
+                              }
                             },
                           ),
                         ),

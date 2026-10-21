@@ -58,6 +58,9 @@ public class BookingItemJpaEntity extends BaseJpaEntity {
     @Column(name = "allow_split", nullable = false)
     private boolean allowSplit;
 
+    @Column(name = "capacity_released", nullable = false)
+    private boolean capacityReleased;
+
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 

@@ -445,8 +445,8 @@ class DiscountConcurrencyIntegrationTest extends BaseSecurityIntegrationTest {
     private UUID newUser(String role) {
         UUID id = UUID.randomUUID();
         jdbc.update(
-                "INSERT INTO users(id,email,role,locale,created_at,updated_at) VALUES"
-                    + " (?,?,?,'en',now(),now())",
+                "INSERT INTO users(id,email,role,locale,created_at,updated_at,session_version) VALUES"
+                    + " (?,?,?,'en',now(),now(),0)",
                 id,
                 "discount-integration-" + id + "@example.com",
                 role);

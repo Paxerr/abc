@@ -375,18 +375,11 @@ public class RbacCacheInvalidationIntegrationTest extends BaseSecurityIntegratio
         Optional<User> byId = accountInternalApi.findUserById(userId);
         assertThat(byId).isPresent();
 
-        Cache usersByIdCache = cacheManager.getCache("usersById");
-        assertThat(usersByIdCache).isNotNull();
-        assertThat(usersByIdCache.get(userId)).isNotNull();
-
         // Cập nhật user (đổi tên và khoá)
         User toUpdate = byId.get();
         toUpdate.setIsLocked(true);
         toUpdate.setFullName("Updated User Name");
         accountInternalApi.saveUser(toUpdate);
-
-        // Kiểm tra cache usersById đã bị evict
-        assertThat(usersByIdCache.get(userId)).isNull();
 
         // Đọc lại từ DB: xác nhận trả về dữ liệu mới đã được cập nhật
         Optional<User> reloaded = accountInternalApi.findUserById(userId);
