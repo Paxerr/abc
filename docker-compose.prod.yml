@@ -130,6 +130,8 @@ services:
     image: ${IMAGE_PREFIX:-ghcr.io/capkimkhanh2k5/danasea}-frontend:${IMAGE_TAG:-latest}
     container_name: danasea-frontend
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
     depends_on:
       backend:
         condition: service_healthy
