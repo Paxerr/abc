@@ -672,12 +672,12 @@ export function Auth() {
                 </form>
 
                 {/* Divider */}
-                <div className="relative my-2 flex items-center justify-center">
-                  <div className="border-t border-outline-variant/30 w-full" />
-                  <span className="bg-surface-container-lowest px-2.5 text-[10px] sm:text-[11px] text-outline font-medium uppercase tracking-wider">
+                <div className="relative my-3 flex items-center">
+                  <div className="flex-1 border-t border-outline-variant/30" />
+                  <span className="flex-shrink-0 px-3 text-[11px] text-outline font-medium uppercase tracking-wider whitespace-nowrap">
                     hoặc tiếp tục với
                   </span>
-                  <div className="border-t border-outline-variant/30 w-full" />
+                  <div className="flex-1 border-t border-outline-variant/30" />
                 </div>
 
                 {/* Google Sign In */}
@@ -797,12 +797,12 @@ export function Auth() {
                     </form>
 
                     {/* Divider */}
-                    <div className="relative my-2 flex items-center justify-center">
-                      <div className="border-t border-outline-variant/30 w-full" />
-                      <span className="bg-surface-container-lowest px-2.5 text-[10px] sm:text-[11px] text-outline font-medium uppercase tracking-wider">
+                    <div className="relative my-3 flex items-center">
+                      <div className="flex-1 border-t border-outline-variant/30" />
+                      <span className="flex-shrink-0 px-3 text-[11px] text-outline font-medium uppercase tracking-wider whitespace-nowrap">
                         hoặc đăng ký bằng
                       </span>
-                      <div className="border-t border-outline-variant/30 w-full" />
+                      <div className="flex-1 border-t border-outline-variant/30" />
                     </div>
 
                     {/* Google Sign In */}
