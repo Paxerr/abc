@@ -65,7 +65,7 @@ public class SubOrderRescheduleHistoryJpaEntity extends BaseJpaEntity {
     @Column(name = "idempotency_key", nullable = false)
     private String idempotencyKey;
 
-    @Column(name = "reschedule_version", nullable = false)
+    @Column(name = "reschedule_version", nullable = false, columnDefinition = "bigint default 1")
     private Long rescheduleVersion;
 
     @Column(name = "notification_sent_at")

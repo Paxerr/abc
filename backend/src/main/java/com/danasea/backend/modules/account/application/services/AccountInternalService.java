@@ -133,11 +133,26 @@ public class AccountInternalService implements AccountInternalApi {
         }
         UserJpaEntity saved = userRepository.saveAndFlush(entity);
 
-        if (previousEmail != null && !previousEmail.equals(user.getEmail())) {
-            if (cacheManager != null) {
-                Cache cache = cacheManager.getCache("usersByEmail");
-                if (cache != null) {
-                    cache.evict(previousEmail);
+        if (cacheManager != null) {
+            Cache byEmail = cacheManager.getCache("usersByEmail");
+            if (byEmail != null) {
+                if (user.getEmail() != null) {
+                    byEmail.evict(normalizeEmail(user.getEmail()));
+                }
+                if (saved.getEmail() != null) {
+                    byEmail.evict(normalizeEmail(saved.getEmail()));
+                }
+                if (previousEmail != null && !previousEmail.equals(user.getEmail())) {
+                    byEmail.evict(previousEmail);
+                }
+            }
+            Cache byId = cacheManager.getCache("usersById");
+            if (byId != null) {
+                if (user.getId() != null) {
+                    byId.evict(user.getId());
+                }
+                if (saved.getId() != null) {
+                    byId.evict(saved.getId());
                 }
             }
         }
