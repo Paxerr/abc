@@ -428,11 +428,15 @@ export function Search() {
 
               {/* Price & Sort Controls */}
               <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-2 text-xs">
-                {/* Price Filter */}
-                <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 rounded-xl px-2.5 py-1.5 border border-slate-200/80 dark:border-white/10">
-                  <span className="text-slate-500 dark:text-slate-400">{language === 'en' ? 'Max:' : 'Giá:'}</span>
-                  <span className="font-bold text-cyan-700 dark:text-cyan-400">
-                    {priceMax >= 1500000 ? (language === 'en' ? 'All' : 'Tất cả') : `${(priceMax / 1000).toLocaleString('vi-VN')}k`}
+                {/* Price Filter with stable width and generous slider */}
+                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-1.5 border border-slate-200/80 dark:border-white/10 shrink-0">
+                  <span className="text-slate-500 dark:text-slate-400 shrink-0">{language === 'en' ? 'Max:' : 'Mức giá:'}</span>
+                  <span className="font-bold text-cyan-700 dark:text-cyan-400 w-[64px] text-left shrink-0">
+                    {priceMax >= 1500000
+                      ? (language === 'en' ? 'All' : 'Tất cả')
+                      : (priceMax >= 1000000
+                        ? `${(priceMax / 1000000).toFixed(1).replace('.0', '')}tr ₫`
+                        : `${priceMax / 1000}k ₫`)}
                   </span>
                   <input
                     type="range"
@@ -441,12 +445,12 @@ export function Search() {
                     step="50000"
                     value={priceMax}
                     onChange={(e) => setPriceMax(Number(e.target.value))}
-                    className="w-16 sm:w-20 accent-cyan-600 cursor-pointer"
+                    className="w-24 sm:w-32 accent-cyan-600 cursor-pointer h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg"
                   />
                 </div>
 
                 {/* Sort Dropdown */}
-                <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 rounded-xl px-2.5 py-1.5 border border-slate-200/80 dark:border-white/10">
+                <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 rounded-xl px-2.5 py-1.5 border border-slate-200/80 dark:border-white/10 shrink-0">
                   <span className="text-slate-500 dark:text-slate-400">{language === 'en' ? 'Sort:' : 'Xếp:'}</span>
                   <select
                     value={sortBy}
@@ -468,21 +472,23 @@ export function Search() {
                   </select>
                 </div>
 
-                {/* Reset Filter Button */}
-                {(selectedCategorySlug || keyword || priceMax < 1500000 || sortBy !== 'popular') && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleSelectCategory(null);
-                      setKeyword('');
-                      setPriceMax(1500000);
-                      setSortBy('popular');
-                    }}
-                    className="text-cyan-700 dark:text-cyan-400 hover:underline font-bold px-1 cursor-pointer"
-                  >
-                    {language === 'en' ? 'Reset' : 'Đặt lại'}
-                  </button>
-                )}
+                {/* Reset Filter Button - Stable layout reservation */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleSelectCategory(null);
+                    setKeyword('');
+                    setPriceMax(1500000);
+                    setSortBy('popular');
+                  }}
+                  className={`text-cyan-700 dark:text-cyan-400 hover:underline font-bold px-1 cursor-pointer transition-opacity shrink-0 ${
+                    (selectedCategorySlug || keyword || priceMax < 1500000 || sortBy !== 'popular')
+                      ? 'opacity-100 pointer-events-auto'
+                      : 'opacity-0 pointer-events-none'
+                  }`}
+                >
+                  {language === 'en' ? 'Reset' : 'Đặt lại'}
+                </button>
               </div>
             </div>
           </div>
