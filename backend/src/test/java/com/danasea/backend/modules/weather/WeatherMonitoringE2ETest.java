@@ -49,6 +49,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.*;
 
 /**
@@ -244,7 +245,8 @@ class WeatherMonitoringE2ETest {
         @Test
         @DisplayName("F4: 30-Phút Sliding Window Scheduler (Quét các slot có lịch đặt trong T-24h và hôm nay)")
         void testF4_slidingWindowSchedulerScanning() {
-            LocalDateTime slotTime = LocalDateTime.now().plusHours(24);
+            LocalDateTime nowInVietnam = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            LocalDateTime slotTime = nowInVietnam.plusHours(24);
             testSlot.setDate(slotTime.toLocalDate());
             testSlot.setStartTime(slotTime.toLocalTime().withSecond(0).withNano(0));
             testSlot.setEndTime(slotTime.plusHours(2).toLocalTime().withSecond(0).withNano(0));
@@ -273,7 +275,7 @@ class WeatherMonitoringE2ETest {
             when(weatherProviderPort.getTimeWindowForecast(anyDouble(), anyDouble(), any(), any(), any()))
                     .thenReturn(safeForecast);
 
-            slotWeatherMonitoringJob.monitorUpcomingSlots();
+            slotWeatherMonitoringJob.monitorUpcomingSlots(nowInVietnam);
 
             // Chỉ slot có bookedCount > 0 mới được đánh giá an toàn thời tiết
             verify(weatherProviderPort, times(1))

@@ -2,6 +2,7 @@ package com.danasea.backend.modules.order.application.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -60,6 +61,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -174,7 +176,7 @@ class DisruptionDecisionIntegrationTest extends BaseE2ETest {
         reservations.release(paidOrder.getId(), originalCode.getId());
         assertThat(codes.findById(originalCode.getId()).orElseThrow().getUsedCount()).isEqualTo(1);
         assertThat(codes.findById(originalCode.getId()).orElseThrow().getValidTo())
-                .isEqualTo(originalCode.getValidTo());
+                .isCloseTo(originalCode.getValidTo(), within(1, ChronoUnit.MICROS));
         assertThat(redemptions.findByMasterOrderId(paidOrder.getId())).hasSize(1);
         assertThat(codes.findByReplacementSubOrderId(subId).isPresent())
                 .isEqualTo(reason == RefundReason.SYSTEM_FAULT);

@@ -38,6 +38,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -518,6 +519,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
         @DisplayName("Multi-item mixed cancellation tiers: correct total refund, overall %, and mixed policy string")
         void challenge_MultiItem_MixedTiers_AggregatesCorrectly() {
             mockSecurityUser(customerId, "ROLE_CUSTOMER");
+            LocalDateTime nowInVietnam = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
 
             MasterOrderJpaEntity masterOrder = new MasterOrderJpaEntity();
             masterOrder.setId(masterOrderId);
@@ -548,7 +550,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
             ServiceSlotJpaEntity slot2 = new ServiceSlotJpaEntity();
             slot2.setId(slotId2);
             // Tomorrow at current time + 5h -> around 29 hours away (in [24h, 48h])
-            LocalDateTime departure2 = LocalDateTime.now().plusHours(30);
+            LocalDateTime departure2 = nowInVietnam.plusHours(30);
             slot2.setDate(departure2.toLocalDate());
             slot2.setStartTime(departure2.toLocalTime());
 
@@ -562,7 +564,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
 
             ServiceSlotJpaEntity slot3 = new ServiceSlotJpaEntity();
             slot3.setId(slotId3);
-            LocalDateTime departure3 = LocalDateTime.now().plusHours(5); // 5h away (in [2h, 24h])
+            LocalDateTime departure3 = nowInVietnam.plusHours(5); // 5h away (in [2h, 24h])
             slot3.setDate(departure3.toLocalDate());
             slot3.setStartTime(departure3.toLocalTime());
 
@@ -576,7 +578,7 @@ public class RefundPolicyEngineEmpiricalChallengeTest {
 
             ServiceSlotJpaEntity slot4 = new ServiceSlotJpaEntity();
             slot4.setId(slotId4);
-            LocalDateTime departure4 = LocalDateTime.now().plusMinutes(30); // 30m away (< 2h)
+            LocalDateTime departure4 = nowInVietnam.plusMinutes(30); // 30m away (< 2h)
             slot4.setDate(departure4.toLocalDate());
             slot4.setStartTime(departure4.toLocalTime());
 
