@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { CinematicSceneBackdrop } from '../../../components/customer/CinematicSceneBackdrop';
-import { ScrollReveal } from '../../../components/common/ScrollReveal';
 import { useWishlistStore } from '../../../store/useWishlistStore';
 import { useLanguageStore } from '../../../store/useLanguageStore';
 import { serviceCatalogService, type ServiceQueryParams } from '../../../services/serviceCatalogService';
@@ -199,7 +198,6 @@ export function Search() {
             // Intelligent fallback from mockData
             const filteredMock = FEATURED_SERVICES.filter(item => {
               if (matchedCategory && item.categoryId) {
-                // If matchedCategory matches mock categories
                 const matchesMockCat = (matchedCategory.slug?.includes('sup') && item.categoryId === 'cat-1') ||
                   (matchedCategory.slug?.includes('cano') && item.categoryId === 'cat-2') ||
                   (matchedCategory.slug?.includes('lan') && item.categoryId === 'cat-3') ||
@@ -322,83 +320,85 @@ export function Search() {
 
   return (
     <main className="w-full text-slate-900 min-h-screen relative overflow-x-clip bg-transparent pb-28">
-      {/* Dynamic Ocean Backdrop matching Homepage (Clear daytime sunny waters) */}
+      {/* Dynamic Ocean Backdrop matching Homepage */}
       <CinematicSceneBackdrop />
 
       <div className="relative z-20 max-w-[1520px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28">
 
         {/* =========================================================================
-            CINEMATIC CATEGORY SHOWCASE BANNER (FPT PLAY / NETFLIX STYLE) - BRIGHT & AIRY
+            TRANSPARENT CINEMATIC HEADER (FPT PLAY / NETFLIX STYLE - NO CLUNKY BOX)
            ========================================================================= */}
-        <section data-scene="hero" className="mb-8 select-none">
-          {/* Breadcrumb Navigation - Crisp Frosted Pill */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-white/60 shadow-sm text-xs text-slate-600 mb-4">
+        <section data-scene="hero" className="mb-6 select-none">
+          {/* Breadcrumb Navigation - Transparent and Clean */}
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-white/90 drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.9)] mb-3">
             <Link
               to="/"
-              className="inline-flex items-center gap-1 font-medium text-slate-700 hover:text-cyan-700 transition-colors"
+              className="inline-flex items-center gap-1 font-medium hover:text-cyan-300 transition-colors"
             >
               <span className="material-symbols-outlined text-[16px]">arrow_back</span>
               <span>{language === 'en' ? 'Home' : 'Trang chủ'}</span>
             </Link>
-            <span className="text-slate-300">/</span>
+            <span className="text-white/40">/</span>
             <button
               onClick={() => handleSelectCategory(null)}
-              className={`hover:text-cyan-700 transition-colors ${!selectedCategorySlug ? 'text-cyan-800 font-bold' : 'text-slate-600'}`}
+              className={`hover:text-cyan-300 transition-colors ${!selectedCategorySlug ? 'text-cyan-300 font-bold' : 'text-white/80'}`}
             >
-              {language === 'en' ? 'All Experiences' : 'Tất cả trải nghiệm'}
+              {language === 'en' ? 'All Activities' : 'Tất cả hoạt động'}
             </button>
             {matchedCategory && (
               <>
-                <span className="text-slate-300">/</span>
-                <span className="text-slate-900 font-bold truncate">
+                <span className="text-white/40">/</span>
+                <span className="text-white font-bold truncate">
                   {language === 'en' ? matchedCategory.nameEn || matchedCategory.name : matchedCategory.name}
                 </span>
               </>
             )}
           </div>
 
-          {/* Large Showcase Title & Subtitle - Frosted Pearl Glassmorphism */}
-          <div className="bg-white/85 backdrop-blur-xl border border-white/80 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-[0_12px_36px_-6px_rgba(16,47,58,0.12)] relative overflow-hidden">
-            {/* Ambient subtle cyan glow */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="relative z-10 max-w-4xl">
-              <div className="flex items-center gap-2.5 mb-3">
-                <span className="px-3 py-1 rounded-full bg-cyan-100/80 text-cyan-800 border border-cyan-200 text-xs font-mono font-bold uppercase tracking-wider shadow-sm">
-                  {categoryMeta ? categoryMeta.tag : (language === 'en' ? 'Ocean Catalog' : 'Danh mục biển')}
-                </span>
-                <span className="text-xs text-slate-500 font-medium font-mono">
-                  {displayServices.length} {language === 'en' ? 'experiences available' : 'trải nghiệm sẵn sàng'}
-                </span>
-              </div>
-
-              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight uppercase mb-3">
-                {categoryMeta
-                  ? (language === 'en' ? categoryMeta.titleEn : categoryMeta.titleVi)
-                  : (language === 'en' ? 'EXPLORE DA NANG MARINE EXPERIENCES' : 'KHÁM PHÁ TRẢI NGHIỆM BIỂN ĐÀ NẴNG')}
-              </h1>
-
-              <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal max-w-3xl">
-                {categoryMeta
-                  ? (language === 'en' ? categoryMeta.descEn : categoryMeta.descVi)
-                  : (language === 'en'
-                    ? 'Handpicked certified marine activities in Da Nang: sunrise SUP, coral scuba diving, speedboats, parasailing and luxury sunset yachts.'
-                    : 'Toàn bộ các gói hoạt động thể thao biển được thẩm định an toàn hàng hải: chèo SUP, lặn ngắm san hô Sơn Trà, dù bay, cano cao tốc và du thuyền hoàng hôn.')}
-              </p>
+          {/* Large Title & Subtitle Directly Over Sea Backdrop */}
+          <div className="max-w-4xl">
+            <div className="flex items-center gap-2.5 mb-2.5">
+              <span className="px-3 py-0.5 rounded-full bg-cyan-400/20 backdrop-blur-md border border-cyan-300/40 text-cyan-200 text-xs font-mono font-bold uppercase tracking-wider drop-shadow-sm">
+                {categoryMeta ? categoryMeta.tag : (language === 'en' ? 'Ocean Catalog' : 'Danh mục biển')}
+              </span>
+              <span className="text-xs text-white/80 font-mono drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+                {displayServices.length} {language === 'en' ? 'experiences available' : 'trải nghiệm sẵn sàng'}
+              </span>
             </div>
 
-            {/* Quick Category Switcher Pills */}
-            <div className="mt-6 pt-5 border-t border-slate-200/80 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] drop-shadow-[0_8px_24px_rgba(0,0,0,0.7)] mb-2.5">
+              {categoryMeta
+                ? (language === 'en' ? categoryMeta.titleEn : categoryMeta.titleVi)
+                : (language === 'en' ? 'EXPLORE DA NANG MARINE EXPERIENCES' : 'KHÁM PHÁ TRẢI NGHIỆM BIỂN ĐÀ NẴNG')}
+            </h1>
+
+            <p className="text-sm sm:text-base text-white/95 leading-relaxed font-normal max-w-3xl drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.95)]">
+              {categoryMeta
+                ? (language === 'en' ? categoryMeta.descEn : categoryMeta.descVi)
+                : (language === 'en'
+                  ? 'Handpicked certified marine activities in Da Nang: sunrise SUP, coral scuba diving, speedboats, parasailing and luxury sunset yachts.'
+                  : 'Toàn bộ các gói hoạt động thể thao biển được thẩm định an toàn hàng hải: chèo SUP, lặn ngắm san hô Sơn Trà, dù bay, cano cao tốc và du thuyền hoàng hôn.')}
+            </p>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            UNIFIED CONTROLLER BAR: CATEGORIES + SEARCH + FILTERS IN ONE SEAMLESS CAPSULE
+           ========================================================================= */}
+        <section className="sticky top-20 z-30 mb-8">
+          <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md border border-white/40 dark:border-white/10 rounded-2xl p-2.5 sm:p-3.5 shadow-[0_12px_40px_-6px_rgba(0,0,0,0.25)] flex flex-col gap-2.5">
+            {/* Row 1: Category Switcher Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 border-b border-slate-100 dark:border-white/10">
               <button
                 type="button"
                 onClick={() => handleSelectCategory(null)}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
                   !selectedCategorySlug
-                    ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white shadow-md shadow-cyan-600/30 scale-105'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/80'
+                    ? 'bg-cyan-600 text-white shadow-sm scale-105'
+                    : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
                 }`}
               >
-                {language === 'en' ? 'All Activities' : 'Tất cả hoạt động'}
+                {language === 'en' ? 'All Activities' : 'Tất cả'}
               </button>
 
               {categories.map((cat) => {
@@ -408,10 +408,10 @@ export function Search() {
                     key={cat.id}
                     type="button"
                     onClick={() => handleSelectCategory(cat.slug || cat.id)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                    className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
                       isSelected
-                        ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white shadow-md shadow-cyan-600/30 scale-105'
-                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/80'
+                        ? 'bg-cyan-600 text-white shadow-sm scale-105'
+                        : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     <span>{language === 'en' ? cat.nameEn || cat.name : cat.name}</span>
@@ -419,92 +419,88 @@ export function Search() {
                 );
               })}
             </div>
-          </div>
-        </section>
 
-        {/* =========================================================================
-            STICKY FILTER & CONTROLS CAPSULE - BRIGHT GLASS
-           ========================================================================= */}
-        <section className="sticky top-20 z-30 mb-8">
-          <div className="bg-white/90 backdrop-blur-xl border border-white/80 rounded-2xl p-3 sm:p-4 shadow-[0_8px_30px_rgba(16,47,58,0.08)] flex flex-col md:flex-row items-center justify-between gap-4">
-            {/* Search Input Box */}
-            <div className="w-full md:w-auto flex-1 flex items-center gap-2 bg-slate-50/90 rounded-xl px-3.5 py-2 border border-slate-200 focus-within:border-cyan-500 focus-within:bg-white transition-all">
-              <span className="material-symbols-outlined text-cyan-600 text-[20px]">search</span>
-              <input
-                type="text"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                placeholder={language === 'en' ? 'Search by activity, location (e.g., My Khe, Son Tra)...' : 'Tìm trải nghiệm, bãi biển (Mỹ Khê, Sơn Trà, Hòn Sụp)...'}
-                className="bg-transparent text-sm text-slate-800 placeholder-slate-400 outline-none w-full"
-              />
-              {keyword && (
-                <button
-                  type="button"
-                  onClick={() => setKeyword('')}
-                  className="text-slate-400 hover:text-slate-600"
-                >
-                  <span className="material-symbols-outlined text-[16px]">close</span>
-                </button>
-              )}
-            </div>
-
-            {/* Filter Controls: Max Price Slider & Sort Dropdown */}
-            <div className="w-full md:w-auto flex flex-wrap items-center justify-between sm:justify-end gap-3 text-xs">
-              {/* Price Filter */}
-              <div className="flex items-center gap-2 bg-slate-50/90 rounded-xl px-3 py-1.5 border border-slate-200">
-                <span className="text-slate-600 font-medium">{language === 'en' ? 'Max Price:' : 'Giá tối đa:'}</span>
-                <span className="font-bold text-cyan-700">
-                  {priceMax >= 1500000 ? (language === 'en' ? 'All' : 'Tất cả') : `${(priceMax / 1000).toLocaleString('vi-VN')}k`}
-                </span>
+            {/* Row 2: Search Input + Price Filter + Sort Dropdown */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5">
+              {/* Search Input Box */}
+              <div className="w-full sm:flex-1 flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-1.5 border border-slate-200/80 dark:border-white/10 focus-within:border-cyan-500 focus-within:bg-white dark:focus-within:bg-slate-900 transition-all">
+                <span className="material-symbols-outlined text-cyan-600 text-[18px]">search</span>
                 <input
-                  type="range"
-                  min="200000"
-                  max="1500000"
-                  step="50000"
-                  value={priceMax}
-                  onChange={(e) => setPriceMax(Number(e.target.value))}
-                  className="w-20 sm:w-24 accent-cyan-600 cursor-pointer"
+                  type="text"
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  placeholder={language === 'en' ? 'Search by activity, location (e.g. My Khe, Son Tra)...' : 'Tìm theo tên trải nghiệm, bãi biển...'}
+                  className="bg-transparent text-xs sm:text-sm text-slate-800 dark:text-white placeholder-slate-400 outline-none w-full"
                 />
+                {keyword && (
+                  <button
+                    type="button"
+                    onClick={() => setKeyword('')}
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">close</span>
+                  </button>
+                )}
               </div>
 
-              {/* Sort By Dropdown */}
-              <div className="flex items-center gap-1.5 bg-slate-50/90 rounded-xl px-3 py-2 border border-slate-200">
-                <span className="text-slate-600 font-medium">{language === 'en' ? 'Sort:' : 'Sắp xếp:'}</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="bg-transparent text-slate-900 font-bold outline-none cursor-pointer"
-                >
-                  <option value="popular" className="bg-white text-slate-900">
-                    {language === 'en' ? 'Most Popular' : 'Phổ biến nhất'}
-                  </option>
-                  <option value="rating_desc" className="bg-white text-slate-900">
-                    {language === 'en' ? 'Top Rated ★' : 'Đánh giá cao nhất ★'}
-                  </option>
-                  <option value="price_asc" className="bg-white text-slate-900">
-                    {language === 'en' ? 'Price: Low to High' : 'Giá: Thấp đến Cao'}
-                  </option>
-                  <option value="price_desc" className="bg-white text-slate-900">
-                    {language === 'en' ? 'Price: High to Low' : 'Giá: Cao đến Thấp'}
-                  </option>
-                </select>
-              </div>
+              {/* Price & Sort Controls */}
+              <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-2 text-xs">
+                {/* Price Filter */}
+                <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 rounded-xl px-2.5 py-1.5 border border-slate-200/80 dark:border-white/10">
+                  <span className="text-slate-500 dark:text-slate-400">{language === 'en' ? 'Max:' : 'Giá:'}</span>
+                  <span className="font-bold text-cyan-700 dark:text-cyan-400">
+                    {priceMax >= 1500000 ? (language === 'en' ? 'All' : 'Tất cả') : `${(priceMax / 1000).toLocaleString('vi-VN')}k`}
+                  </span>
+                  <input
+                    type="range"
+                    min="200000"
+                    max="1500000"
+                    step="50000"
+                    value={priceMax}
+                    onChange={(e) => setPriceMax(Number(e.target.value))}
+                    className="w-16 sm:w-20 accent-cyan-600 cursor-pointer"
+                  />
+                </div>
 
-              {/* Reset Filter Button */}
-              {(selectedCategorySlug || keyword || priceMax < 1500000 || sortBy !== 'popular') && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleSelectCategory(null);
-                    setKeyword('');
-                    setPriceMax(1500000);
-                    setSortBy('popular');
-                  }}
-                  className="text-cyan-700 hover:text-cyan-900 transition-colors underline underline-offset-2 font-bold cursor-pointer"
-                >
-                  {language === 'en' ? 'Reset' : 'Đặt lại'}
-                </button>
-              )}
+                {/* Sort Dropdown */}
+                <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 rounded-xl px-2.5 py-1.5 border border-slate-200/80 dark:border-white/10">
+                  <span className="text-slate-500 dark:text-slate-400">{language === 'en' ? 'Sort:' : 'Xếp:'}</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="bg-transparent text-slate-800 dark:text-white font-bold outline-none cursor-pointer text-xs"
+                  >
+                    <option value="popular" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
+                      {language === 'en' ? 'Popular' : 'Phổ biến'}
+                    </option>
+                    <option value="rating_desc" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
+                      {language === 'en' ? 'Top Rated ★' : 'Đánh giá ★'}
+                    </option>
+                    <option value="price_asc" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
+                      {language === 'en' ? 'Price: Low' : 'Giá tăng dần'}
+                    </option>
+                    <option value="price_desc" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
+                      {language === 'en' ? 'Price: High' : 'Giá giảm dần'}
+                    </option>
+                  </select>
+                </div>
+
+                {/* Reset Filter Button */}
+                {(selectedCategorySlug || keyword || priceMax < 1500000 || sortBy !== 'popular') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSelectCategory(null);
+                      setKeyword('');
+                      setPriceMax(1500000);
+                      setSortBy('popular');
+                    }}
+                    className="text-cyan-700 dark:text-cyan-400 hover:underline font-bold px-1 cursor-pointer"
+                  >
+                    {language === 'en' ? 'Reset' : 'Đặt lại'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </section>
@@ -519,7 +515,7 @@ export function Search() {
               {[...Array(8)].map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white/80 border border-slate-200 rounded-2xl overflow-hidden p-3 animate-pulse shadow-sm"
+                  className="bg-white/90 border border-slate-200/90 rounded-2xl overflow-hidden p-3 animate-pulse shadow-sm"
                 >
                   <div className="aspect-[4/3] rounded-xl bg-slate-200 mb-3" />
                   <div className="h-4 bg-slate-200 rounded w-3/4 mb-2" />
@@ -659,7 +655,7 @@ export function Search() {
             </div>
           ) : (
             /* Empty State */
-            <div className="bg-white/85 backdrop-blur-xl border border-white/80 rounded-3xl p-12 text-center max-w-xl mx-auto my-12 shadow-xl">
+            <div className="bg-white/90 backdrop-blur-md border border-white/60 rounded-3xl p-12 text-center max-w-xl mx-auto my-12 shadow-xl">
               <span className="material-symbols-outlined text-cyan-600 text-[64px] mb-3">search_off</span>
               <h2 className="text-xl font-bold text-slate-900 mb-2">
                 {language === 'en' ? 'No marine experiences found' : 'Không tìm thấy trải nghiệm phù hợp'}
