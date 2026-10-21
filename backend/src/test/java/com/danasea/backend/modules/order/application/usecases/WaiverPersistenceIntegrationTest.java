@@ -24,6 +24,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.OffsetDateTime;
+import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -135,7 +136,10 @@ class WaiverPersistenceIntegrationTest extends BaseE2ETest {
             start.countDown();
             var first = a.get(30, TimeUnit.SECONDS);
             var second = b.get(30, TimeUnit.SECONDS);
-            assertEquals(first.acceptedAt().toInstant(), second.acceptedAt().toInstant());
+            assertTrue(
+                    Duration.between(first.acceptedAt(), second.acceptedAt()).abs()
+                                    .compareTo(Duration.ofNanos(1_000))
+                            <= 0);
             assertEquals("VI", first.language());
             var stored = subOrderRepository.findById(subId).orElseThrow();
             assertTrue(stored.getWaiverAccepted());

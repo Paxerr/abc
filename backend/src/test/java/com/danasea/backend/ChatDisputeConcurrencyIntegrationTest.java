@@ -76,10 +76,10 @@ class ChatDisputeConcurrencyIntegrationTest extends BaseSecurityIntegrationTest 
         Vendor vendor = new Vendor(); vendor.setId(vendorId); vendor.setUserId(vendorUser);
         when(vendors.findByUserId(any())).thenReturn(Optional.empty());
         when(vendors.findByUserId(vendorUser)).thenReturn(Optional.of(vendor));
-        jdbc.update("INSERT INTO users(id,email,password_hash,full_name,role,created_at,updated_at) "
-                + "VALUES (?,?,'hash','Customer','CUSTOMER',NOW(),NOW())", customer, customer + "@example.com");
-        jdbc.update("INSERT INTO users(id,email,password_hash,full_name,role,created_at,updated_at) "
-                + "VALUES (?,?,'hash','Admin','ADMIN',NOW(),NOW())", admin, admin + "@example.com");
+        jdbc.update("INSERT INTO users(id,email,password_hash,full_name,role,locale,created_at,updated_at) "
+                + "VALUES (?,?,'hash','Customer','CUSTOMER','vi',NOW(),NOW())", customer, customer + "@example.com");
+        jdbc.update("INSERT INTO users(id,email,password_hash,full_name,role,locale,created_at,updated_at) "
+                + "VALUES (?,?,'hash','Admin','ADMIN','vi',NOW(),NOW())", admin, admin + "@example.com");
         jdbc.update("INSERT INTO master_orders(id,customer_id,status,total_amount,created_at,updated_at) "
                 + "VALUES (?,?,'PAID',100000,NOW(),NOW())", order, customer);
         jdbc.update("INSERT INTO sub_orders(id,master_order_id,vendor_id,status,final_amount,created_at,updated_at) "
