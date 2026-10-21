@@ -70,28 +70,23 @@ export function CustomerLayout() {
       </div>
       {!isAuthPage && <Footer />}
 
-      {/* Global Floating Wishlist Toast Notification (Nền xanh lá nhạt, độ trong suốt cao) */}
+      {/* Global Floating Wishlist Toast Notification (Nền xanh lá nhạt trong suốt, chữ trắng) */}
       {toastMessage && (
-        <div className="fixed top-24 right-5 sm:top-24 sm:right-8 z-[99999] bg-emerald-400/25 dark:bg-emerald-900/40 backdrop-blur-xl text-slate-900 dark:text-white px-4 py-3 rounded-2xl shadow-[0_12px_36px_-4px_rgba(16,185,129,0.3)] flex items-center gap-3 border border-emerald-300/60 dark:border-emerald-500/40 animate-fade-in-down">
-          <div className="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center shrink-0">
+        <div className="fixed top-24 right-5 sm:top-24 sm:right-8 z-[99999] bg-emerald-500/35 backdrop-blur-xl text-white px-4 py-3 rounded-2xl shadow-[0_12px_36px_-4px_rgba(5,150,105,0.35)] flex items-center gap-3 border border-emerald-400/40 animate-fade-in-down">
+          <div className="w-8 h-8 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
             <span
-              className="material-symbols-outlined text-rose-500 text-[20px]"
+              className="material-symbols-outlined text-rose-400 text-[18px]"
               style={{ fontVariationSettings: "'FILL' 1" }}
             >
               favorite
             </span>
           </div>
-          <div className="flex flex-col min-w-0 pr-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 font-mono">
-              Danh sách yêu thích
-            </span>
-            <span className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white line-clamp-1 max-w-xs sm:max-w-md">
-              {toastMessage}
-            </span>
-          </div>
+          <span className="font-medium text-xs sm:text-sm text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] line-clamp-1 max-w-xs sm:max-w-md pr-1">
+            {toastMessage}
+          </span>
           <button
             onClick={clearToast}
-            className="ml-auto p-1 rounded-full text-emerald-900/60 hover:text-emerald-950 dark:text-emerald-200 hover:bg-emerald-500/20 cursor-pointer transition-colors"
+            className="ml-auto p-1 rounded-full text-white/70 hover:text-white hover:bg-white/20 cursor-pointer transition-colors"
             aria-label="Close toast"
           >
             <span className="material-symbols-outlined text-[18px]">close</span>
