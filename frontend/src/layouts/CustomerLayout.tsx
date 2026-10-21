@@ -70,10 +70,10 @@ export function CustomerLayout() {
       </div>
       {!isAuthPage && <Footer />}
 
-      {/* Global Floating Wishlist Toast Notification (Phong cách Frosted Glass tươi sáng, cao cấp) */}
+      {/* Global Floating Wishlist Toast Notification (Nền xanh lá nhạt, độ trong suốt cao) */}
       {toastMessage && (
-        <div className="fixed top-24 right-5 sm:top-24 sm:right-8 z-[99999] bg-white/95 backdrop-blur-xl text-slate-800 px-4 py-3 rounded-2xl shadow-[0_16px_40px_-6px_rgba(0,0,0,0.12),0_4px_16px_rgba(0,0,0,0.06)] flex items-center gap-3 border border-slate-200/90 animate-fade-in-down">
-          <div className="w-9 h-9 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0">
+        <div className="fixed top-24 right-5 sm:top-24 sm:right-8 z-[99999] bg-emerald-400/25 dark:bg-emerald-900/40 backdrop-blur-xl text-slate-900 dark:text-white px-4 py-3 rounded-2xl shadow-[0_12px_36px_-4px_rgba(16,185,129,0.3)] flex items-center gap-3 border border-emerald-300/60 dark:border-emerald-500/40 animate-fade-in-down">
+          <div className="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center shrink-0">
             <span
               className="material-symbols-outlined text-rose-500 text-[20px]"
               style={{ fontVariationSettings: "'FILL' 1" }}
@@ -82,16 +82,16 @@ export function CustomerLayout() {
             </span>
           </div>
           <div className="flex flex-col min-w-0 pr-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-500 font-mono">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 font-mono">
               Danh sách yêu thích
             </span>
-            <span className="font-semibold text-xs sm:text-sm text-slate-800 line-clamp-1 max-w-xs sm:max-w-md">
+            <span className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white line-clamp-1 max-w-xs sm:max-w-md">
               {toastMessage}
             </span>
           </div>
           <button
             onClick={clearToast}
-            className="ml-auto p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer transition-colors"
+            className="ml-auto p-1 rounded-full text-emerald-900/60 hover:text-emerald-950 dark:text-emerald-200 hover:bg-emerald-500/20 cursor-pointer transition-colors"
             aria-label="Close toast"
           >
             <span className="material-symbols-outlined text-[18px]">close</span>
