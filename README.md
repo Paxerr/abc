@@ -46,24 +46,61 @@ Coastal adventure tourism requires strict capacity management, weather contingen
 
 ## System Architecture
 
-The application is structured as a **Modular Clean Monolith** following Hexagonal Architecture principles (Ports and Adapters) to ensure maintainable domain boundaries:
+The platform is designed around a **Modular Clean Monolith** adhering to Hexagonal Architecture (Ports & Adapters) principles. The diagram below illustrates the end-to-end request flow across presentation, edge, core domain modules, data layers, and external providers:
 
-```
-[ Web & Mobile Clients ]
-           │ (HTTPS / REST)
-           ▼
-[ Nginx Reverse Proxy / Static Host ]
-           │ (Proxy Pass / Forwarded Headers)
-           ▼
-[ Spring Boot Core Application ]
-  ├── Security Layer (JWT, Cookie Origin Validation, RBAC)
-  ├── Domain Modules (Auth, Booking, Order, Checkin, Dispute, Settlement, Weather, AI)
-  └── Infrastructure Adapters (Flyway, JPA Repositories, External APIs)
-           │
-     ┌─────┴──────────────┐
-     ▼                    ▼
-[ PostgreSQL 17 ]    [ Redis 7 & RabbitMQ 3.12 ]
-  (Primary Store)     (Distributed Locks & Event Queue)
+```mermaid
+flowchart TD
+    subgraph Clients ["Presentation Tier"]
+        Web["Web Application (React 18, TypeScript)"]
+        Mobile["Mobile Applications (React Native, Expo)"]
+    end
+
+    subgraph Edge ["Edge & Ingress Tier"]
+        Tunnel["Tailscale Funnel (Public TLS Endpoint)"]
+        Proxy["Nginx (Reverse Proxy & Static Asset Server)"]
+    end
+
+    subgraph Backend ["Backend Tier — Modular Clean Monolith (Spring Boot 3.4, Java 21)"]
+        Security["Security Layer (JWT, Cookie Origin Validation, RBAC)"]
+        
+        subgraph Domains ["Domain Modules"]
+            Booking["Booking & Orders (Slot Locking, Multi-Vendor Cart)"]
+            Checkin["Check-in & Disputes (HMAC QR Verification, Arbitration)"]
+            Settlement["Settlement Engine (Vendor Payouts, Commission Ledger)"]
+            Intelligence["Services & Safeguards (Weather Monitor, AI Concierge)"]
+        end
+    end
+
+    subgraph Storage ["Data & Messaging Tier"]
+        DB[("PostgreSQL 17 (Primary Relational Store)")]
+        Cache[("Redis 7 (Distributed Locking & Cache)")]
+        Queue[("RabbitMQ 3.12 (Asynchronous Event Bus)")]
+    end
+
+    subgraph Providers ["External Ecosystem"]
+        Payments["Payment Providers (VNPay, PayPal)"]
+        WeatherAPI["Open-Meteo Marine API"]
+        AIProviders["LLM Providers (Gemini, Groq)"]
+    end
+
+    Web --> Tunnel
+    Mobile --> Tunnel
+    Tunnel --> Proxy
+    Proxy --> Security
+    Security --> Booking
+    Security --> Checkin
+    Security --> Settlement
+    Security --> Intelligence
+
+    Booking --> DB
+    Booking --> Cache
+    Checkin --> DB
+    Settlement --> DB
+    Intelligence --> Queue
+
+    Booking -.-> Payments
+    Intelligence -.-> WeatherAPI
+    Intelligence -.-> AIProviders
 ```
 
 ---
@@ -71,11 +108,11 @@ The application is structured as a **Modular Clean Monolith** following Hexagona
 ## Technology Stack
 
 ### Backend
-- **Framework:** Spring Boot 3.4 (Java 21 LTS)
+- **Core Framework:** Spring Boot 3.4 (Java 21 LTS)
 - **Security:** Spring Security 6 with stateless JWT authentication and strict cookie origin validation
 - **Persistence:** Spring Data JPA / Hibernate, PostgreSQL 17, Flyway
 - **Caching & Messaging:** Redis 7 (distributed locks, rate limiting), RabbitMQ 3.12 (asynchronous task execution)
-- **Testing:** JUnit 5, Mockito, Testcontainers (PostgreSQL, Redis, RabbitMQ)
+- **Testing & Quality:** JUnit 5, Mockito, Testcontainers (isolated containerized integration testing)
 
 ### Frontend & Clients
 - **Web:** React 18, TypeScript, Vite, Tailwind CSS
@@ -84,7 +121,7 @@ The application is structured as a **Modular Clean Monolith** following Hexagona
 ### Infrastructure & Operations
 - **Containerization:** Docker, Docker Compose
 - **Continuous Integration / Continuous Deployment:** GitHub Actions, GitHub Container Registry (GHCR)
-- **Networking & Access:** Tailscale Funnel
+- **Networking & Access:** Tailscale Funnel, Nginx
 
 ---
 
