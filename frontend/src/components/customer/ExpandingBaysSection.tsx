@@ -87,11 +87,11 @@ export const ExpandingBaysSection: React.FC = () => {
               />
 
               {/* Gradient Scrim */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-950/15 to-transparent" />
 
               {/* Top Floating Badge */}
               <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-                <span className="px-2.5 py-1 rounded-full bg-slate-950/70 backdrop-blur-sm border border-white/20 text-cyan-300 text-[11px] font-medium flex items-center gap-1 shadow-xs">
+                <span className="px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm border border-white/60 text-cyan-800 font-bold text-[11px] font-medium flex items-center gap-1 shadow-xs">
                   <span className="material-symbols-outlined text-[13px]">schedule</span>
                   <span>{displayBestTime}</span>
                 </span>

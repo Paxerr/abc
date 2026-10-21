@@ -66,7 +66,7 @@ export const OceanSportsShowcase: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         {/* Left Column: Visual Container with smooth image crossfade */}
         <div className="lg:col-span-6">
-          <div className="relative rounded-2xl overflow-hidden border border-white/20 shadow-xl aspect-[4/3] bg-slate-950">
+          <div className="relative rounded-2xl overflow-hidden border border-white/20 shadow-xl aspect-[4/3] bg-slate-100">
             {OCEAN_SPORTS_SHOWCASE.map((sport: OceanSportShowcase, idx: number) => (
               <img
                 key={sport.id}
@@ -82,29 +82,29 @@ export const OceanSportsShowcase: React.FC = () => {
             ))}
 
             {/* Gradient Scrim */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-transparent to-transparent pointer-events-none" />
 
             {/* Top Badge */}
             <div className="absolute top-4 left-4 z-10">
-              <span className="px-3 py-1 rounded-full bg-slate-950/70 backdrop-blur-md border border-white/20 text-cyan-300 text-xs font-semibold">
+              <span className="px-3 py-1 rounded-full bg-white/90 backdrop-blur-md border border-white/60 text-cyan-800 text-xs font-bold shadow-sm">
                 {language === 'en' ? activeSport.levelEn : activeSport.level}
               </span>
             </div>
 
             {/* Bottom Card Overlay */}
-            <div className="absolute bottom-4 left-4 right-4 z-10 p-3.5 sm:p-4 rounded-xl bg-slate-950/75 backdrop-blur-md border border-white/20 shadow-xl">
+            <div className="absolute bottom-4 left-4 right-4 z-10 p-3.5 sm:p-4 rounded-xl bg-white/95 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.12)] text-slate-900">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[11px] font-bold text-cyan-300 tracking-wider uppercase">
+                  <span className="text-[11px] font-bold text-cyan-700 tracking-wider uppercase block">
                     {activeSport.index} / 04
                   </span>
-                  <h4 className="text-sm sm:text-base font-bold text-white drop-shadow-sm">
+                  <h4 className="text-sm sm:text-base font-extrabold text-slate-900">
                     {language === 'en' ? activeSport.nameEn : activeSport.name}
                   </h4>
                 </div>
                 <div className="text-right">
-                  <span className="text-[11px] text-white/70 block">{language === 'en' ? 'From' : 'Chỉ từ'}</span>
-                  <span className="text-sm sm:text-base font-extrabold text-cyan-300 drop-shadow-sm">
+                  <span className="text-[11px] text-slate-400 block">{language === 'en' ? 'From' : 'Chỉ từ'}</span>
+                  <span className="text-sm sm:text-base font-black text-rose-600">
                     {activeSport.startingPrice.toLocaleString('vi-VN')}₫
                   </span>
                 </div>
