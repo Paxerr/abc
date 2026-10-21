@@ -22,6 +22,10 @@ import { ScrollToTopButton } from "../../../components/customer/ScrollToTopButto
 import { CinematicSceneBackdrop } from "../../../components/customer/CinematicSceneBackdrop";
 import { ScrollReveal } from "../../../components/common/ScrollReveal";
 import { MarineWeatherPill } from "../../../components/customer/MarineWeatherPill";
+import { CategoryBar } from "../../../components/customer/CategoryBar";
+import { serviceCatalogService } from "../../../services/serviceCatalogService";
+import type { ServiceSummaryDto } from "../../../types/service";
+import type { FlashSaleExperience, ActivityCardData } from "../../../data/customerHomeData";
 
 // AI Beach Data for Maritime Concierge
 const AI_BEACH_DATA: Record<string, any> = {
@@ -125,6 +129,96 @@ export function Home() {
   const [selectedTime, setSelectedTime] = useState<string>('05:30');
   const [guests, setGuests] = useState({ adults: 2, children: 0 });
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // Live Services from Backend (with intelligent fallback)
+  const [liveServices, setLiveServices] = useState<ServiceSummaryDto[]>([]);
+  useEffect(() => {
+    let isMounted = true;
+    serviceCatalogService
+      .getServices({ size: 20 })
+      .then((res) => {
+        if (isMounted && res.content && res.content.length > 0) {
+          setLiveServices(res.content);
+        }
+      })
+      .catch((err) => {
+        console.warn('[Home] Không thể tải dịch vụ, dùng fallback:', err);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Map live services to carousel formats
+  const flashSaleList: FlashSaleExperience[] = liveServices.length > 0
+    ? liveServices.slice(0, 4).map((s, idx) => ({
+        id: s.id,
+        title: s.name,
+        titleEn: s.name,
+        category: 'Ưu đãi biển',
+        categoryEn: 'Marine Special',
+        location: s.address || 'Đà Nẵng',
+        locationEn: 'Da Nang Coast',
+        duration: '2 giờ',
+        durationEn: '2 hours',
+        originalPrice: Math.round(Number(s.price) * 1.3),
+        salePrice: Number(s.price),
+        discountPercent: 23,
+        rating: Number(s.averageRating) || 4.95,
+        reviewCount: s.reviewCount || 100,
+        slotsLeft: 3 + (idx % 4),
+        totalSlots: 15,
+        badge: 'Hot Deal',
+        badgeEn: 'Hot Deal',
+        imageUrl: s.primaryImageUrl || 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=800',
+      }))
+    : FLASH_SALE_EXPERIENCES;
+
+  const supFiltered = liveServices.filter((s) => {
+    const n = s.name.toLowerCase();
+    return n.includes('sup') || n.includes('kayak');
+  });
+  const supKayakList: ActivityCardData[] = supFiltered.length > 0
+    ? supFiltered.map((s) => ({
+        id: s.id,
+        title: s.name,
+        titleEn: s.name,
+        category: 'Chèo SUP & Kayak',
+        categoryEn: 'SUP & Kayak',
+        location: s.address || 'Mân Thái, Sơn Trà',
+        duration: '2 giờ',
+        durationEn: '2 hours',
+        price: Number(s.price),
+        rating: Number(s.averageRating) || 4.95,
+        reviewCount: s.reviewCount || 50,
+        badge: 'Bán chạy',
+        badgeEn: 'Best Seller',
+        imageUrl: s.primaryImageUrl || 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=800',
+      }))
+    : SUP_KAYAK_EXPERIENCES;
+
+  const divingFiltered = liveServices.filter((s) => {
+    const n = s.name.toLowerCase();
+    return n.includes('lặn') || n.includes('diving') || n.includes('san hô');
+  });
+  const divingList: ActivityCardData[] = divingFiltered.length > 0
+    ? divingFiltered.map((s) => ({
+        id: s.id,
+        title: s.name,
+        titleEn: s.name,
+        category: 'Lặn ngắm san hô',
+        categoryEn: 'Scuba Diving',
+        location: s.address || 'Hòn Sụp, Sơn Trà',
+        duration: '3.5 giờ',
+        durationEn: '3.5 hours',
+        price: Number(s.price),
+        rating: Number(s.averageRating) || 4.96,
+        reviewCount: s.reviewCount || 80,
+        badge: 'Đặc sắc',
+        badgeEn: 'Featured',
+        imageUrl: s.primaryImageUrl || 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800',
+      }))
+    : DIVING_EXPERIENCES;
 
   const baseMessage = activeCustomPrompt ? CUSTOM_PROMPT_DATA[activeCustomPrompt] : AI_BEACH_DATA[activeAIBeach];
   const displayMessages = [baseMessage, ...chatHistory];
@@ -869,6 +963,11 @@ export function Home() {
           <div className="mt-4 flex justify-center w-full relative z-20">
             <MarineWeatherPill />
           </div>
+
+          {/* Dynamic Sea Sports Category Quick Bar */}
+          <div className="mt-5 w-full max-w-5xl mx-auto relative z-20">
+            <CategoryBar />
+          </div>
         </div>
       </section>
 
@@ -893,7 +992,7 @@ export function Home() {
         <ScrollReveal>
           <div className="space-y-12 sm:space-y-16">
             {/* Flash Sale Section */}
-            <FlashSaleSection experiences={FLASH_SALE_EXPERIENCES} />
+            <FlashSaleSection experiences={flashSaleList} />
 
             {/* Carousel SUP & Kayak Biển */}
             <CategoryExperienceCarousel
@@ -902,7 +1001,7 @@ export function Home() {
                 ? 'Glide peacefully across mirrored morning waters and greet the sunrise'
                 : 'Lướt êm trên mặt biển phẳng lặng sớm mai, đón ánh bình minh rạng rỡ'}
               categorySlug="sup"
-              experiences={SUP_KAYAK_EXPERIENCES}
+              experiences={supKayakList}
             />
           </div>
         </ScrollReveal>
@@ -938,7 +1037,7 @@ export function Home() {
                 ? 'Immerse into rich coral biodiversity guided by certified master divers'
                 : 'Đắm mình trong làn nước pha lê và quần thể san hô đa dạng sắc màu'}
               categorySlug="diving"
-              experiences={DIVING_EXPERIENCES}
+              experiences={divingList}
             />
 
             {/* Carousel Combo Trọn Gói & Hoàng Hôn */}
