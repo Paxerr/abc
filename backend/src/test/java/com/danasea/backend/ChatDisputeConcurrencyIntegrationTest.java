@@ -142,7 +142,7 @@ class ChatDisputeConcurrencyIntegrationTest extends BaseSecurityIntegrationTest 
     void databaseRejectsDuplicateConversation() {
         createConversation();
         assertThrows(org.springframework.dao.DuplicateKeyException.class, () -> jdbc.update(
-                "INSERT INTO conversations(id,customer_id,vendor_id,master_order_id,created_at,updated_at) VALUES (?,?,?,?,NOW(),NOW())",
+                "INSERT INTO conversations(id,customer_id,vendor_id,master_order_id,created_at,updated_at,last_message_sequence) VALUES (?,?,?,?,NOW(),NOW(),0)",
                 UUID.randomUUID(), customer, vendorId, order));
     }
 

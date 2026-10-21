@@ -31,15 +31,33 @@ class Milestone1PostgreSqlEmpiricalChallengerTest {
             .withExposedPorts(5432)
             .waitingFor(Wait.forListeningPort());
 
+    private static void waitForPostgres(String url, String user, String password) throws Exception {
+        long deadline = System.currentTimeMillis() + 60_000;
+        Exception lastEx = null;
+        while (System.currentTimeMillis() < deadline) {
+            try (Connection conn = DriverManager.getConnection(url, user, password);
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute("SELECT 1");
+                return;
+            } catch (Exception e) {
+                lastEx = e;
+                Thread.sleep(250);
+            }
+        }
+        throw new IllegalStateException("PostgreSQL did not become ready in time: " + (lastEx != null ? lastEx.getMessage() : "timeout"), lastEx);
+    }
+
     @Test
     @DisplayName("Empirical Verification of V25 Migration Schema Changes on Real PostgreSQL 16")
     void verifyV25SchemaAndLargePayloadsOnPostgreSql16() throws Exception {
         String jdbcUrl = "jdbc:postgresql://" + POSTGRES.getHost() + ":"
                 + POSTGRES.getFirstMappedPort() + "/challenger_test";
+        waitForPostgres(jdbcUrl, "challenger_user", "challenger_password");
 
         Flyway flyway = Flyway.configure()
                 .dataSource(jdbcUrl, "challenger_user", "challenger_password")
                 .locations("classpath:db/migration")
+                .connectRetries(30)
                 .target("28")
                 .load();
 
