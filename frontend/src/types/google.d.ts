@@ -15,6 +15,7 @@ export interface GoogleIdConfiguration {
   ux_mode?: 'popup' | 'redirect';
   allowed_parent_origin?: string | string[];
   intermediate_iframe_close_callback?: () => void;
+  use_fedcm_for_prompt?: boolean;
 }
 
 export interface GsiButtonConfiguration {

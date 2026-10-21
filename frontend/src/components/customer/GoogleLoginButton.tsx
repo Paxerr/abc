@@ -17,6 +17,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   mode = 'login',
 }) => {
   const buttonContainerRef = useRef<HTMLDivElement>(null);
+  const isInitializedRef = useRef(false);
   const [isGsiLoaded, setIsGsiLoaded] = useState(false);
   const [clientIdNotice, setClientIdNotice] = useState<string | null>(null);
 
@@ -55,20 +56,24 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
     if (!isGsiLoaded || !googleClientId || !buttonContainerRef.current) return;
 
     try {
-      console.log('[GoogleLoginButton] Initializing Google Identity Services with Client ID:', googleClientId);
-      window.google!.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: (response: GoogleCredentialResponse) => {
-          if (response?.credential) {
-            onSuccess(response.credential);
-          } else {
-            console.warn('[GoogleLoginButton] No credential in Google response');
-            onError?.('Không nhận được thông tin xác thực từ Google.');
-          }
-        },
-        auto_select: false,
-        cancel_on_tap_outside: true,
-      });
+      if (!isInitializedRef.current) {
+        console.log('[GoogleLoginButton] Initializing Google Identity Services with Client ID:', googleClientId);
+        window.google!.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: (response: GoogleCredentialResponse) => {
+            if (response?.credential) {
+              onSuccess(response.credential);
+            } else {
+              console.warn('[GoogleLoginButton] No credential in Google response');
+              onError?.('Không nhận được thông tin xác thực từ Google.');
+            }
+          },
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          use_fedcm_for_prompt: true,
+        });
+        isInitializedRef.current = true;
+      }
 
       // Clear any previous rendered button
       if (buttonContainerRef.current) {
