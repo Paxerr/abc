@@ -47,6 +47,9 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: ./${{ matrix.service }}
+          build-args: |
+            ${{ matrix.service == 'frontend' && format('VITE_GOOGLE_CLIENT_ID={0}', vars.VITE_GOOGLE_CLIENT_ID) || '' }}
+            ${{ matrix.service == 'frontend' && 'REQUIRE_GOOGLE_CLIENT_ID=true' || '' }}
           push: true
           tags: |
             ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ env.DEPLOY_SHA }}
