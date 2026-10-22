@@ -256,7 +256,7 @@ export function DevRoleSwitcher() {
             className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-primary/10 via-secondary/10 to-primary-container/10 border border-primary/20 hover:border-primary/40 text-primary flex items-center justify-center gap-2 text-xs font-bold transition-all hover:shadow-sm cursor-pointer"
           >
             <span className="material-symbols-outlined text-[16px] text-secondary">sailing</span>
-            <span>Xem thử hiệu ứng Loading (Summer Animation)</span>
+            <span>Xem thử hiệu ứng Sóng nước (Liquid Wave Loader)</span>
           </button>
 
           {/* Footer Actions */}
