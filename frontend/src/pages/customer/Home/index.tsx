@@ -507,7 +507,7 @@ export function Home() {
       <section
         id="scene-hero"
         data-scene="hero"
-        className="relative z-20 w-full min-h-[480px] sm:min-h-[540px] flex flex-col justify-center items-center pt-16 sm:pt-20 pb-12 overflow-visible"
+        className="relative z-20 w-full min-h-[480px] sm:min-h-[540px] flex flex-col justify-center items-center pt-28 sm:pt-32 pb-12 overflow-visible"
       >
         <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center overflow-visible">
           {/* Large Headline */}
