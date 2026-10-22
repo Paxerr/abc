@@ -8,7 +8,14 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run build
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+
+RUN if [ -z "$VITE_GOOGLE_CLIENT_ID" ]; then \
+      echo "VITE_GOOGLE_CLIENT_ID is required to build the frontend image." >&2; \
+      exit 1; \
+    fi; \
+    npm run build
 
 
 FROM nginxinc/nginx-unprivileged:alpine

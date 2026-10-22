@@ -1,4 +1,42 @@
-# React + TypeScript + Vite
+# DANASEA frontend
+
+## Google Login configuration
+
+Use a Google OAuth **Web application** client. In the repository-root `.env`,
+set `VITE_GOOGLE_CLIENT_ID` to the same Web client ID as the backend's
+`GOOGLE_CLIENT_ID`. Vite reads this directory through `envDir: '../'` for local
+development and embeds the value into the production JavaScript during build.
+Restart the Vite dev server after changing it.
+
+For a local Docker build, run `docker compose build frontend` from the repository
+root. Compose passes `VITE_GOOGLE_CLIENT_ID` as a build argument; the Dockerfile
+rejects an empty value. For a direct build, supply
+`--build-arg VITE_GOOGLE_CLIENT_ID=<your-web-client-id>` to `docker build`.
+The repository-root `.env` stays outside the frontend build context.
+
+For GitHub CD, add a **repository Actions variable** named `VITE_GOOGLE_CLIENT_ID`
+under **Settings → Secrets and variables → Actions → Variables**. The CD build job
+passes this variable to the frontend Docker build. Use a repository variable,
+because the image build job does not use the `production` environment. The client
+ID is public; `GOOGLE_CLIENT_SECRET` and other backend secrets must stay out of
+frontend build arguments and all `VITE_*` variables.
+
+The production Compose file uses prebuilt images. Changing the server's `.env`
+or restarting its frontend container does not change the embedded client ID;
+build and deploy a new frontend image after updating it.
+
+In Google Cloud Console, add `https://danasea.tailfc3563.ts.net` to the client's
+**Authorized JavaScript origins**. For local development, add `http://localhost`
+and `http://localhost:3000` (or the actual local port). The Nginx CSP allows the
+Google Identity Services script, styles, frames and connections. Reference:
+[Google setup guide](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid).
+
+After deploying the new image, verify that the document response has the updated
+CSP, `/auth` loads `https://accounts.google.com/gsi/client` without a CSP violation,
+the Google button no longer reports a missing client ID, and a valid Google
+credential can complete `POST /api/auth/oauth2/google`.
+
+## React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
