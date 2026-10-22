@@ -9,9 +9,10 @@ development and embeds the value into the production JavaScript during build.
 Restart the Vite dev server after changing it.
 
 For a local Docker build, run `docker compose build frontend` from the repository
-root. Compose passes `VITE_GOOGLE_CLIENT_ID` as a build argument; the Dockerfile
-rejects an empty value. For a direct build, supply
-`--build-arg VITE_GOOGLE_CLIENT_ID=<your-web-client-id>` to `docker build`.
+root. Compose passes `VITE_GOOGLE_CLIENT_ID` as a build argument. If left unset,
+the build succeeds with a warning and Google Sign-In is gracefully disabled in the UI.
+In CD or production builds, supply `REQUIRE_GOOGLE_CLIENT_ID=true` to fail fast if the ID is missing.
+For a direct build, supply `--build-arg VITE_GOOGLE_CLIENT_ID=<your-web-client-id>` to `docker build`.
 The repository-root `.env` stays outside the frontend build context.
 
 For GitHub CD, add a **repository Actions variable** named `VITE_GOOGLE_CLIENT_ID`
