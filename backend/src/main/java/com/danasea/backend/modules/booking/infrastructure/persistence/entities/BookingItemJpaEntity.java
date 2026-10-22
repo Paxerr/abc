@@ -55,11 +55,13 @@ public class BookingItemJpaEntity extends BaseJpaEntity {
     @Column(name = "max_pax_per_package")
     private Integer maxPaxPerPackage;
 
-    @Column(name = "allow_split", nullable = false)
-    private boolean allowSplit;
+    @Column(name = "allow_split", nullable = false, columnDefinition = "boolean default false")
+    @Builder.Default
+    private boolean allowSplit = false;
 
-    @Column(name = "capacity_released", nullable = false)
-    private boolean capacityReleased;
+    @Column(name = "capacity_released", nullable = false, columnDefinition = "boolean default false")
+    @Builder.Default
+    private boolean capacityReleased = false;
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;

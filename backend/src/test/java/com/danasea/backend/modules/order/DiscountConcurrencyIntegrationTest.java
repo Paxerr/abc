@@ -482,8 +482,8 @@ class DiscountConcurrencyIntegrationTest extends BaseSecurityIntegrationTest {
                 customer);
         jdbc.update(
                 "INSERT INTO"
-                    + " booking_items(id,booking_id,service_id,vendor_id,slot_id,quantity,booking_date,booking_time,price,created_at,updated_at)"
-                    + " VALUES (?,?,?,?,?,1,CURRENT_DATE+4,'11:00',100000,now(),now())",
+                    + " booking_items(id,booking_id,service_id,vendor_id,slot_id,quantity,booking_date,booking_time,price,allow_split,capacity_released,created_at,updated_at)"
+                    + " VALUES (?,?,?,?,?,1,CURRENT_DATE+4,'11:00',100000,false,false,now(),now())",
                 UUID.randomUUID(),
                 id,
                 service,
