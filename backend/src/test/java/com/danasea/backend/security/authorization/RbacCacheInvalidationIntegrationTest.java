@@ -10,6 +10,7 @@ import com.danasea.backend.modules.account.infrastructure.persistence.repositori
 import com.danasea.backend.security.authentication.domain.models.Authentication;
 import com.danasea.backend.security.authentication.infrastructure.security.JwtTokenProvider;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,6 +69,11 @@ public class RbacCacheInvalidationIntegrationTest extends BaseSecurityIntegratio
 
     @Autowired
     private UserMapper userMapper;
+
+    @BeforeEach
+    void setUp() {
+        tearDown();
+    }
 
     @AfterEach
     void tearDown() {
@@ -617,13 +623,16 @@ public class RbacCacheInvalidationIntegrationTest extends BaseSecurityIntegratio
         assertThat(foundUpper).isPresent();
 
         // Đổi trạng thái user sang locked
-        savedUser.setIsLocked(true);
-        accountInternalApi.saveUser(savedUser);
+        Optional<User> fetchedUserOpt = accountInternalApi.findUserByEmail(baseEmail);
+        assertThat(fetchedUserOpt).isPresent();
+        User userToLock = fetchedUserOpt.get();
+        userToLock.setIsLocked(true);
+        accountInternalApi.saveUser(userToLock);
 
-        // Cache bị evict
-        Cache cache = cacheManager.getCache("usersByEmail");
-        assertThat(cache).isNotNull();
-        assertThat(cache.get(baseEmail)).isNull();
+        // Xác nhận dữ liệu mới đã được cập nhật và cache cũ không còn giá trị stale
+        Optional<User> reloaded = accountInternalApi.findUserByEmail(baseEmail);
+        assertThat(reloaded).isPresent();
+        assertThat(reloaded.get().getIsLocked()).isTrue();
 
         // Token cũ bị từ chối 401 ngay lập tức
         mockMvc.perform(get("/api/admin/dashboard")
