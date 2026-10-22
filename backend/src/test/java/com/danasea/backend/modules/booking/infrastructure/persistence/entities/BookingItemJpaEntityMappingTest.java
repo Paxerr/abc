@@ -16,5 +16,17 @@ class BookingItemJpaEntityMappingTest {
         assertThat(column).isNotNull();
         assertThat(column.name()).isEqualTo("capacity_released");
         assertThat(column.nullable()).isFalse();
+        assertThat(column.columnDefinition()).isEqualTo("boolean default false");
+    }
+
+    @Test
+    void mapsAllowSplitColumnForSchemaGeneration() throws NoSuchFieldException {
+        Field field = BookingItemJpaEntity.class.getDeclaredField("allowSplit");
+        Column column = field.getAnnotation(Column.class);
+
+        assertThat(column).isNotNull();
+        assertThat(column.name()).isEqualTo("allow_split");
+        assertThat(column.nullable()).isFalse();
+        assertThat(column.columnDefinition()).isEqualTo("boolean default false");
     }
 }
