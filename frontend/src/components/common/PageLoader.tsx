@@ -93,19 +93,8 @@ export function PageLoader() {
             <img
               src="/images/danasea-logo.png"
               alt="DANASEA Logo Full Color"
-              className="w-full h-full object-contain filter brightness-105 saturate-110"
+              className="w-full h-full object-contain"
             />
-          </div>
-
-          {/* Liquid ocean water tint over the filled portion */}
-          <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/30 via-teal-600/20 to-cyan-400/10 mix-blend-color pointer-events-none" />
-
-          {/* Rising Sea Bubbles */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <span className="absolute left-[18%] bottom-2 w-3 h-3 rounded-full bg-white/80 animate-liquid-bubble-1 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
-            <span className="absolute left-[38%] bottom-3 w-2 h-2 rounded-full bg-white/90 animate-liquid-bubble-2 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
-            <span className="absolute left-[62%] bottom-2 w-3.5 h-3.5 rounded-full bg-white/70 animate-liquid-bubble-3 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
-            <span className="absolute left-[82%] bottom-4 w-2.5 h-2.5 rounded-full bg-white/85 animate-liquid-bubble-4 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
           </div>
         </div>
 
@@ -169,6 +158,14 @@ export function PageLoader() {
                   />
                 </svg>
               </div>
+            </div>
+
+            {/* Rising Sea Bubbles (strictly masked inside the logo geometry) */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <span className="absolute left-[20%] bottom-3 w-2.5 h-2.5 rounded-full bg-white/80 animate-liquid-bubble-1 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
+              <span className="absolute left-[40%] bottom-4 w-2 h-2 rounded-full bg-white/90 animate-liquid-bubble-2 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
+              <span className="absolute left-[65%] bottom-2 w-3 h-3 rounded-full bg-white/70 animate-liquid-bubble-3 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
+              <span className="absolute left-[85%] bottom-5 w-2 h-2 rounded-full bg-white/85 animate-liquid-bubble-4 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
             </div>
           </div>
         )}
