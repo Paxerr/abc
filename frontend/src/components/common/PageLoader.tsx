@@ -16,7 +16,7 @@ export function PageLoader() {
       showLoader(
         'Chào mừng bạn đến với DANASEA',
         'Chạm sóng biển, mở chuyến đi riêng',
-        2200
+        2400
       );
     }
   }, [showLoader]);
@@ -34,7 +34,7 @@ export function PageLoader() {
     setIsExiting(false);
     startTimeRef.current = null;
 
-    const targetDuration = Math.max(durationMs || 2000, 1200);
+    const targetDuration = Math.max(durationMs || 2200, 1400);
 
     const step = (timestamp: number) => {
       if (!startTimeRef.current) startTimeRef.current = timestamp;
@@ -46,7 +46,7 @@ export function PageLoader() {
       if (currentProgress < 100) {
         rafRef.current = requestAnimationFrame(step);
       } else {
-        // Hold at 100% for 200ms so user admires the fully filled logo, then smoothly fade out
+        // Hold at 100% for 250ms so user admires the fully filled logo, then smoothly fade out
         setTimeout(() => {
           setIsExiting(true);
           setTimeout(() => {
@@ -54,7 +54,7 @@ export function PageLoader() {
             setIsExiting(false);
             setProgress(0);
           }, 320);
-        }, 220);
+        }, 250);
       }
     };
 
@@ -70,29 +70,24 @@ export function PageLoader() {
   return (
     <div
       onClick={hideLoader}
-      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-slate-950/85 backdrop-blur-2xl select-none transition-all duration-300 ${
+      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center backdrop-blur-xl bg-white/70 dark:bg-slate-950/60 select-none transition-all duration-300 ${
         isExiting ? 'opacity-0 scale-102 pointer-events-none' : 'opacity-100 scale-100'
       }`}
       role="status"
       aria-label="Đang tải trang"
     >
-      {/* Background Ambient Ocean Glow */}
-      <div className="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-gradient-to-tr from-cyan-500/25 via-teal-400/20 to-sky-500/10 blur-3xl pointer-events-none animate-pulse" />
-
-      {/* Main Container */}
-      <div className="relative z-10 flex flex-col items-center max-w-sm px-6 text-center">
+      {/* Main Glassmorphic Center Card */}
+      <div className="relative z-10 flex flex-col items-center max-w-sm px-6 py-8 rounded-3xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/80 dark:border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] text-center">
+        
         {/* =========================================================================
             LIQUID WAVE LOGO VESSEL (MASKS THE LIQUID TO THE DANASEA LOGO)
            ========================================================================= */}
-        <div className="relative w-40 h-40 sm:w-48 sm:h-48 mb-6 flex items-center justify-center">
-          {/* Subtle Outer Halo Ring */}
-          <div className="absolute -inset-3 rounded-full border border-cyan-400/20 shadow-[0_0_30px_rgba(6,182,212,0.15)] animate-pulse pointer-events-none" />
-
-          {/* Layer 1: Faint Logo Outline/Silhouette (Empty Vessel Waiting to Fill) */}
+        <div className="relative w-44 h-44 sm:w-52 sm:h-52 mb-5 flex items-center justify-center filter drop-shadow-[0_8px_20px_rgba(6,182,212,0.2)]">
+          {/* Layer 1: Faint Logo Silhouette (Empty Glass Vessel Waiting to Fill) */}
           <img
             src="/images/danasea-logo.png"
             alt="DANASEA Logo Silhouette"
-            className="absolute inset-0 w-full h-full object-contain opacity-25 filter brightness-150 contrast-125 select-none pointer-events-none"
+            className="absolute inset-0 w-full h-full object-contain opacity-20 filter contrast-125 select-none pointer-events-none"
           />
 
           {/* Layer 2: Liquid Water Wave (Clipped precisely to the DANASEA Logo geometry) */}
@@ -109,74 +104,81 @@ export function PageLoader() {
               WebkitMaskRepeat: 'no-repeat',
             }}
           >
-            {/* Rising Water Column */}
+            {/* Rising Water Column with dramatic wave crests */}
             <div
               className="absolute left-0 right-0 bottom-0 bg-gradient-to-t from-cyan-700 via-teal-500 to-cyan-400 transition-[height] duration-75 ease-out"
               style={{ height: `${progress}%` }}
             >
-              {/* Wave 1: Back wave (translucent teal) */}
-              <div className="absolute -top-3 sm:-top-4 -left-full w-[300%] h-5 sm:h-6 overflow-hidden opacity-40 animate-liquid-wave-rev pointer-events-none">
-                <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-teal-200">
-                  <path d="M 0,60 C 150,20 350,100 500,60 C 650,20 850,100 1000,60 C 1150,20 1350,100 1500,60 V 120 H 0 Z" />
+              {/* Wave 1: Back Wave (Deep Teal, rolling right to left with big 45px amplitude) */}
+              <div className="absolute -top-7 sm:-top-8 -left-full w-[300%] h-11 sm:h-12 overflow-hidden opacity-50 animate-liquid-wave-rev pointer-events-none">
+                <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-teal-400">
+                  <path d="M 0,60 C 150,10 350,110 500,60 C 650,10 850,110 1000,60 C 1150,10 1350,110 1500,60 V 120 H 0 Z" />
                 </svg>
               </div>
 
-              {/* Wave 2: Front wave (cyan with foam crest) */}
-              <div className="absolute -top-3 sm:-top-4 -left-full w-[300%] h-5 sm:h-6 overflow-hidden opacity-90 animate-liquid-wave pointer-events-none">
+              {/* Wave 2: Middle Wave (Vibrant Ocean Cyan, rolling left to right) */}
+              <div className="absolute -top-6 sm:-top-7 -left-full w-[300%] h-10 sm:h-11 overflow-hidden opacity-70 animate-liquid-wave-mid pointer-events-none">
+                <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-cyan-500">
+                  <path d="M 0,60 C 150,110 350,10 500,60 C 650,110 850,10 1000,60 C 1150,110 1350,10 1500,60 V 120 H 0 Z" />
+                </svg>
+              </div>
+
+              {/* Wave 3: Front Wave (Bright Cyan with White Foam Crest, fast rolling) */}
+              <div className="absolute -top-5 sm:-top-6 -left-full w-[300%] h-9 sm:h-10 overflow-hidden opacity-95 animate-liquid-wave pointer-events-none">
                 <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-cyan-300">
-                  <path d="M 0,60 C 150,100 350,20 500,60 C 650,100 850,20 1000,60 C 1150,100 1350,20 1500,60 V 120 H 0 Z" />
+                  <path d="M 0,60 C 150,15 350,105 500,60 C 650,15 850,105 1000,60 C 1150,15 1350,105 1500,60 V 120 H 0 Z" />
                 </svg>
               </div>
 
               {/* Floating Sea Bubbles */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <span className="absolute left-[20%] bottom-1 w-2 h-2 rounded-full bg-white/70 animate-liquid-bubble-1" />
-                <span className="absolute left-[45%] bottom-1 w-1.5 h-1.5 rounded-full bg-white/60 animate-liquid-bubble-2" />
-                <span className="absolute left-[70%] bottom-1 w-2.5 h-2.5 rounded-full bg-white/50 animate-liquid-bubble-3" />
-                <span className="absolute left-[85%] bottom-1 w-1 h-1 rounded-full bg-white/80 animate-liquid-bubble-4" />
+                <span className="absolute left-[15%] bottom-1 w-2 h-2 rounded-full bg-white/70 animate-liquid-bubble-1" />
+                <span className="absolute left-[40%] bottom-1 w-1.5 h-1.5 rounded-full bg-white/80 animate-liquid-bubble-2" />
+                <span className="absolute left-[65%] bottom-1 w-2.5 h-2.5 rounded-full bg-white/60 animate-liquid-bubble-3" />
+                <span className="absolute left-[85%] bottom-1 w-1.5 h-1.5 rounded-full bg-white/85 animate-liquid-bubble-4" />
               </div>
             </div>
 
-            {/* Layer 3: Vibrant Color Overlay (Shimmers as water fills up) */}
+            {/* Layer 3: Vibrant Color Overlay (Revealed dynamically with the water waves) */}
             <img
               src="/images/danasea-logo.png"
               alt=""
               className="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-90 mix-blend-color-dodge transition-opacity"
               style={{
-                clipPath: `inset(${Math.max(0, 100 - progress)}% 0 0 0)`,
-                WebkitClipPath: `inset(${Math.max(0, 100 - progress)}% 0 0 0)`,
+                clipPath: `inset(${Math.max(0, 100 - progress - 4)}% 0 0 0)`,
+                WebkitClipPath: `inset(${Math.max(0, 100 - progress - 4)}% 0 0 0)`,
               }}
             />
           </div>
         </div>
 
         {/* Percentage Counter */}
-        <div className="mb-3">
-          <span className="text-2xl sm:text-3xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-200 to-cyan-400 drop-shadow-[0_2px_12px_rgba(6,182,212,0.5)]">
+        <div className="mb-2">
+          <span className="text-3xl sm:text-4xl font-mono font-black text-cyan-800 dark:text-cyan-300 tracking-wider drop-shadow-sm">
             {Math.round(progress)}%
           </span>
         </div>
 
         {/* Progress Pill Track */}
-        <div className="w-48 sm:w-56 h-1.5 rounded-full bg-white/15 overflow-hidden mb-4 p-0.5 border border-white/10">
+        <div className="w-48 sm:w-56 h-1.5 rounded-full bg-slate-200 dark:bg-white/15 overflow-hidden mb-3.5 p-0.5 border border-slate-300/40 dark:border-white/10">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-teal-300 transition-all duration-75 ease-out shadow-[0_0_10px_rgba(6,182,212,0.8)]"
+            className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-teal-400 to-cyan-400 transition-all duration-75 ease-out shadow-[0_0_8px_rgba(6,182,212,0.6)]"
             style={{ width: `${progress}%` }}
           />
         </div>
 
         {/* Main Message */}
-        <h3 className="text-base sm:text-lg font-extrabold text-white tracking-wide mb-1 drop-shadow-md">
+        <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-wide mb-1">
           {message}
         </h3>
 
-        {/* Subtitle / Nautical Slogan */}
-        <p className="text-xs sm:text-sm text-cyan-200/80 font-medium leading-relaxed drop-shadow-sm">
+        {/* Subtitle / Slogan */}
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-cyan-200/80 font-medium leading-relaxed">
           {subMessage}
         </p>
 
         {/* Skip Tip */}
-        <span className="mt-5 text-[10px] text-white/40 tracking-wider uppercase font-semibold hover:text-white/70 transition-colors cursor-pointer">
+        <span className="mt-4 text-[10px] text-slate-400 dark:text-white/40 tracking-wider uppercase font-semibold hover:text-slate-600 dark:hover:text-white/70 transition-colors cursor-pointer">
           Chạm bất kỳ đâu để bỏ qua
         </span>
       </div>
