@@ -38,7 +38,7 @@ DANASEA là sàn thương mại điện tử đa nhà cung cấp chuyên về tr
 
 ## 4. API đã thực hiện
 
-Hiện có **40 API** trong module AI, đối chiếu với controller và file `danasea-api-tracking.md`. Quyet Small hỗ trợ phân loại, đánh giá văn bản/JSON; Groq phục vụ hội thoại. Giá, tồn chỗ, quyền sở hữu và trạng thái giao dịch được kiểm tra bằng nghiệp vụ backend.
+Hiện có **40 API** trong module AI, đối chiếu với controller và file `danasea-api-tracking.md`. Quyet Small hỗ trợ phân loại, đánh giá văn bản/JSON; CLI Proxy phục vụ hội thoại. Giá, tồn chỗ, quyền sở hữu và trạng thái giao dịch được kiểm tra bằng nghiệp vụ backend.
 
 ### 4.1. Trợ lý hội thoại — 4 API
 

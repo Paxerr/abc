@@ -15,7 +15,7 @@ Security Gateway (JWT, LocaleContext, AiExecutionBudgetFilter 8s, RedisRateLimit
        ▼
 Spring Boot Core Backend (Clean Architecture)
        │
-       ├──► Groq Cloud LLM (Llama 3.3/3.1) ────────► Hội thoại, sinh ngôn ngữ tự nhiên, trích xuất dẫn chứng review
+       ├──► CLI Proxy (OAuth) ────────► Hội thoại, sinh ngôn ngữ tự nhiên, trích xuất dẫn chứng review
        │
        ├──► Quyet Small Worker (Fast Inference) ───► Phân loại ý định, chấm điểm gợi ý, kiểm duyệt text, rủi ro giao dịch
        │
@@ -26,7 +26,7 @@ Spring Boot Core Backend (Clean Architecture)
 ```
 
 ### Nguyên tắc Bất biến Cốt lõi (Invariants):
-1. **Tuyệt đối không tự động can thiệp tài chính / tồn kho:** Cả Groq LLM và Quyet Worker đều không bao giờ được phép trực tiếp sửa đổi tiền, tự ý hủy booking, hoàn tiền hay tạo hóa đơn trong DB.
+1. **Tuyệt đối không tự động can thiệp tài chính / tồn kho:** Cả CLI Proxy LLM và Quyet Worker đều không bao giờ được phép trực tiếp sửa đổi tiền, tự ý hủy booking, hoàn tiền hay tạo hóa đơn trong DB.
 2. **Backend Code luôn nắm quyền quyết định cuối cùng:** Khi mô hình AI trả về kết quả mâu thuẫn với quy tắc hệ thống, Backend Rule Engine luôn ghi đè kết quả của AI.
 3. **Truy vấn AI không gây ô nhiễm dữ liệu vận hành:** Các yêu cầu đọc dữ liệu qua AI không được làm tăng `view_count` của dịch vụ và không ghi lịch sử xem gần đây.
 4. **Bảo vệ tài nguyên & Deadline thực thi (Budget Enforced):** Bộ lọc `AiExecutionBudgetFilter` giới hạn tối đa 8 request AI đồng thời trên mỗi JVM và thực thi deadline nghiêm ngặt (tối đa 8000ms), tránh nghẽn thread.
@@ -53,7 +53,7 @@ Trợ lý ảo (`POST /api/assistant/chat`) được trang bị **15 công cụ 
 10. **`ai_compare_services`** *(READ)*: So sánh từ 2 đến 4 dịch vụ về tổng chi phí cho cả đoàn, quyền lợi gói, thời lượng và chính sách hoàn tiền chung.
 11. **`ai_plan_itinerary`** *(WRITE - PostgreSQL V21/V23)*: Tự động lập lịch trình du lịch biển tối ưu ngân sách, kiểm tra thời gian di chuyển giữa các điểm và tính an toàn thời tiết.
 12. **`ai_replan_itinerary`** *(WRITE - PostgreSQL V23)*: Tái lập lịch trình khi có slot bị hủy hoặc thời tiết thay đổi, sinh Proposal diff và kiểm soát đồng thời bằng Optimistic Locking (`@Version`).
-13. **`ai_review_summary`** *(READ)*: Đọc tóm tắt đánh giá trích xuất từ tối đa 50 bình luận thực tế; Quyet phân tích khía cạnh và Groq trích dẫn câu có ID nguồn kiểm chứng.
+13. **`ai_review_summary`** *(READ)*: Đọc tóm tắt đánh giá trích xuất từ tối đa 50 bình luận thực tế; Quyet phân tích khía cạnh và CLI Proxy trích dẫn câu có ID nguồn kiểm chứng.
 14. **`ai_weather_slot`** *(READ)*: Kiểm tra an toàn thời tiết cho một ca dịch vụ cụ thể; nếu thiếu dữ liệu sẽ trả về `UNKNOWN` chứ không tự ý cho phép đặt chỗ.
 15. **`ai_customer_support`** *(READ)*: Tra cứu trạng thái đơn hàng của chính khách hàng đăng nhập và xem trước chính sách hủy (`CancellationPreviewResult`).
 
@@ -72,7 +72,7 @@ Các kết quả gọi tool được chuyển hóa thành các thẻ tương tá
 ## 3. DANH SÁCH TOÀN BỘ API BACKEND MODULE AI
 
 ### A. Nhóm Chat Assistant (`/api/assistant/**`)
-- **`POST /api/assistant/chat`** *(READ + WRITE)*: Tiếp nhận câu hỏi, kiểm tra Rate Limit, nạp lịch sử từ DB, gọi Groq LLM trong vòng lặp Tool Calling (tối đa 5 lượt) và trả lời. Hỗ trợ header `Idempotency-Key` (chống xử lý trùng) và `X-Execution-Budget-Ms`.
+- **`POST /api/assistant/chat`** *(READ + WRITE)*: Tiếp nhận câu hỏi, kiểm tra Rate Limit, nạp lịch sử từ DB, gọi CLI Proxy LLM trong vòng lặp Tool Calling (tối đa 5 lượt) và trả lời. Hỗ trợ header `Idempotency-Key` (chống xử lý trùng) và `X-Execution-Budget-Ms`.
 - **`GET /api/assistant/conversations/{id}`** *(READ)*: Lấy thông tin hội thoại kèm kiểm tra quyền sở hữu (403 Forbidden nếu truy cập chéo).
 - **`GET /api/assistant/conversations/{id}/history`** *(READ)*: Lấy lịch sử tin nhắn gần nhất.
 - **`POST /api/assistant/conversations/{id}/confirm`** *(READ + WRITE)*: Xác nhận đặt chỗ từ Thẻ nháp. Thiết lập khóa phân tán Redis (30s), kiểm tra Outcome bền vững (V25), thẩm định lại giá & slot thời gian thực, kích hoạt `CreateBookingHoldUseCase` giữ chỗ 15 phút kèm cơ chế bù trừ tự động.
@@ -179,7 +179,7 @@ Backend tính toán các chỉ số hành vi thực tế trong CSDL:
 
 ### Kịch bản 2: Trợ Lý Đa Năng ➔ Chốt Vé Native Option ➔ Khóa Giữ Chỗ Re-validation Bền Vững
 1. **Tư vấn:** Khách chat: *"Mai tôi muốn đi cano riêng ngắm bán đảo Sơn Trà nhóm 3 người, có gói nào phù hợp không?"*
-   - Groq LLM kích hoạt công cụ `ai_smart_search` và `get_service_detail`. Backend trả về gói cano riêng (tối đa 2 người/gói, giá 1.500.000đ/gói).
+   - CLI Proxy LLM kích hoạt công cụ `ai_smart_search` và `get_service_detail`. Backend trả về gói cano riêng (tối đa 2 người/gói, giá 1.500.000đ/gói).
 2. **Chốt phiếu đặt vé nháp:** Khách đồng ý đặt $\rightarrow$ LLM gọi `request_booking_confirmation(service_id, option_id, slot_id, date, participants: 3)`.
    - Backend tính toán: Cần 2 gói cano, phân bổ `[2, 1]`, sinh `ConfirmationCard` lưu vào Redis với TTL 15 phút.
    - Khách nhìn thấy Thẻ Xác Nhận trên giao diện chat kèm nút **[Xác Nhận Đặt Chỗ]**.

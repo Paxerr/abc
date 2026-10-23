@@ -9,9 +9,9 @@ sequenceDiagram
     participant Budget as ⏱️ AiExecutionBudgetFilter
     participant Ctrl as 🎮 AssistantController
     participant Idem as 📑 ChatIdempotencyService
-    participant Guard as 🛡️ GroqModerationClient (Prompt Guard)
+    participant Guard as 🛡️ CliProxyModerationClient
     participant ChatUC as ⚙️ ChatUseCase
-    participant Groq as ☁️ GroqLlmClient (5 Keys Rotator)
+    participant Proxy as ☁️ CliProxyLlmClient
     participant Registry as 🧰 AIToolRegistry (15 Tools)
     participant ToolExec as 🔧 ToolExecutor / CustomerFeatureTool
     participant Mapper as 🎨 AssistantArtifactMapper
@@ -50,10 +50,10 @@ sequenceDiagram
         activate ChatUC
 
         ChatUC->>Registry: getToolDefinitions() -> Cung cấp 15 công cụ (6 legacy + 9 CustomerFeatureTools)
-        ChatUC->>Groq: generateResponse(history, tools, language)
-        activate Groq
-        Groq-->>ChatUC: Trả về Lệnh Gọi Tool: name = "ai_smart_search", args = { criteria: {...} }
-        deactivate Groq
+        ChatUC->>Proxy: generateResponse(history, tools, language)
+        activate Proxy
+        Proxy-->>ChatUC: Trả về Lệnh Gọi Tool: name = "ai_smart_search", args = { criteria: {...} }
+        deactivate Proxy
 
         Note over ChatUC, ToolExec: Vòng lặp Tool Calling (Tối đa 5 lượt gọi công cụ)
         ChatUC->>ToolExec: execute(argumentsJson, ToolExecutionContext{userId, convId, lang})
@@ -65,10 +65,10 @@ sequenceDiagram
         ToolExec-->>ChatUC: Kết quả JSON của công cụ
         deactivate ToolExec
 
-        ChatUC->>Groq: generateResponse(history + tool_result, tools, language)
-        activate Groq
-        Groq-->>ChatUC: Trả lời tự nhiên + Cung cấp chi tiết dịch vụ
-        deactivate Groq
+        ChatUC->>Proxy: generateResponse(history + tool_result, tools, language)
+        activate Proxy
+        Proxy-->>ChatUC: Trả lời tự nhiên + Cung cấp chi tiết dịch vụ
+        deactivate Proxy
 
         ChatUC->>Mapper: mapToArtifacts(toolCalls)
         activate Mapper
@@ -93,10 +93,10 @@ sequenceDiagram
         activate Ctrl
         Ctrl->>ChatUC: chat(...)
         activate ChatUC
-        ChatUC->>Groq: generateResponse(...)
-        activate Groq
-        Groq-->>ChatUC: ToolCall: request_booking_confirmation(service_id, option_id, slot_id, date, participants: 2)
-        deactivate Groq
+        ChatUC->>Proxy: generateResponse(...)
+        activate Proxy
+        Proxy-->>ChatUC: ToolCall: request_booking_confirmation(service_id, option_id, slot_id, date, participants: 2)
+        deactivate Proxy
 
         ChatUC->>ToolExec: execute("request_booking_confirmation", args, context)
         activate ToolExec

@@ -25,3 +25,5 @@ __pycache__/
 .ruff_cache/
 cli-proxy/auths/
 cli-proxy/logs/
+.deploy-state
+.deploy.lock

@@ -6,7 +6,6 @@ import com.danasea.backend.modules.ai.domain.models.LlmResponse;
 import com.danasea.backend.modules.ai.infrastructure.cliproxy.CliProxyException;
 import com.danasea.backend.modules.ai.infrastructure.cliproxy.CliProxyLlmClient;
 import com.danasea.backend.modules.ai.infrastructure.cliproxy.configs.CliProxyProperties;
-import com.danasea.backend.modules.ai.infrastructure.groq.GroqLlmClient;
 import com.danasea.backend.modules.ai.infrastructure.router.FailoverLlmClient;
 import com.danasea.backend.shared.i18n.SupportedLanguage;
 
@@ -25,14 +24,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("FailoverLlmClient 3-Tier Failover Unit Tests")
+@DisplayName("LLM gateway routing tests")
 public class FailoverLlmClientTest {
 
     @Mock
     private CliProxyLlmClient cliProxyLlmClient;
-
-    @Mock
-    private GroqLlmClient groqLlmClient;
 
     private CliProxyProperties enabledProperties;
     private CliProxyProperties disabledProperties;
@@ -56,9 +52,9 @@ public class FailoverLlmClientTest {
     }
 
     @Test
-    @DisplayName("Tier 1/2 Success: CLI Proxy succeeds, Groq is never touched")
-    void testCliProxySuccess_GroqNeverInvoked() {
-        FailoverLlmClient client = new FailoverLlmClient(cliProxyLlmClient, groqLlmClient, enabledProperties);
+    @DisplayName("Tier 1/2 Success: CLI Proxy succeeds")
+    void testCliProxySuccess() {
+        FailoverLlmClient client = new FailoverLlmClient(cliProxyLlmClient, enabledProperties);
 
         LlmResponse cliResponse = new LlmResponse();
         cliResponse.setContent("Phản hồi từ Gemini trên CLI Proxy");
@@ -76,54 +72,37 @@ public class FailoverLlmClientTest {
         assertEquals("Phản hồi từ Gemini trên CLI Proxy", result.getContent());
         assertEquals("cliproxy", result.getKeyMasked());
         verify(cliProxyLlmClient, times(1)).generateResponse(any(), eq(SupportedLanguage.VI));
-        verifyNoInteractions(groqLlmClient);
     }
 
     @Test
-    @DisplayName("Tier 3 Fallback: When CLI Proxy fails, system falls back to Groq")
-    void testCliProxyFails_FallsBackToGroq() {
-        FailoverLlmClient client = new FailoverLlmClient(cliProxyLlmClient, groqLlmClient, enabledProperties);
+    @DisplayName("CLI Proxy failure must not send user data directly to another provider")
+    void testCliProxyFails_DoesNotBypassGateway() {
+        FailoverLlmClient client = new FailoverLlmClient(cliProxyLlmClient, enabledProperties);
 
         when(cliProxyLlmClient.generateResponse(any(), eq(SupportedLanguage.VI)))
                 .thenThrow(new CliProxyException("Connection refused to CLI Proxy"));
 
-        LlmResponse groqResponse = new LlmResponse();
-        groqResponse.setContent("Phản hồi từ Groq fallback");
-        groqResponse.setKeyMasked("...1234");
-
-        when(groqLlmClient.generateResponse(any(), eq(SupportedLanguage.VI))).thenReturn(groqResponse);
-
         AiMessage msg = new AiMessage();
         msg.setRole(AiMessageRole.USER);
         msg.setContent("Xin chào");
 
-        LlmResponse result = client.generateResponse(List.of(msg), SupportedLanguage.VI);
-
-        assertNotNull(result);
-        assertEquals("Phản hồi từ Groq fallback", result.getContent());
-        assertEquals("...1234", result.getKeyMasked());
+        assertThrows(CliProxyException.class,
+                () -> client.generateResponse(List.of(msg), SupportedLanguage.VI));
         verify(cliProxyLlmClient, times(1)).generateResponse(any(), eq(SupportedLanguage.VI));
-        verify(groqLlmClient, times(1)).generateResponse(any(), eq(SupportedLanguage.VI));
     }
 
     @Test
-    @DisplayName("CLI Proxy disabled in configuration: routes directly to Groq")
-    void testCliProxyDisabled_RoutesDirectlyToGroq() {
-        FailoverLlmClient client = new FailoverLlmClient(cliProxyLlmClient, groqLlmClient, disabledProperties);
+    void emptyProxyResponseMustNotBypassGateway() {
+        FailoverLlmClient client = new FailoverLlmClient(cliProxyLlmClient, enabledProperties);
+        when(cliProxyLlmClient.generateResponse(any(), any())).thenReturn(new LlmResponse());
+        assertThrows(CliProxyException.class, () -> client.generateResponse(List.of()));
+    }
 
-        LlmResponse groqResponse = new LlmResponse();
-        groqResponse.setContent("Phản hồi trực tiếp từ Groq");
-        when(groqLlmClient.generateResponse(any(), eq(SupportedLanguage.VI))).thenReturn(groqResponse);
-
-        AiMessage msg = new AiMessage();
-        msg.setRole(AiMessageRole.USER);
-        msg.setContent("Xin chào");
-
-        LlmResponse result = client.generateResponse(List.of(msg), SupportedLanguage.VI);
-
-        assertNotNull(result);
-        assertEquals("Phản hồi trực tiếp từ Groq", result.getContent());
+    @Test
+    @DisplayName("Disabled gateway rejects requests without another provider")
+    void disabledGatewayRejectsRequests() {
+        FailoverLlmClient client = new FailoverLlmClient(cliProxyLlmClient, disabledProperties);
+        assertThrows(CliProxyException.class, () -> client.generateResponse(List.of()));
         verifyNoInteractions(cliProxyLlmClient);
-        verify(groqLlmClient, times(1)).generateResponse(any(), eq(SupportedLanguage.VI));
     }
 }

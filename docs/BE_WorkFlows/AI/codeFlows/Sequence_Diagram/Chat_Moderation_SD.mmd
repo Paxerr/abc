@@ -9,8 +9,8 @@ sequenceDiagram
     participant Ctrl as 🎮 AssistantController
     participant Limiter as ⚡ RedisRateLimiter (2 Tầng)
     participant ChatUC as ⚙️ ChatUseCase
-    participant Guard as 🛡️ GroqModerationClient (Prompt Guard)
-    participant Groq as ☁️ GroqLlmClient (5 Keys Rotator)
+    participant Guard as 🛡️ CliProxyModerationClient
+    participant Proxy as ☁️ CliProxyLlmClient
     participant ToolExec as 🔧 ToolExecutor [ConversationAware]
     participant PolicyGuard as 📜 PolicyGuard
     participant DB as 🐘 PostgreSQL & Redis
@@ -47,10 +47,10 @@ sequenceDiagram
 
     Note over ChatUC, ToolExec: VÒNG LẶP THỰC THI TOOL AN TOÀN (TỐI ĐA 5 LƯỢT)
     loop Vòng lặp gọi Tool (Tối đa 5 lượt)
-        ChatUC->>Groq: generateResponse(history, tools, language)
-        activate Groq
-        Groq-->>ChatUC: Response (ToolCall HOẶC Final Text)
-        deactivate Groq
+        ChatUC->>Proxy: generateResponse(history, tools, language)
+        activate Proxy
+        Proxy-->>ChatUC: Response (ToolCall HOẶC Final Text)
+        deactivate Proxy
 
         alt LLM trả ToolCall
             ChatUC->>ToolExec: execute(toolCall, ToolExecutionContext{language, convId, userId})

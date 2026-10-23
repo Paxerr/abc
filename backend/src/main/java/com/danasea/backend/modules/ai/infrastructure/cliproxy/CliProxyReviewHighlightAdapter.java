@@ -1,4 +1,4 @@
-package com.danasea.backend.modules.ai.infrastructure.groq;
+package com.danasea.backend.modules.ai.infrastructure.cliproxy;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +21,7 @@ import java.util.ArrayList;
 
 @Component
 @RequiredArgsConstructor
-public class GroqReviewHighlightAdapter implements ReviewHighlightPort {
+public class CliProxyReviewHighlightAdapter implements ReviewHighlightPort {
     private final LlmClientPort llm;
     private final ObjectMapper mapper;
 
