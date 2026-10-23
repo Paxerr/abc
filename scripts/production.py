@@ -112,7 +112,7 @@ def prepare(root):
 def validate_networks(networks, routes):
     own_devices = set()
     for network in networks:
-        for config in network.get('IPAM', {}).get('Config', []):
+        for config in (network.get('IPAM') or {}).get('Config') or []:
             subnet = config.get('Subnet')
             if not subnet or ':' in subnet:
                 continue

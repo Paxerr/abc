@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,6 +45,7 @@ import org.springframework.security.test.context.TestSecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -76,6 +78,7 @@ class ReschedulePersistenceIntegrationTest extends BaseE2ETest {
     @Autowired JpaRefundRepository refunds;
     @Autowired WeatherBookingCancellationService cancellations;
     @Autowired StringRedisTemplate redis;
+    @Autowired JdbcTemplate jdbc;
     UUID oldId, targetId, subId, itemId, alertId;
     UUID holdId;
     List<InventoryLockItem> held;
@@ -295,6 +298,35 @@ class ReschedulePersistenceIntegrationTest extends BaseE2ETest {
     }
 
     @Test
+    @Transactional
+    void cleanupRemovesRescheduleHistoryWithoutDatabaseForeignKeys() {
+        confirm.execute(
+                subId,
+                new ConfirmRescheduleRequest(targetId, null, 0L),
+                "cleanup-history-1");
+        assertEquals(1, histories.findBySubOrderIdOrderByCreatedAtDesc(subId).size());
+
+        // Hibernate-created test schemas may omit FK relationships represented as UUID fields.
+        // This transaction rolls the constraint changes back after verifying fixture cleanup.
+        var constraints =
+                jdbc.queryForList(
+                        "SELECT conname FROM pg_constraint WHERE"
+                                + " conrelid = 'public.sub_order_reschedule_history'::regclass"
+                                + " AND contype = 'f'",
+                        String.class);
+        for (String constraint : constraints) {
+            jdbc.execute(
+                    "ALTER TABLE sub_order_reschedule_history DROP CONSTRAINT \""
+                            + constraint.replace("\"", "\"\"")
+                            + "\"");
+        }
+
+        cleanDatabase();
+
+        assertEquals(0, histories.count());
+    }
+
+    @Test
     void twoOrdersCompetingForLastCapacityHaveOneWinner() throws Exception {
         slotA1TomorrowMorning.setBookedCount(8);
         serviceSlotRepository.saveAndFlush(slotA1TomorrowMorning);
@@ -345,11 +377,18 @@ class ReschedulePersistenceIntegrationTest extends BaseE2ETest {
                                 return attempt(secondId, userId, "last-capacity-2");
                             });
             start.countDown();
-            assertNotEquals(a.get(30, TimeUnit.SECONDS), b.get(30, TimeUnit.SECONDS));
+            boolean firstMoved = a.get(30, TimeUnit.SECONDS);
+            boolean secondMoved = b.get(30, TimeUnit.SECONDS);
+            assertNotEquals(firstMoved, secondMoved);
             assertEquals(
                     4, serviceSlotRepository.findById(targetId).orElseThrow().getBookedCount());
             assertEquals(4, serviceSlotRepository.findById(oldId).orElseThrow().getBookedCount());
-            assertEquals(1, histories.count());
+            assertEquals(
+                    firstMoved ? 1 : 0,
+                    histories.findBySubOrderIdOrderByCreatedAtDesc(subId).size());
+            assertEquals(
+                    secondMoved ? 1 : 0,
+                    histories.findBySubOrderIdOrderByCreatedAtDesc(secondId).size());
         }
     }
 

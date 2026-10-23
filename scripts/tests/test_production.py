@@ -94,6 +94,15 @@ class ProductionPreparationTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 validate(networks, routes)
 
+    def test_host_and_none_networks_without_ipam_subnets_are_ignored(self):
+        self.module.validate_networks(
+            [
+                {'Name': 'host', 'IPAM': {'Config': None}},
+                {'Name': 'none', 'IPAM': None},
+            ],
+            [],
+        )
+
     def test_database_role_cannot_be_the_migration_owner(self):
         with self.assertRaises(ValueError):
             self.module.runtime_role_sql({'POSTGRES_APP_USER': 'owner', 'POSTGRES_USER': 'owner', 'POSTGRES_DB': 'app', 'POSTGRES_APP_PASSWORD': secrets.token_hex(32)})
