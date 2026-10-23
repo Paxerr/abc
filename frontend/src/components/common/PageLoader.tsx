@@ -66,7 +66,7 @@ export function PageLoader() {
   return (
     <div
       onClick={hideLoader}
-      className={`fixed inset-0 z-[99999] flex items-center justify-center backdrop-blur-xl bg-slate-900/10 select-none cursor-pointer transition-all duration-300 ${
+      className={`fixed inset-0 z-[99999] flex items-center justify-center backdrop-blur-md bg-black/[0.04] dark:bg-black/20 select-none cursor-pointer transition-all duration-300 ${
         isExiting ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100 scale-100'
       }`}
       role="status"
