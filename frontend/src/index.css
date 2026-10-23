@@ -549,17 +549,17 @@
 }
 
 .animate-liquid-wave {
-  animation: liquidWaveFlow 1.6s linear infinite;
+  animation: liquidWaveFlow 1.25s linear infinite;
   will-change: transform;
 }
 
 .animate-liquid-wave-mid {
-  animation: liquidWaveFlowReverse 2.1s linear infinite;
+  animation: liquidWaveFlowReverse 1.8s linear infinite;
   will-change: transform;
 }
 
 .animate-liquid-wave-rev {
-  animation: liquidWaveFlow 2.6s linear infinite;
+  animation: liquidWaveFlow 2.4s linear infinite;
   will-change: transform;
 }
 

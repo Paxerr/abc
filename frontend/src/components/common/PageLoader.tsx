@@ -66,7 +66,7 @@ export function PageLoader() {
   return (
     <div
       onClick={hideLoader}
-      className={`fixed inset-0 z-[99999] flex items-center justify-center backdrop-blur-md bg-black/[0.04] dark:bg-black/20 select-none cursor-pointer transition-all duration-300 ${
+      className={`fixed inset-0 z-[99999] flex items-center justify-center backdrop-blur-md bg-white/[0.02] dark:bg-black/10 select-none cursor-pointer transition-all duration-300 ${
         isExiting ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100 scale-100'
       }`}
       role="status"
@@ -75,15 +75,15 @@ export function PageLoader() {
       {/* =========================================================================
           PURE LIQUID WAVE LOGO (FLOATING SEAMLESSLY OVER FROSTED GLASS BACKGROUND)
          ========================================================================= */}
-      <div className="relative w-48 h-48 sm:w-60 sm:h-60 flex items-center justify-center filter drop-shadow-[0_12px_32px_rgba(0,0,0,0.18)]">
+      <div className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center filter drop-shadow-[0_16px_36px_rgba(0,0,0,0.18)]">
         {/* Layer 1: Faint Logo Silhouette (Empty Glass Vessel Waiting to Fill) */}
         <img
           src="/images/danasea-logo.png"
           alt="DANASEA Logo Silhouette"
-          className="absolute inset-0 w-full h-full object-contain opacity-25 filter contrast-125 select-none pointer-events-none"
+          className="absolute inset-0 w-full h-full object-contain opacity-20 filter contrast-125 select-none pointer-events-none"
         />
 
-        {/* Layer 2: Liquid Water Wave (Clipped precisely to the DANASEA Logo geometry) */}
+        {/* Layer 2: Liquid Water Waves (Clipped precisely to the DANASEA Logo geometry) */}
         <div
           className="absolute inset-0 w-full h-full select-none pointer-events-none overflow-hidden"
           style={{
@@ -97,52 +97,102 @@ export function PageLoader() {
             WebkitMaskRepeat: 'no-repeat',
           }}
         >
-          {/* Rising Water Column with dramatic wave crests */}
+          {/* Rising Water Column with GIGANTIC SURGING & CHURNING WAVES (No flat cut!) */}
           <div
-            className="absolute left-0 right-0 bottom-0 bg-gradient-to-t from-cyan-700 via-teal-500 to-cyan-400 transition-[height] duration-75 ease-out"
-            style={{ height: `${progress}%` }}
+            className="absolute left-0 right-0 w-full h-[200%] pointer-events-none transition-[top] duration-75 ease-out"
+            style={{
+              top: `${100 - progress * 1.5}%`,
+            }}
           >
-            {/* Wave 1: Back Wave (Deep Teal, rolling right to left with big amplitude) */}
-            <div className="absolute -top-7 sm:-top-9 -left-full w-[300%] h-12 sm:h-14 overflow-hidden opacity-50 animate-liquid-wave-rev pointer-events-none">
-              <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-teal-400">
-                <path d="M 0,60 C 150,10 350,110 500,60 C 650,10 850,110 1000,60 C 1150,10 1350,110 1500,60 V 120 H 0 Z" />
+            {/* Wave 1: Back Wave (Deep Sea Teal, rolling right-to-left with 110-unit amplitude) */}
+            <div className="absolute top-0 left-0 w-[200%] h-full opacity-60 animate-liquid-wave-rev pointer-events-none">
+              <svg viewBox="0 0 1200 500" preserveAspectRatio="none" className="w-full h-full">
+                <defs>
+                  <linearGradient id="danaseaWaveGrad1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#0d9488" />
+                    <stop offset="60%" stopColor="#08515a" />
+                    <stop offset="100%" stopColor="#042f2e" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M 0 70 Q 150 -40 300 70 T 600 70 Q 750 -40 900 70 T 1200 70 V 500 H 0 Z"
+                  fill="url(#danaseaWaveGrad1)"
+                />
               </svg>
             </div>
 
-            {/* Wave 2: Middle Wave (Vibrant Ocean Cyan, rolling left to right) */}
-            <div className="absolute -top-6 sm:-top-8 -left-full w-[300%] h-11 sm:h-13 overflow-hidden opacity-70 animate-liquid-wave-mid pointer-events-none">
-              <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-cyan-500">
-                <path d="M 0,60 C 150,110 350,10 500,60 C 650,110 850,10 1000,60 C 1150,110 1350,10 1500,60 V 120 H 0 Z" />
+            {/* Wave 2: Middle Wave (Ocean Cyan, rolling left-to-right in counter-phase with 110-unit amplitude) */}
+            <div className="absolute top-0 left-0 w-[200%] h-full opacity-75 animate-liquid-wave-mid pointer-events-none">
+              <svg viewBox="0 0 1200 500" preserveAspectRatio="none" className="w-full h-full">
+                <defs>
+                  <linearGradient id="danaseaWaveGrad2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#06b6d4" />
+                    <stop offset="50%" stopColor="#0284c7" />
+                    <stop offset="100%" stopColor="#08515a" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M 0 70 Q 150 180 300 70 T 600 70 Q 750 180 900 70 T 1200 70 V 500 H 0 Z"
+                  fill="url(#danaseaWaveGrad2)"
+                />
               </svg>
             </div>
 
-            {/* Wave 3: Front Wave (Bright Cyan with White Foam Crest, fast rolling) */}
-            <div className="absolute -top-5 sm:-top-7 -left-full w-[300%] h-10 sm:h-12 overflow-hidden opacity-95 animate-liquid-wave pointer-events-none">
-              <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-cyan-300">
-                <path d="M 0,60 C 150,15 350,105 500,60 C 650,15 850,105 1000,60 C 1150,15 1350,105 1500,60 V 120 H 0 Z" />
+            {/* Wave 3: Front Wave (Vibrant Aqua with Glowing White Foam Crest & Spray, fast rolling) */}
+            <div className="absolute top-0 left-0 w-[200%] h-full opacity-95 animate-liquid-wave pointer-events-none">
+              <svg viewBox="0 0 1200 500" preserveAspectRatio="none" className="w-full h-full">
+                <defs>
+                  <linearGradient id="danaseaWaveGrad3" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#22d3ee" />
+                    <stop offset="40%" stopColor="#0891b2" />
+                    <stop offset="100%" stopColor="#0369a1" />
+                  </linearGradient>
+                </defs>
+                {/* Aqua Water Body */}
+                <path
+                  d="M 0 70 Q 75 -30 150 70 T 300 70 Q 375 -30 450 70 T 600 70 Q 675 -30 750 70 T 900 70 Q 975 -30 1050 70 T 1200 70 V 500 H 0 Z"
+                  fill="url(#danaseaWaveGrad3)"
+                />
+                {/* Soft Cyan Water Spray Glow */}
+                <path
+                  d="M 0 70 Q 75 -30 150 70 T 300 70 Q 375 -30 450 70 T 600 70 Q 675 -30 750 70 T 900 70 Q 975 -30 1050 70 T 1200 70"
+                  fill="none"
+                  stroke="#a5f3fc"
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                  opacity="0.45"
+                />
+                {/* Dazzling White Foam Crest along the wave peaks */}
+                <path
+                  d="M 0 70 Q 75 -30 150 70 T 300 70 Q 375 -30 450 70 T 600 70 Q 675 -30 750 70 T 900 70 Q 975 -30 1050 70 T 1200 70"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  opacity="0.95"
+                />
               </svg>
             </div>
 
-            {/* Floating Sea Bubbles */}
+            {/* Rising Sea Bubbles */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <span className="absolute left-[15%] bottom-1 w-2.5 h-2.5 rounded-full bg-white/70 animate-liquid-bubble-1" />
-              <span className="absolute left-[40%] bottom-1 w-2 h-2 rounded-full bg-white/80 animate-liquid-bubble-2" />
-              <span className="absolute left-[65%] bottom-1 w-3 h-3 rounded-full bg-white/60 animate-liquid-bubble-3" />
-              <span className="absolute left-[85%] bottom-1 w-2 h-2 rounded-full bg-white/85 animate-liquid-bubble-4" />
+              <span className="absolute left-[18%] top-[25%] w-3 h-3 rounded-full bg-white/80 animate-liquid-bubble-1 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
+              <span className="absolute left-[38%] top-[35%] w-2 h-2 rounded-full bg-white/90 animate-liquid-bubble-2 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
+              <span className="absolute left-[62%] top-[28%] w-3.5 h-3.5 rounded-full bg-white/70 animate-liquid-bubble-3 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
+              <span className="absolute left-[82%] top-[40%] w-2.5 h-2.5 rounded-full bg-white/85 animate-liquid-bubble-4 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
             </div>
           </div>
-
-          {/* Layer 3: Vibrant Color Overlay (Revealed dynamically with the water waves) */}
-          <img
-            src="/images/danasea-logo.png"
-            alt=""
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-90 mix-blend-color-dodge transition-opacity"
-            style={{
-              clipPath: `inset(${Math.max(0, 100 - progress - 4)}% 0 0 0)`,
-              WebkitClipPath: `inset(${Math.max(0, 100 - progress - 4)}% 0 0 0)`,
-            }}
-          />
         </div>
+
+        {/* Layer 3: Authentic Brand Logo detail - cleanly reveals as liquid reaches top */}
+        <img
+          src="/images/danasea-logo.png"
+          alt="DANASEA"
+          className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none transition-opacity duration-300"
+          style={{
+            opacity: progress >= 95 ? 1 : Math.max(0, (progress - 25) / 75) * 0.35,
+          }}
+        />
       </div>
     </div>
   );
