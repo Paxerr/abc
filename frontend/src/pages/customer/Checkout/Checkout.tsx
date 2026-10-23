@@ -146,9 +146,7 @@ export function Checkout() {
                   </p>
                 </div>
               </div>
-              <span className="px-space-sm py-1 rounded-full bg-surface-container-lowest font-label-sm text-label-sm text-primary font-bold shadow-sm whitespace-nowrap">
-                An toàn
-              </span>
+
             </div>
 
             {/* Section 1: Customer Information */}
