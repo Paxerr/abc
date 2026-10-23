@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../store/useAuthStore";
+import { useLoadingStore } from "../../../store/useLoadingStore";
 import { authService } from "../../../services/authService";
 import { AuthCinematicBackdrop } from "../../../components/customer/AuthCinematicBackdrop";
 import { GoogleLoginButton } from "../../../components/customer/GoogleLoginButton";
@@ -127,9 +128,12 @@ export function Auth() {
       console.log(`[Bước 5/5] Hoàn tất đăng nhập! Chuẩn bị điều hướng tới: ${destination}`);
       console.groupEnd();
 
+      // Trigger wave transition into destination workspace
+      useLoadingStore.getState().triggerDemoLoading(1200, "Đang kết nối tài khoản...", "Chào mừng trở lại với DANASEA");
+
       setTimeout(() => {
         navigate(destination);
-      }, 1200);
+      }, 1100);
     } catch (err: any) {
       console.groupEnd();
       console.error('[Auth Flow] Lỗi đăng nhập thất bại:', err);

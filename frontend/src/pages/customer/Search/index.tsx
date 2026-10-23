@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { CinematicSceneBackdrop } from '../../../components/customer/CinematicSceneBackdrop';
+import { TourCardSkeleton } from '../../../components/common/skeletons';
 import { useWishlistStore } from '../../../store/useWishlistStore';
 import { useLanguageStore } from '../../../store/useLanguageStore';
 import { serviceCatalogService, type ServiceQueryParams } from '../../../services/serviceCatalogService';
@@ -499,19 +500,9 @@ export function Search() {
            ========================================================================= */}
         <section data-scene="sports">
           {isLoading ? (
-            /* Skeleton Loading State */
+            /* Shared Skeleton Loading State */
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <div
-                  key={i}
-                  className="bg-white/90 border border-slate-200/90 rounded-2xl overflow-hidden p-3 animate-pulse shadow-sm"
-                >
-                  <div className="aspect-[4/3] rounded-xl bg-slate-200 mb-3" />
-                  <div className="h-4 bg-slate-200 rounded w-3/4 mb-2" />
-                  <div className="h-3 bg-slate-200 rounded w-1/2 mb-4" />
-                  <div className="h-5 bg-slate-200 rounded w-1/3" />
-                </div>
-              ))}
+              <TourCardSkeleton count={8} />
             </div>
           ) : displayServices.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
