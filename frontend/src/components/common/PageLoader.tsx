@@ -120,30 +120,41 @@ export function PageLoader() {
                 top: `${100 - progress}%`,
               }}
             >
-              {/* Wave 1: Back Wave (Deep Teal, rolling right to left) */}
-              <div className="absolute inset-0 w-[200%] h-full opacity-65 animate-liquid-wave-rev pointer-events-none">
-                <svg viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-full fill-teal-600">
-                  <path d="M 0 50 Q 125 -10 250 50 T 500 50 Q 625 -10 750 50 T 1000 50 V 100 H 0 Z" />
+              {/* Wave 1: Back Wave (Brand Deep Sea Teal #08515a, rolling right to left) */}
+              <div className="absolute inset-0 w-[200%] h-full opacity-75 animate-liquid-wave-rev pointer-events-none">
+                <svg viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-full">
+                  <path
+                    d="M 0 50 Q 125 -10 250 50 T 500 50 Q 625 -10 750 50 T 1000 50"
+                    fill="none"
+                    stroke="#08515a"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </div>
 
-              {/* Wave 2: Middle Wave (Ocean Cyan, rolling left to right in counter-phase) */}
-              <div className="absolute inset-0 w-[200%] h-full opacity-80 animate-liquid-wave-mid pointer-events-none">
-                <svg viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-full fill-cyan-500">
-                  <path d="M 0 50 Q 125 110 250 50 T 500 50 Q 625 110 750 50 T 1000 50 V 100 H 0 Z" />
+              {/* Wave 2: Middle Wave (Brand Cyan-Teal #35a7ae, rolling left to right in counter-phase) */}
+              <div className="absolute inset-0 w-[200%] h-full opacity-85 animate-liquid-wave-mid pointer-events-none">
+                <svg viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-full">
+                  <path
+                    d="M 0 50 Q 125 110 250 50 T 500 50 Q 625 110 750 50 T 1000 50"
+                    fill="none"
+                    stroke="#35a7ae"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </div>
 
-              {/* Wave 3: Front Wave (Bright Aqua with Dazzling White Foam Crest, fast rolling) */}
+              {/* Wave 3: Front Wave (Brand Sea Spray & Dazzling White Foam Crest, fast rolling) */}
               <div className="absolute inset-0 w-[200%] h-full opacity-95 animate-liquid-wave pointer-events-none">
-                <svg viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-full fill-cyan-400">
-                  <path d="M 0 50 Q 62.5 -5 125 50 T 250 50 Q 312.5 -5 375 50 T 500 50 Q 562.5 -5 625 50 T 750 50 Q 812.5 -5 875 50 T 1000 50 V 100 H 0 Z" />
-                  {/* Soft Cyan Water Spray Glow */}
+                <svg viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-full">
+                  {/* Brand Cyan Glow along the wave crest */}
                   <path
                     d="M 0 50 Q 62.5 -5 125 50 T 250 50 Q 312.5 -5 375 50 T 500 50 Q 562.5 -5 625 50 T 750 50 Q 812.5 -5 875 50 T 1000 50"
                     fill="none"
-                    stroke="#a5f3fc"
-                    strokeWidth="8"
+                    stroke="#35a7ae"
+                    strokeWidth="10"
                     strokeLinecap="round"
                     opacity="0.5"
                   />
