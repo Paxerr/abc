@@ -86,7 +86,7 @@ public class ReviewSummaryUseCase {
         Set<UUID> allowed = new LinkedHashSet<>(sources.stream().map(ReviewEvidence::id).toList());
         List<UUID> selected = highlights.select(sources, language);
         if (selected == null || selected.size() > 6 || !allowed.containsAll(selected)) selected = List.of();
-        String method = selected.isEmpty() ? "EXTRACTIVE_BASELINE" : "GROQ_SELECTED_VERIFIED_SOURCE_IDS";
+        String method = selected.isEmpty() ? "EXTRACTIVE_BASELINE" : "CLIPROXY_SELECTED_VERIFIED_SOURCE_IDS";
         if (selected.isEmpty()) {
             var combined = new LinkedHashSet<>(sources.stream().sorted(Comparator.comparingInt(ReviewEvidence::rating))
                     .limit(3).map(ReviewEvidence::id).toList());

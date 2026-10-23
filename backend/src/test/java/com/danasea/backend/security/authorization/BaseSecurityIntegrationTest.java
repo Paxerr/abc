@@ -50,8 +50,6 @@ public abstract class BaseSecurityIntegrationTest {
         registry.add("spring.data.redis.port", () -> redis.getFirstMappedPort());
         registry.add("app.jwt.secret", () -> "test-secret-key-that-is-at-least-256-bits-long-for-danasea-rbac-testing-purposes");
         registry.add("app.checkin.qr-secret", () -> "test-checkin-qr-secret-that-is-at-least-256-bits-long");
-        registry.add("ai.groq.api-keys",
-                () -> "test-api-key-1,test-api-key-2,test-api-key-3,test-api-key-4,test-api-key-5");
         registry.add("spring.mail.username", () -> "test@example.com");
         registry.add("spring.mail.password", () -> "testpassword");
         registry.add("spring.rabbitmq.listener.simple.auto-startup", () -> "false");

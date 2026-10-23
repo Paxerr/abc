@@ -11,10 +11,10 @@ sequenceDiagram
     participant Ctrl as 🎮 AssistantController
     participant Rate as ⚡ RedisRateLimiter
     participant Idem as 📑 ChatIdempotencyService
-    participant Guard as 🛡️ GroqModerationClient (Prompt Guard)
+    participant Guard as 🛡️ CliProxyModerationClient
     participant ChatUC as ⚙️ ChatUseCase
     participant History as 📜 ChatHistoryService
-    participant Groq as ☁️ GroqLlmClient (5 Keys Rotator)
+    participant Proxy as ☁️ CliProxyLlmClient
     participant ToolReg as 🧰 AIToolRegistry (15 Tools)
     participant Mapper as 🎨 AssistantArtifactMapper
     participant DB as 🐘 PostgreSQL (ai_chat_requests, ai_conversations, ai_messages)
@@ -72,20 +72,20 @@ sequenceDiagram
     activate ChatUC
 
     ChatUC->>History: loadRecentMessages(conversationId)
-    ChatUC->>Groq: generateResponse(history, tools, language)
-    activate Groq
+    ChatUC->>Proxy: generateResponse(history, tools, language)
+    activate Proxy
 
     opt LLM yêu cầu gọi công cụ (Tool Call)
-        Groq-->>ChatUC: ToolCall (name, arguments)
+        Proxy-->>ChatUC: ToolCall (name, arguments)
         ChatUC->>ToolReg: execute(toolCall, ToolExecutionContext)
         activate ToolReg
         ToolReg-->>ChatUC: ToolResult JSON
         deactivate ToolReg
-        ChatUC->>Groq: generateResponse(history + tool_result, tools, language)
+        ChatUC->>Proxy: generateResponse(history + tool_result, tools, language)
     end
 
-    Groq-->>ChatUC: LlmResponse(content, toolCalls, responseStatus)
-    deactivate Groq
+    Proxy-->>ChatUC: LlmResponse(content, toolCalls, responseStatus)
+    deactivate Proxy
 
     ChatUC->>Mapper: mapToArtifacts(toolCalls, language)
     activate Mapper

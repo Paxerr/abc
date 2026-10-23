@@ -1,23 +1,19 @@
 package com.danasea.backend.modules.ai;
 
+import com.danasea.backend.modules.ai.infrastructure.cliproxy.CliProxyModerationClient;
+
 import com.danasea.backend.modules.ai.application.ports.ConfirmationCardStorePort;
-import com.danasea.backend.modules.ai.application.ports.KeyRotatorPort;
 import com.danasea.backend.modules.ai.application.ports.LlmClientPort;
 import com.danasea.backend.modules.ai.application.ports.ModerationPort;
-import com.danasea.backend.modules.ai.application.tools.GetPolicyTool;
-import com.danasea.backend.modules.ai.application.tools.GetSafetyAlertTool;
-import com.danasea.backend.modules.ai.application.tools.GetWeatherForecastTool;
 import com.danasea.backend.modules.ai.application.tools.ToolExecutor;
 import com.danasea.backend.modules.ai.application.usecases.ChatUseCase;
 import com.danasea.backend.modules.ai.application.usecases.ConfirmBookingUseCase;
-import com.danasea.backend.modules.ai.domain.models.AiMessage;
 import com.danasea.backend.modules.ai.domain.models.AiMessageRole;
 import com.danasea.backend.modules.ai.domain.models.ConfirmationCard;
 import com.danasea.backend.modules.ai.domain.models.LlmResponse;
 import com.danasea.backend.modules.ai.domain.models.ToolCall;
 import com.danasea.backend.modules.ai.domain.services.AssistantAuditLogService;
 import com.danasea.backend.modules.ai.domain.services.ChatHistoryService;
-import com.danasea.backend.modules.ai.infrastructure.groq.GroqModerationClient;
 import com.danasea.backend.modules.service.application.dtos.ServiceDetailResult;
 import com.danasea.backend.modules.service.application.usecases.GetPublicServiceDetailUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,7 +29,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
@@ -55,7 +50,7 @@ import static org.mockito.Mockito.*;
  * Provides rigorous, empirical verification of:
  * 1. Padding bypass prevention: User messages strictly capped to 1800 chars in ChatUseCase
  *    before moderation, chat history persistence, and LLM processing.
- * 2. UTF-16 Unicode surrogate pair safety during truncation (both ChatUseCase & GroqModerationClient).
+ * 2. UTF-16 Unicode surrogate pair safety during truncation (both ChatUseCase & CliProxyModerationClient).
  * 3. Strict policy keyword rejection when get_policy tool is omitted.
  * 4. Booking confirmation re-validation logic (PRICE_CHANGED reason, Redis 2-retry limit, slot exhaustion).
  */
@@ -239,11 +234,7 @@ public class EmpiricalPaddingAndAdversarialVerificationTest {
     @DisplayName("2. UTF-16 Unicode Surrogate Pair Safety Verification")
     class UnicodeSurrogateSafetyTests {
 
-        @Mock
-        private KeyRotatorPort keyRotator;
 
-        @Mock
-        private RestTemplate restTemplate;
 
         @Mock
         private LlmClientPort llmClientPort;
@@ -253,15 +244,11 @@ public class EmpiricalPaddingAndAdversarialVerificationTest {
 
         @Mock
         private ChatHistoryService chatHistoryService;
-
-        private GroqModerationClient moderationClient;
         private ChatUseCase chatUseCase;
         private final UUID conversationId = UUID.randomUUID();
 
         @BeforeEach
         void setUp() {
-            moderationClient = new GroqModerationClient(restTemplate, keyRotator,
-                    "meta-llama/llama-prompt-guard-2-86m", "https://api.groq.com/openai/v1/chat/completions");
 
             chatUseCase = new ChatUseCase(
                     llmClientPort,
@@ -274,14 +261,14 @@ public class EmpiricalPaddingAndAdversarialVerificationTest {
         }
 
         @Test
-        @DisplayName("CHAL2-SUR-1: High surrogate at index 1799 in GroqModerationClient decrements length to 1799 (no dangling surrogate)")
-        void testGroqModerationClient_SurrogatePairAtBoundary() throws CharacterCodingException {
+        @DisplayName("CHAL2-SUR-1: High surrogate at index 1799 in CliProxyModerationClient decrements length to 1799 (no dangling surrogate)")
+        void testCliProxyModerationClient_SurrogatePairAtBoundary() throws CharacterCodingException {
             // High surrogate: \uD83D, Low surrogate: \uDC2C (🐬)
             String prefix = "v".repeat(1799);
             String dolphinEmoji = "\uD83D\uDC2C";
             String fullMessage = prefix + dolphinEmoji + "suffix after emoji";
 
-            String truncated = moderationClient.truncateForModeration(fullMessage, 450);
+            String truncated = CliProxyModerationClient.truncateForModeration(fullMessage, 450);
 
             // Length must be 1799, not 1800 (which would leave a dangling high surrogate \uD83D)
             assertEquals(1799, truncated.length(), "Boundary must pull back by 1 char to avoid splitting surrogate pair");
@@ -329,7 +316,7 @@ public class EmpiricalPaddingAndAdversarialVerificationTest {
             String intactEmoji = "\uD83C\uDFD6"; // 🏖️
             String fullMessage = prefix + intactEmoji + "overflow text";
 
-            String truncated = moderationClient.truncateForModeration(fullMessage, 450);
+            String truncated = CliProxyModerationClient.truncateForModeration(fullMessage, 450);
 
             assertEquals(1800, truncated.length(), "When surrogate pair fits entirely, length must be 1800");
             assertTrue(truncated.endsWith(intactEmoji), "Emoji must be intact at the end of truncated string");
@@ -347,7 +334,7 @@ public class EmpiricalPaddingAndAdversarialVerificationTest {
             }
             String longVietnameseText = sb.toString();
 
-            String truncated = moderationClient.truncateForModeration(longVietnameseText, 450);
+            String truncated = CliProxyModerationClient.truncateForModeration(longVietnameseText, 450);
             assertEquals(1800, truncated.length());
 
             // Check that UTF-8 strictly decodes without surrogate or invalid byte errors

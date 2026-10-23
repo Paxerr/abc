@@ -8,6 +8,7 @@
 #
 # Usage (via SSH or locally): deploy <40-char git sha>
 set -Eeuo pipefail
+umask 077
 
 APP_DIR="${APP_DIR:-$HOME/danasea}"
 COMPOSE_FILE="docker-compose.prod.yml"
@@ -25,7 +26,7 @@ compose() {
 
 # --- Validate input ("deploy <sha>" from SSH_ORIGINAL_COMMAND or CLI args) ---
 read -r action tag _ <<< "${SSH_ORIGINAL_COMMAND:-$*}" || true
-if [[ "${action:-}" != "deploy" || ! "${tag:-}" =~ ^[0-9a-f]{40}$ ]]; then
+if [[ "${SSH_ORIGINAL_COMMAND:-$*}" != "deploy ${tag:-}" || "${action:-}" != "deploy" || ! "${tag:-}" =~ ^[0-9a-f]{40}$ ]]; then
   echo "Usage: deploy <40-char git sha>" >&2
   exit 2
 fi
@@ -37,6 +38,10 @@ exec 9>"$APP_DIR/.deploy.lock"
 flock -n 9 || { echo "Another deploy is in progress" >&2; exit 1; }
 
 prev_tag="$(cat "$STATE_FILE" 2>/dev/null || true)"
+if [[ -n "$prev_tag" && ! "$prev_tag" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "Invalid previous release state" >&2
+  exit 2
+fi
 log "Deploying ${tag:0:7} (previous: ${prev_tag:0:7})"
 
 rollback() {
@@ -52,7 +57,11 @@ rollback() {
 # --- 1. Sync compose/config files to the exact commit being deployed ---
 git fetch --quiet origin main
 git cat-file -e "${tag}^{commit}"
+git merge-base --is-ancestor "$tag" origin/main || { echo "Release is not on origin/main" >&2; exit 1; }
 git checkout --quiet --force --detach "$tag"
+
+# Fail before changing running services when private files, keys or the subnet are not ready.
+python3 scripts/production.py check
 
 # --- 2. Backup database before touching anything ---
 if [[ -n "$(compose "$tag" ps -q postgres 2>/dev/null)" ]]; then
@@ -65,7 +74,7 @@ fi
 
 # --- 3. Pull prebuilt images (no building on this 4GB box) ---
 log "Pulling images"
-compose "$tag" pull backend frontend
+compose "$tag" pull
 
 # --- 4. Start and wait for healthchecks; roll back on failure ---
 log "Starting containers"

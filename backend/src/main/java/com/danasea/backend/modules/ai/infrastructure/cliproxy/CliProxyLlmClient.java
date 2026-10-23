@@ -1,6 +1,7 @@
 package com.danasea.backend.modules.ai.infrastructure.cliproxy;
 
 import com.danasea.backend.modules.ai.application.ports.LlmClientPort;
+import com.danasea.backend.modules.ai.application.ports.AiExecutionBudget;
 import com.danasea.backend.modules.ai.domain.models.AiMessage;
 import com.danasea.backend.modules.ai.domain.models.LlmResponse;
 import com.danasea.backend.modules.ai.domain.models.ToolCall;
@@ -104,21 +105,26 @@ public class CliProxyLlmClient implements LlmClientPort {
             return callModel(messages, defaultModel, promptLanguage);
         } catch (Exception ex) {
             log.warn("CLI Proxy primary model {} failed ({}). Attempting secondary model {}",
-                    defaultModel, ex.getMessage(), fallbackModel);
+                    defaultModel, ex.getClass().getSimpleName(), fallbackModel);
             try {
                 return callModel(messages, fallbackModel, promptLanguage);
             } catch (Exception fallbackEx) {
-                log.error("CLI Proxy secondary model {} also failed: {}", fallbackModel, fallbackEx.getMessage());
+                log.error("CLI Proxy secondary model {} also failed: {}", fallbackModel, fallbackEx.getClass().getSimpleName());
                 throw new CliProxyException(
-                        "Both models on CLI Proxy failed. Primary [" + defaultModel + "]: " + ex.getMessage()
-                                + ", Secondary [" + fallbackModel + "]: " + fallbackEx.getMessage(),
-                        fallbackEx
+                        "Both models on CLI Proxy failed. Primary [" + defaultModel
+                                + "], Secondary [" + fallbackModel + "]"
                 );
             }
         }
     }
 
     private LlmResponse callModel(List<AiMessage> messages, String model, SupportedLanguage language) {
+        if (!AiExecutionBudget.hasTimeFor(DEFAULT_CONNECT_TIMEOUT.plus(DEFAULT_READ_TIMEOUT))) {
+            LlmResponse timeout = new LlmResponse();
+            timeout.setContent(localizedMessages.get("ai.timeout", language));
+            timeout.setResponseStatus("PARTIAL");
+            return timeout;
+        }
         if (model == null || model.isBlank()) {
             throw new CliProxyException("CLI Proxy model is not configured");
         }
@@ -194,11 +200,11 @@ public class CliProxyLlmClient implements LlmClientPort {
 
             return llmResponse;
         } catch (ResourceAccessException ex) {
-            log.warn("CLI Proxy request timed out (15s) for model {}: {}", model, ex.getMessage());
-            throw new CliProxyException("CLI Proxy timeout for model " + model + ": " + ex.getMessage(), ex);
+            log.warn("CLI Proxy request timed out (15s) for model {}", model);
+            throw new CliProxyException("CLI Proxy timeout for model " + model);
         } catch (RestClientResponseException ex) {
-            log.warn("CLI Proxy API returned HTTP {} for model {}: {}", ex.getStatusCode().value(), model, ex.getMessage());
-            throw new CliProxyException("CLI Proxy HTTP " + ex.getStatusCode().value() + " for model " + model, ex);
+            log.warn("CLI Proxy API returned HTTP {} for model {}", ex.getStatusCode().value(), model);
+            throw new CliProxyException("CLI Proxy HTTP " + ex.getStatusCode().value() + " for model " + model);
         }
     }
 }

@@ -166,7 +166,6 @@ def main() -> None:
             APP_JWT_SECRET=signing_secret,
             SPRING_MAIL_USERNAME="smoke@example.test",
             SPRING_MAIL_PASSWORD="unused",
-            GROQ_API_KEYS="",
             AI_QUYET_ENABLED="true",
             AI_QUYET_BASE_URL="http://127.0.0.1:8091",
             AI_QUYET_API_KEY=key,

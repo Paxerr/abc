@@ -50,10 +50,10 @@ class I18nSourceGuardTest {
                 Files.readString(
                         MAIN_JAVA.resolve(
                                 "com/danasea/backend/modules/ai/application/usecases/ChatUseCase.java"));
-        String groq =
+        String gateway =
                 Files.readString(
                         MAIN_JAVA.resolve(
-                                "com/danasea/backend/modules/ai/infrastructure/groq/GroqLlmClient.java"));
+                                "com/danasea/backend/modules/ai/infrastructure/cliproxy/CliProxyLlmClient.java"));
         String weatherJob =
                 Files.readString(
                         MAIN_JAVA.resolve(
@@ -68,7 +68,7 @@ class I18nSourceGuardTest {
             assertFalse(
                     chat.contains(forbidden), "Chat fallback must use a message key: " + forbidden);
             assertFalse(
-                    groq.contains(forbidden), "LLM fallback must use a message key: " + forbidden);
+                    gateway.contains(forbidden), "LLM fallback must use a message key: " + forbidden);
         }
         assertFalse(
                 Pattern.compile(
