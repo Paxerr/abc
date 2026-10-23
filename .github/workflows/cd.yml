@@ -83,7 +83,6 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:ci
-          targets: ${{ secrets.SERVER_TAILSCALE_IP }}
 
       - name: Configure SSH
         env:
@@ -102,5 +101,6 @@ jobs:
           DEPLOY_HOST: ${{ secrets.SERVER_TAILSCALE_IP }}
         run: |
           ssh -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=15 -o ConnectionAttempts=3 \
             "$DEPLOY_USER@$DEPLOY_HOST" \
             "deploy ${DEPLOY_SHA}"

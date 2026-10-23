@@ -70,7 +70,9 @@ Kết quả phải chứa đúng digest và platform mong muốn. Action GitHub 
 
 GitHub environment `production` cần hai secrets `TS_OAUTH_CLIENT_ID`, `TS_OAUTH_SECRET` từ Tailscale OAuth client. Chỉ cấp scope `Auth Keys: Write` cho `tag:ci`; không cấp quyền sửa policy, người dùng hay DNS. Các secrets `SERVER_TAILSCALE_IP`, `SERVER_USER`, `SSH_PRIVATE_KEY`, `SSH_KNOWN_HOSTS` có thể nằm ở environment hoặc repository. Host key phải được đối chiếu fingerprint qua kênh tin cậy; không chỉ tin `ssh-keyscan`. Dùng key riêng cho CI.
 
-Workflow kiểm tra các giá trị OAuth và đích Tailscale không rỗng mà không in secret, đăng ký runner với `tag:ci`, rồi kiểm tra kết nối tới `SERVER_TAILSCALE_IP` trước khi SSH. Workflow không dùng hoặc tự chuyển về `TAILSCALE_AUTHKEY`. Chỉ thu hồi authkey cũ và xoá secret cũ sau khi lần CD đầu tiên bằng OAuth thành công. Không ghi OAuth client secret vào source, log hay chat.
+Workflow kiểm tra các giá trị OAuth và đích Tailscale không rỗng mà không in secret, đăng ký runner với `tag:ci`, rồi dùng SSH tới `SERVER_TAILSCALE_IP` với timeout kết nối 15 giây và tối đa 3 lần thử. SSH kiểm tra host key và xác thực bằng key CI trước khi chạy forced command deploy. Kết nối trực tiếp hoặc qua DERP đều được chấp nhận. Không dùng input `targets` của bản Tailscale Action đang pin: phép ping có thể trả mã 1 khi chưa tạo được đường trực tiếp, và Bash `-e` làm action thoát trước nhánh chấp nhận relay. Không mở thêm quyền policy hoặc port router để làm ping thành công.
+
+Workflow không dùng hoặc tự chuyển về `TAILSCALE_AUTHKEY`. Chỉ thu hồi authkey cũ và xoá secret cũ sau khi lần CD đầu tiên bằng OAuth thành công. Không ghi OAuth client secret vào source, log hay chat.
 
 Cài script theo source đã review:
 
