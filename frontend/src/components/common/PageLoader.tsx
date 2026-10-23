@@ -97,77 +97,50 @@ export function PageLoader() {
             WebkitMaskRepeat: 'no-repeat',
           }}
         >
-          {/* Rising Water Column with GIGANTIC SURGING & CHURNING WAVES (No flat cut!) */}
+          {/* Rising Water Column with DRAMATIC SURGING & CHURNING WAVES */}
           <div
-            className="absolute left-0 right-0 w-full h-[200%] pointer-events-none transition-[top] duration-75 ease-out"
+            className="absolute left-0 right-0 bottom-0 pointer-events-none transition-[height] duration-75 ease-out"
             style={{
-              top: `${100 - progress * 1.5}%`,
+              height: `${Math.min(108, progress * 1.08)}%`,
+              opacity: progress > 0.5 ? 1 : 0,
             }}
           >
-            {/* Wave 1: Back Wave (Deep Sea Teal, rolling right-to-left with 110-unit amplitude) */}
-            <div className="absolute top-0 left-0 w-[200%] h-full opacity-60 animate-liquid-wave-rev pointer-events-none">
-              <svg viewBox="0 0 1200 500" preserveAspectRatio="none" className="w-full h-full">
-                <defs>
-                  <linearGradient id="danaseaWaveGrad1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0d9488" />
-                    <stop offset="60%" stopColor="#08515a" />
-                    <stop offset="100%" stopColor="#042f2e" />
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M 0 70 Q 150 -40 300 70 T 600 70 Q 750 -40 900 70 T 1200 70 V 500 H 0 Z"
-                  fill="url(#danaseaWaveGrad1)"
-                />
+            {/* Solid Water Body beneath waves (Starts below wave troughs to eliminate ANY flat horizontal line) */}
+            <div className="absolute inset-x-0 bottom-0 top-6 sm:top-8 bg-gradient-to-t from-cyan-950 via-teal-700 to-cyan-600" />
+
+            {/* Wave 1: Back Wave (Deep Teal, rolling right to left with massive amplitude) */}
+            <div className="absolute -top-12 sm:-top-16 left-0 w-[200%] h-20 sm:h-24 overflow-visible opacity-65 animate-liquid-wave-rev pointer-events-none">
+              <svg viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-full fill-teal-700">
+                <path d="M 0 50 Q 125 -10 250 50 T 500 50 Q 625 -10 750 50 T 1000 50 V 100 H 0 Z" />
               </svg>
             </div>
 
-            {/* Wave 2: Middle Wave (Ocean Cyan, rolling left-to-right in counter-phase with 110-unit amplitude) */}
-            <div className="absolute top-0 left-0 w-[200%] h-full opacity-75 animate-liquid-wave-mid pointer-events-none">
-              <svg viewBox="0 0 1200 500" preserveAspectRatio="none" className="w-full h-full">
-                <defs>
-                  <linearGradient id="danaseaWaveGrad2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#06b6d4" />
-                    <stop offset="50%" stopColor="#0284c7" />
-                    <stop offset="100%" stopColor="#08515a" />
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M 0 70 Q 150 180 300 70 T 600 70 Q 750 180 900 70 T 1200 70 V 500 H 0 Z"
-                  fill="url(#danaseaWaveGrad2)"
-                />
+            {/* Wave 2: Middle Wave (Ocean Cyan, rolling left to right in counter-phase) */}
+            <div className="absolute -top-10 sm:-top-14 left-0 w-[200%] h-18 sm:h-22 overflow-visible opacity-80 animate-liquid-wave-mid pointer-events-none">
+              <svg viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-full fill-cyan-600">
+                <path d="M 0 50 Q 125 110 250 50 T 500 50 Q 625 110 750 50 T 1000 50 V 100 H 0 Z" />
               </svg>
             </div>
 
-            {/* Wave 3: Front Wave (Vibrant Aqua with Glowing White Foam Crest & Spray, fast rolling) */}
-            <div className="absolute top-0 left-0 w-[200%] h-full opacity-95 animate-liquid-wave pointer-events-none">
-              <svg viewBox="0 0 1200 500" preserveAspectRatio="none" className="w-full h-full">
-                <defs>
-                  <linearGradient id="danaseaWaveGrad3" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#22d3ee" />
-                    <stop offset="40%" stopColor="#0891b2" />
-                    <stop offset="100%" stopColor="#0369a1" />
-                  </linearGradient>
-                </defs>
-                {/* Aqua Water Body */}
-                <path
-                  d="M 0 70 Q 75 -30 150 70 T 300 70 Q 375 -30 450 70 T 600 70 Q 675 -30 750 70 T 900 70 Q 975 -30 1050 70 T 1200 70 V 500 H 0 Z"
-                  fill="url(#danaseaWaveGrad3)"
-                />
+            {/* Wave 3: Front Wave (Bright Aqua with Dazzling White Foam Crest, fast rolling) */}
+            <div className="absolute -top-9 sm:-top-12 left-0 w-[200%] h-16 sm:h-20 overflow-visible opacity-95 animate-liquid-wave pointer-events-none">
+              <svg viewBox="0 0 1000 100" preserveAspectRatio="none" className="w-full h-full fill-cyan-400">
+                <path d="M 0 50 Q 62.5 -5 125 50 T 250 50 Q 312.5 -5 375 50 T 500 50 Q 562.5 -5 625 50 T 750 50 Q 812.5 -5 875 50 T 1000 50 V 100 H 0 Z" />
                 {/* Soft Cyan Water Spray Glow */}
                 <path
-                  d="M 0 70 Q 75 -30 150 70 T 300 70 Q 375 -30 450 70 T 600 70 Q 675 -30 750 70 T 900 70 Q 975 -30 1050 70 T 1200 70"
+                  d="M 0 50 Q 62.5 -5 125 50 T 250 50 Q 312.5 -5 375 50 T 500 50 Q 562.5 -5 625 50 T 750 50 Q 812.5 -5 875 50 T 1000 50"
                   fill="none"
                   stroke="#a5f3fc"
-                  strokeWidth="12"
+                  strokeWidth="8"
                   strokeLinecap="round"
-                  opacity="0.45"
+                  opacity="0.5"
                 />
-                {/* Dazzling White Foam Crest along the wave peaks */}
+                {/* Crisp White Foam Crest */}
                 <path
-                  d="M 0 70 Q 75 -30 150 70 T 300 70 Q 375 -30 450 70 T 600 70 Q 675 -30 750 70 T 900 70 Q 975 -30 1050 70 T 1200 70"
+                  d="M 0 50 Q 62.5 -5 125 50 T 250 50 Q 312.5 -5 375 50 T 500 50 Q 562.5 -5 625 50 T 750 50 Q 812.5 -5 875 50 T 1000 50"
                   fill="none"
-                  stroke="white"
-                  strokeWidth="6"
+                  stroke="#ffffff"
+                  strokeWidth="4"
                   strokeLinecap="round"
                   opacity="0.95"
                 />
@@ -176,21 +149,21 @@ export function PageLoader() {
 
             {/* Rising Sea Bubbles */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <span className="absolute left-[18%] top-[25%] w-3 h-3 rounded-full bg-white/80 animate-liquid-bubble-1 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
-              <span className="absolute left-[38%] top-[35%] w-2 h-2 rounded-full bg-white/90 animate-liquid-bubble-2 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
-              <span className="absolute left-[62%] top-[28%] w-3.5 h-3.5 rounded-full bg-white/70 animate-liquid-bubble-3 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
-              <span className="absolute left-[82%] top-[40%] w-2.5 h-2.5 rounded-full bg-white/85 animate-liquid-bubble-4 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
+              <span className="absolute left-[18%] bottom-2 w-3 h-3 rounded-full bg-white/80 animate-liquid-bubble-1 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
+              <span className="absolute left-[38%] bottom-3 w-2 h-2 rounded-full bg-white/90 animate-liquid-bubble-2 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
+              <span className="absolute left-[62%] bottom-2 w-3.5 h-3.5 rounded-full bg-white/70 animate-liquid-bubble-3 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
+              <span className="absolute left-[82%] bottom-4 w-2.5 h-2.5 rounded-full bg-white/85 animate-liquid-bubble-4 filter drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
             </div>
           </div>
         </div>
 
-        {/* Layer 3: Authentic Brand Logo detail - cleanly reveals as liquid reaches top */}
+        {/* Layer 3: Authentic Brand Logo detail - seamlessly revealed as water fills */}
         <img
           src="/images/danasea-logo.png"
           alt="DANASEA"
           className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none transition-opacity duration-300"
           style={{
-            opacity: progress >= 95 ? 1 : Math.max(0, (progress - 25) / 75) * 0.35,
+            opacity: progress >= 95 ? 1 : Math.max(0, (progress - 20) / 80) * 0.45,
           }}
         />
       </div>
