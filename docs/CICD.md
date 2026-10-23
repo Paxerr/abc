@@ -68,7 +68,9 @@ Kết quả phải chứa đúng digest và platform mong muốn. Action GitHub 
 
 ## SSH và GitHub settings
 
-GitHub secrets cần `TAILSCALE_AUTHKEY`, `SERVER_TAILSCALE_IP`, `SERVER_USER`, `SSH_PRIVATE_KEY`, `SSH_KNOWN_HOSTS`. Host key phải được đối chiếu fingerprint qua kênh tin cậy; không chỉ tin `ssh-keyscan`. Dùng key riêng cho CI.
+GitHub environment `production` cần hai secrets `TS_OAUTH_CLIENT_ID`, `TS_OAUTH_SECRET` từ Tailscale OAuth client. Chỉ cấp scope `Auth Keys: Write` cho `tag:ci`; không cấp quyền sửa policy, người dùng hay DNS. Các secrets `SERVER_TAILSCALE_IP`, `SERVER_USER`, `SSH_PRIVATE_KEY`, `SSH_KNOWN_HOSTS` có thể nằm ở environment hoặc repository. Host key phải được đối chiếu fingerprint qua kênh tin cậy; không chỉ tin `ssh-keyscan`. Dùng key riêng cho CI.
+
+Workflow kiểm tra các giá trị OAuth và đích Tailscale không rỗng mà không in secret, đăng ký runner với `tag:ci`, rồi kiểm tra kết nối tới `SERVER_TAILSCALE_IP` trước khi SSH. Workflow không dùng hoặc tự chuyển về `TAILSCALE_AUTHKEY`. Chỉ thu hồi authkey cũ và xoá secret cũ sau khi lần CD đầu tiên bằng OAuth thành công. Không ghi OAuth client secret vào source, log hay chat.
 
 Cài script theo source đã review:
 
@@ -84,7 +86,7 @@ command="/usr/local/bin/danasea-deploy",restrict ssh-ed25519 AAAA... github-acti
 
 Key quản trị cá nhân giữ SSH tunnel. Script chỉ chấp nhận `deploy <40-char sha>`, kiểm tra commit thuộc lịch sử origin/main và chạy preflight trước thao tác container. Sau khi script thay đổi cần cài lại bản root-owned; sửa file trong repo không tự cập nhật forced command đã cài.
 
-Tailscale ACL cần tách quyền quản trị và runner (`tag:ci` chỉ tới `tag:server:22`), giữ nodeAttrs cho Funnel. Merge policy vào cấu hình đang dùng, chạy policy tests rồi thử phiên SSH mới; không thay toàn bộ policy bằng mẫu allow-all.
+Tailscale policy cần tách quyền quản trị và runner: chỉ admin sở hữu `tag:ci`, runner chỉ được `tcp:22` tới server production. Đích có thể dùng host alias trỏ tới IP đã đối chiếu trong trang Machines; không gắn tag mới lên server chỉ để chuyển CI sang OAuth. Không giữ grant `src: ["*"]` tới mọi đích vì nó cũng cấp quyền rộng cho runner đã gắn tag. Giữ quyền thiết bị cá nhân và nodeAttrs cho Funnel, thêm policy tests chặn runner tới các cổng khác và máy cá nhân. Merge vào policy đang dùng, chạy tests rồi thử phiên SSH mới.
 
 ## Deploy và nghiệm thu
 
@@ -94,6 +96,8 @@ Deploy thủ công qua phiên quản trị sau khi chuẩn bị xong:
 /usr/local/bin/danasea-deploy deploy <sha-da-qua-ci>
 ```
 
-Script giữ backup database trước deploy và 7 bản gần nhất; image pull chỉ lấy nội dung đã cấu hình. Không tự sinh secret hoặc thay OS/firewall trong pipeline. Khi healthcheck thất bại, rollback source/image được thử; rollback không hoàn tác Flyway và không chuyển dữ liệu broker. Migration phải tương thích phiên bản ứng dụng trước.
+Script giữ backup database trước deploy và 7 bản gần nhất; image pull chỉ lấy nội dung đã cấu hình. Không tự sinh secret hoặc thay OS/firewall trong pipeline. Sau checkout, script chỉ đặt file cấu hình Nginx công khai thành mode 644 để UID của frontend đọc được; secret/private config vẫn được giữ quyền hạn chế.
+
+Khi healthcheck thất bại, script in trạng thái, log frontend/backend/Redis/RabbitMQ và chi tiết healthcheck. Manifest so sánh rollback được render vào thư mục tạm mode 700 rồi xoá khi kết thúc; không in các manifest chứa secret. Chỉ cho phép rollback tự động khi cấu hình PostgreSQL, Redis, RabbitMQ, mạng và volume giữa hai release không đổi. Rollback chỉ khởi động lại backend/frontend bằng `--no-deps`, không recreate hay hạ phiên bản các dịch vụ dữ liệu. Nếu cấu hình hạ tầng khác hoặc chưa xác minh được, script giữ bản hiện tại và yêu cầu phục hồi có kiểm soát. Không dùng Compose cũ để hạ Redis sau khi bản mới đã ghi RDB mới. Rollback cũng không hoàn tác Flyway; migration phải tương thích phiên bản ứng dụng trước.
 
 Sau deploy: xác nhận prod profile, DB role không đặc quyền, Redis/RabbitMQ authentication, OAuth AI thật, IP/HTTPS từ hai mạng khách, customer/vendor ownership, cổng public, SMTP/payment sandbox và giám sát. Chỉ sau nghiệm thu mới bật auto deploy. Backup ngoài máy tiếp tục là phạm vi vận hành riêng.

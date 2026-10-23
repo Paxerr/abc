@@ -158,6 +158,12 @@ def initialize_database(root, values, container):
     print('Runtime database role initialized; backend has no migration/DDL role.')
 
 
+def validate_frontend_config(path):
+    mode = path.stat().st_mode
+    if not mode & 0o004 or mode & 0o022:
+        raise ValueError('Public Nginx config must be readable by its container user and not group/other writable (use chmod 644).')
+
+
 def check(root, values):
     for key in SECRETS:
         if placeholder(values[key]) or len(values[key]) < 32:
@@ -173,6 +179,7 @@ def check(root, values):
     for path in [config, root / 'private/rabbitmq/definitions.json', root / 'private/rabbitmq/rabbitmq.conf', root / 'frontend/nginx.prod.conf']:
         if not path.is_file():
             raise ValueError('Required deployment file missing: ' + str(path.relative_to(root)))
+    validate_frontend_config(root / 'frontend/nginx.prod.conf')
     if config.stat().st_mode & 0o077:
         raise ValueError('Private proxy configuration must have mode 600.')
     try:

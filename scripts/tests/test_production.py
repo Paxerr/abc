@@ -5,6 +5,7 @@ from pathlib import Path
 import secrets
 import shlex
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -103,6 +104,17 @@ class ProductionPreparationTest(unittest.TestCase):
             [],
         )
 
+    def test_frontend_config_rejects_private_or_world_writable_permissions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / 'nginx.prod.conf'
+            config.write_text('public Nginx configuration')
+            for mode in [0o600, 0o666]:
+                config.chmod(mode)
+                with self.assertRaises(ValueError):
+                    self.module.validate_frontend_config(config)
+            config.chmod(0o644)
+            self.module.validate_frontend_config(config)
+
     def test_database_role_cannot_be_the_migration_owner(self):
         with self.assertRaises(ValueError):
             self.module.runtime_role_sql({'POSTGRES_APP_USER': 'owner', 'POSTGRES_USER': 'owner', 'POSTGRES_DB': 'app', 'POSTGRES_APP_PASSWORD': secrets.token_hex(32)})
@@ -113,6 +125,90 @@ class ProductionPreparationTest(unittest.TestCase):
 
 
 class DeploymentGuardTest(unittest.TestCase):
+    def simulate_failed_deploy(self, infrastructure_changed):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary = root / 'bin'
+            binary.mkdir()
+            (root / 'frontend').mkdir()
+            (root / '.deploy-state').write_text('b' * 40)
+            (root / '.env').write_text('fixture')
+            (root / '.env').chmod(0o600)
+            log = root / 'calls.jsonl'
+            mock = '''import json, os, pathlib, sys
+name = pathlib.Path(sys.argv[0]).name
+args = sys.argv[1:]
+root = pathlib.Path(os.environ['APP_DIR'])
+log = pathlib.Path(os.environ['DANASEA_TEST_CALLS'])
+def record(value):
+    with log.open('a') as output:
+        output.write(json.dumps(value) + '\\n')
+record([name, *args])
+if name == 'git' and args[0] == 'checkout':
+    path = root / 'frontend/nginx.prod.conf'
+    path.write_text('fixture')
+    path.chmod(0o600)
+if name == 'git' and args[0] == 'show':
+    print('fixture compose')
+if name == 'python3':
+    if args[0] == 'scripts/production.py':
+        record(['preflight-modes', (root / 'frontend/nginx.prod.conf').stat().st_mode & 0o777,
+                (root / '.env').stat().st_mode & 0o777])
+    else:
+        os.execv(sys.executable, [sys.executable, *args])
+if name == 'docker':
+    if 'config' in args:
+        previous = any('rollback-source.yml' in arg for arg in args)
+        redis = 'redis:7.0-alpine' if previous and os.environ['DANASEA_TEST_INFRA_CHANGED'] == '1' else 'redis:7.4-alpine'
+        print(json.dumps({'services': {'postgres': {'image': 'postgres:17-alpine'},
+              'redis': {'image': redis}, 'rabbitmq': {'image': 'rabbitmq:4.3-alpine'}},
+              'networks': {}, 'volumes': {}}))
+    if 'up' in args:
+        calls = [json.loads(line) for line in log.read_text().splitlines()]
+        count = sum(row[0] == 'docker' and 'up' in row for row in calls)
+        sys.exit(1 if count == 1 else 0)
+    if 'logs' in args:
+        print('Using generated security password: fake-diagnostic-password')
+    if 'inspect' in args:
+        print('[]')
+'''
+            for name in ['git', 'flock', 'python3', 'docker']:
+                path = binary / name
+                path.write_text('#!' + sys.executable + '\n' + mock)
+                path.chmod(0o700)
+            environment = {
+                **os.environ, 'APP_DIR': str(root),
+                'PATH': str(binary) + ':' + os.environ['PATH'],
+                'SSH_ORIGINAL_COMMAND': 'deploy ' + 'a' * 40,
+                'DANASEA_TEST_CALLS': str(log),
+                'DANASEA_TEST_INFRA_CHANGED': '1' if infrastructure_changed else '0',
+            }
+            result = subprocess.run(['bash', str(ROOT / 'scripts/deploy.sh')],
+                                    env=environment, capture_output=True, text=True)
+            calls = [json.loads(line) for line in log.read_text().splitlines()]
+            return result, calls
+
+    def test_nginx_config_is_readable_without_relaxing_secret_permissions(self):
+        _, calls = self.simulate_failed_deploy(False)
+        self.assertIn(['preflight-modes', 0o644, 0o600], calls)
+
+    def test_infrastructure_change_blocks_automatic_rollback(self):
+        result, calls = self.simulate_failed_deploy(True)
+        updates = [call for call in calls if call[0] == 'docker' and 'up' in call]
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(len(updates), 1)
+        self.assertIn('Rollback blocked', result.stdout)
+        self.assertFalse(any(call[0] == 'git' and 'checkout' in call and 'b' * 40 in call for call in calls))
+
+    def test_compatible_rollback_only_restarts_applications_and_redacts_diagnostics(self):
+        result, calls = self.simulate_failed_deploy(False)
+        updates = [call for call in calls if call[0] == 'docker' and 'up' in call]
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(len(updates), 2)
+        self.assertIn('--no-deps', updates[1])
+        self.assertEqual(updates[1][-2:], ['backend', 'frontend'])
+        self.assertNotIn('fake-diagnostic-password', result.stdout)
+
     def test_private_proxy_addresses_match_compose_and_backend(self):
         with tempfile.TemporaryDirectory() as directory:
             envfile = Path(directory) / '.env'

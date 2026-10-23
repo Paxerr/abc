@@ -44,14 +44,39 @@ if [[ -n "$prev_tag" && ! "$prev_tag" =~ ^[0-9a-f]{40}$ ]]; then
 fi
 log "Deploying ${tag:0:7} (previous: ${prev_tag:0:7})"
 
+prepare_public_config() {
+  # Only this tracked, non-secret file is mounted into a container with another UID.
+  if [[ -f frontend/nginx.prod.conf ]]; then
+    chmod 644 frontend/nginx.prod.conf
+  fi
+}
+
+diagnostics() {
+  compose "$1" ps --all || true
+  compose "$1" logs --tail 50 frontend redis rabbitmq backend 2>&1 \
+    | sed -E 's/(Using generated security password: )[[:alnum:]-]+/\1[REDACTED]/g' || true
+  docker inspect --format '{{.Name}} {{json .State.Health}}' \
+    danasea-frontend danasea-backend danasea-redis danasea-rabbitmq cli-proxy-api 2>/dev/null || true
+}
+
+rollback_ready=false
 rollback() {
   if [[ -z "$prev_tag" ]]; then
     log "No previous release to roll back to"
     return
   fi
+  if [[ "$rollback_ready" != true ]]; then
+    log "Rollback blocked: infrastructure compatibility is unverified or changed; keep current data services and recover forward"
+    return
+  fi
   log "Rolling back to ${prev_tag:0:7}"
   git checkout --quiet --force --detach "$prev_tag"
-  compose "$prev_tag" up -d --wait --wait-timeout "$WAIT_TIMEOUT" || log "Rollback failed, manual action required"
+  prepare_public_config
+  # Never downgrade or recreate databases/brokers during application rollback.
+  if ! compose "$prev_tag" up -d --no-deps --wait --wait-timeout "$WAIT_TIMEOUT" backend frontend; then
+    log "Application rollback failed, manual action required"
+    diagnostics "$prev_tag"
+  fi
 }
 
 # --- 1. Sync compose/config files to the exact commit being deployed ---
@@ -59,9 +84,45 @@ git fetch --quiet origin main
 git cat-file -e "${tag}^{commit}"
 git merge-base --is-ancestor "$tag" origin/main || { echo "Release is not on origin/main" >&2; exit 1; }
 git checkout --quiet --force --detach "$tag"
+prepare_public_config
 
 # Fail before changing running services when private files, keys or the subnet are not ready.
 python3 scripts/production.py check
+
+# Render private manifests without checking out the previous release. Comparing full
+# data-service/network configs also catches changes to credentials and storage paths.
+runtime_dir="$(mktemp -d "${TMPDIR:-/tmp}/danasea-deploy.XXXXXX")"
+trap 'rm -rf -- "$runtime_dir"' EXIT
+if [[ -n "$prev_tag" ]] \
+  && git show "$prev_tag:$COMPOSE_FILE" > "$runtime_dir/rollback-source.yml" \
+  && IMAGE_TAG="$prev_tag" docker compose --project-directory "$APP_DIR" \
+    -f "$runtime_dir/rollback-source.yml" config --format json > "$runtime_dir/previous.json" 2>/dev/null \
+  && compose "$tag" config --format json > "$runtime_dir/current.json" 2>/dev/null; then
+  if python3 - "$runtime_dir/previous.json" "$runtime_dir/current.json" <<'PY'
+import json
+import sys
+
+try:
+    with open(sys.argv[1]) as source:
+        previous = json.load(source)
+    with open(sys.argv[2]) as source:
+        current = json.load(source)
+    services = ('postgres', 'redis', 'rabbitmq')
+    compatible = all(previous['services'].get(name) == current['services'].get(name)
+                     for name in services)
+    compatible = compatible and all(previous.get(key) == current.get(key)
+                                    for key in ('networks', 'volumes'))
+except (OSError, ValueError, KeyError, TypeError):
+    compatible = False
+sys.exit(0 if compatible else 1)
+PY
+  then
+    rollback_ready=true
+  fi
+fi
+if [[ "$rollback_ready" != true && -n "$prev_tag" ]]; then
+  log "Automatic rollback disabled for this release: data services or network/storage configuration differ"
+fi
 
 # --- 2. Backup database before touching anything ---
 if [[ -n "$(compose "$tag" ps -q postgres 2>/dev/null)" ]]; then
@@ -80,7 +141,7 @@ compose "$tag" pull
 log "Starting containers"
 if ! compose "$tag" up -d --wait --wait-timeout "$WAIT_TIMEOUT" --remove-orphans; then
   log "Deploy failed healthchecks"
-  compose "$tag" logs --tail 50 backend || true
+  diagnostics "$tag"
   rollback
   exit 1
 fi
