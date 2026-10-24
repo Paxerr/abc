@@ -125,7 +125,9 @@
 - [x] GET /api/vendor/documents
 - [x] GET /api/admin/vendors?status=
 - [x] GET /api/admin/vendors/{id} (trả kèm toàn bộ document để Admin đọc)
-- [x] PATCH /api/admin/vendors/{id}/approve — Rule đã chốt: Admin đọc toàn bộ document trong hồ sơ, ấn Approve nếu thỏa mãn (không approve từng document riêng lẻ)
+- [x] PATCH /api/admin/vendors/{vendorId}/documents/{documentId}/approve — Admin xét duyệt từng VendorDocument PENDING; lưu reviewer/thời điểm và audit cùng transaction.
+- [x] PATCH /api/admin/vendors/{vendorId}/documents/{documentId}/reject — body `reason` bắt buộc, tối đa 2000 ký tự; lý do lưu trong audit log. Duyệt lặp hoặc đổi quyết định sau review trả 409.
+- [x] PATCH /api/admin/vendors/{id}/approve — Chỉ duyệt Vendor PENDING khi có BUSINESS_LICENSE và SAFETY_CERT đã APPROVED; review document không tự duyệt Vendor. Contract từng document được hoàn thiện theo phạm vi phê duyệt ngày 24/10/2026.
 - [x] PATCH /api/admin/vendors/{id}/reject
 
 ### Vendor Public Profile — API
@@ -140,12 +142,13 @@
 - [x] ApproveVendorUseCaseTest / RejectVendorUseCaseTest
 - [x] Test approve khi vendor không ở trạng thái PENDING → chặn
 - [x] Test GET /api/admin/vendors/{id} trả đủ danh sách document cho Admin đọc trước khi approve
+- [x] VendorDocumentCategoryHttpIntegrationTest — HTTP thật, JWT từ login thật và PostgreSQL Testcontainers V37: approve/reject, quan hệ Vendor/Document, 401/403/404/409, lý do, audit/rollback/concurrent review và gate duyệt Vendor. Chỉ chứng minh workflow trên fixture cách ly, không chứng minh giấy phép SAMPLE hợp lệ.
 
 ### Categories — API
 - [x] GET /api/categories
 - [x] GET /api/admin/categories
 - [x] POST /api/admin/categories
-- [x] PATCH /api/admin/categories/{id}
+- [x] PATCH /api/admin/categories/{id} — optional `isActive`: bật/tắt/kích hoạt lại; absent/null giữ nguyên. Tắt vẫn bị chặn nếu có Service PUBLISHED, giống route deactivate.
 - [x] PATCH /api/admin/categories/{id}/deactivate
 
 ### Categories — Test
@@ -154,6 +157,7 @@
 - [x] DeactivateCategoryUseCaseTest (chặn khi có service active)
 - [x] CategoryHierarchyAdversarialUseCaseTest
 - [x] CategoryDeactivationAndBusinessConstraintUseCaseTest
+- [x] VendorDocumentCategoryHttpIntegrationTest — Category inactive/active/reactivate, 401/403/404, guard 409 và SELECT độc lập xác nhận trạng thái/các field khác, gồm `requires_safety_cert`, được bảo toàn.
 
 ### Vendor Services — API
 - [x] POST /api/vendor/services

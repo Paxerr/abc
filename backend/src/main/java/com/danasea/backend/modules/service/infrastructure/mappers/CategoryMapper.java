@@ -24,6 +24,7 @@ public class CategoryMapper {
         domain.setParentId(entity.getParentId());
         domain.setIconUrl(entity.getIconUrl());
         domain.setIsActive(entity.getIsActive());
+        domain.setRequiresSafetyCert(entity.getRequiresSafetyCert());
         domain.setCreatedAt(entity.getCreatedAt());
         domain.setUpdatedAt(entity.getUpdatedAt());
         return domain;
@@ -50,6 +51,7 @@ public class CategoryMapper {
         entity.setParentId(domain.getParentId());
         entity.setIconUrl(domain.getIconUrl());
         entity.setIsActive(domain.getIsActive());
+        entity.setRequiresSafetyCert(Boolean.TRUE.equals(domain.getRequiresSafetyCert()));
         entity.setCreatedAt(domain.getCreatedAt());
         entity.setUpdatedAt(domain.getUpdatedAt());
         return entity;

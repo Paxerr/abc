@@ -179,7 +179,7 @@ class CategoryDeactivationAndBusinessConstraintUseCaseTest {
         void setUp() {
             categoryRepositoryPort = mock(CategoryRepositoryPort.class);
             createUseCase = new CreateCategoryUseCase(categoryRepositoryPort);
-            updateUseCase = new UpdateCategoryUseCase(categoryRepositoryPort);
+            updateUseCase = new UpdateCategoryUseCase(categoryRepositoryPort, mock(ActiveServiceCheckPort.class));
         }
 
         @Test
@@ -554,7 +554,7 @@ class CategoryDeactivationAndBusinessConstraintUseCaseTest {
             Category updated = Category.builder().id(id).name("Tours Updated").slug("tours").isActive(true).build();
             CategoryResponse responseDto = new CategoryResponse(id, "Tours Updated", null, "tours", null, null, true, null, null);
 
-            when(updateUseCase.execute(id, "Tours Updated", null, null, null, null)).thenReturn(updated);
+            when(updateUseCase.execute(id, new UpdateCategoryCommand("Tours Updated", null, null, null, null))).thenReturn(updated);
             when(categoryMapper.toResponse(updated)).thenReturn(responseDto);
 
             ResponseEntity<CategoryResponse> response = controller.updateCategory(id, request);
@@ -562,7 +562,7 @@ class CategoryDeactivationAndBusinessConstraintUseCaseTest {
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals("Tours Updated", response.getBody().name());
-            verify(updateUseCase).execute(id, "Tours Updated", null, null, null, null);
+            verify(updateUseCase).execute(id, new UpdateCategoryCommand("Tours Updated", null, null, null, null));
         }
     }
 }
