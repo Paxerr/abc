@@ -51,7 +51,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 /** Real HTTP/JWT + PostgreSQL; only disposable Testcontainers resources are used. */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-        "spring.flyway.enabled=true", "spring.flyway.target=37",
+        "spring.flyway.enabled=true",
         "spring.jpa.hibernate.ddl-auto=validate",
         "spring.autoconfigure.exclude=org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration",
         "logging.level.root=WARN", "logging.level.org.springframework=ERROR",
@@ -84,15 +84,51 @@ class VendorDocumentCategoryHttpIntegrationTest extends BaseSecurityIntegrationT
     UUID categoryId;
 
     @BeforeAll void authenticateOnIsolatedDatabase() throws Exception {
+        // 1. Verify isolated test database (never target production 'danasea' database)
         assertThat(jdbc.queryForObject("SELECT current_database()", String.class)).isEqualTo("testdb");
-        assertThat(jdbc.queryForObject("SELECT max(version::integer) FROM flyway_schema_history WHERE success", Integer.class))
-                .isEqualTo(37);
+        assertThat(jdbc.queryForObject("SELECT current_schema()", String.class)).isEqualTo("public");
+
+        // 2. Verify migration V37 applied successfully
+        Integer v37Count = jdbc.queryForObject(
+                "SELECT count(*) FROM flyway_schema_history WHERE version = '37' AND success = true", Integer.class);
+        assertThat(v37Count).isEqualTo(1);
+
+        // 3. Verify latest migration is at least V37 and no migrations failed (compatible with V37 and V38)
+        Integer latestVersion = jdbc.queryForObject(
+                "SELECT max(version::integer) FROM flyway_schema_history WHERE success = true", Integer.class);
+        assertThat(latestVersion).isGreaterThanOrEqualTo(37);
+        Integer failedCount = jdbc.queryForObject(
+                "SELECT count(*) FROM flyway_schema_history WHERE success = false", Integer.class);
+        assertThat(failedCount).isZero();
+
+        // 4. Verify required schema for both VendorDocument and Category features exists
+        Integer categoryColumns = jdbc.queryForObject("""
+                SELECT count(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'categories'
+                  AND column_name IN ('is_active', 'requires_safety_cert')
+                """, Integer.class);
+        assertThat(categoryColumns).isEqualTo(2);
+
+        Integer documentColumns = jdbc.queryForObject("""
+                SELECT count(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'vendor_documents'
+                  AND column_name IN ('status', 'file_url', 'doc_type', 'vendor_id')
+                """, Integer.class);
+        assertThat(documentColumns).isEqualTo(4);
+
+        Integer auditColumns = jdbc.queryForObject("""
+                SELECT count(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'audit_logs'
+                  AND column_name IN ('action', 'actor_user_id', 'entity_id', 'entity_type', 'metadata')
+                """, Integer.class);
+        assertThat(auditColumns).isEqualTo(5);
+
         Files.createDirectories(evidence.getParent());
         Files.writeString(evidence, "");
         // Other suites may enable framework DEBUG globally; never log login DTOs or token responses.
         LoggingSystem.get(getClass().getClassLoader()).setLogLevel("org.springframework.web", LogLevel.WARN);
         Files.writeString(evidence, json.writeValueAsString(Map.of("environment", Map.of(
-                "httpBase", base(), "database", "testdb", "schema", "public", "flyway", 37,
+                "httpBase", base(), "database", "testdb", "schema", "public", "flyway", latestVersion,
                 "postgresql", jdbc.queryForObject("SELECT version()", String.class),
                 "isolated", true))) + "\n", StandardOpenOption.APPEND);
         var admin = user(Role.ADMIN);
