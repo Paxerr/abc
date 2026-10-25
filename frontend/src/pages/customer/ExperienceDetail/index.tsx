@@ -454,9 +454,13 @@ export function ExperienceDetail() {
                   ))}
                 </div>
 
-                {/* Zoom Hint Icon */}
-                <div className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/50 hover:bg-black/75 backdrop-blur-xs border border-white/10 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none shadow-xs">
-                  <span className="material-symbols-outlined text-[16px]">zoom_in</span>
+                {/* Zoom Hint Icon - Slim & Elegant SVG */}
+                <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-black/40 backdrop-blur-xs border border-white/15 text-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none shadow-xs">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="10.5" cy="10.5" r="6.5" strokeWidth="1.25" />
+                    <path d="M15.5 15.5L20 20" strokeWidth="1.25" strokeLinecap="round" />
+                    <path d="M10.5 7.5v6M7.5 10.5h6" strokeWidth="1.25" strokeLinecap="round" />
+                  </svg>
                 </div>
 
                 {/* Previous Button */}
@@ -534,8 +538,14 @@ export function ExperienceDetail() {
                         alt={`${service.name} - ${idx + 1}`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                       />
-                      <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/25 transition-colors flex items-center justify-center">
-                        <span className="material-symbols-outlined text-white text-[22px] opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md">zoom_in</span>
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-xs border border-white/15 text-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-xs">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="10.5" cy="10.5" r="6.5" strokeWidth="1.25" />
+                            <path d="M15.5 15.5L20 20" strokeWidth="1.25" strokeLinecap="round" />
+                            <path d="M10.5 7.5v6M7.5 10.5h6" strokeWidth="1.25" strokeLinecap="round" />
+                          </svg>
+                        </div>
                       </div>
                       {isCurrentActive && (
                         <div className="absolute inset-0 bg-cyan-900/10 pointer-events-none" />
