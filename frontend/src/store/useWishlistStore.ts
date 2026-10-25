@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 interface WishlistState {
   wishlistIds: string[];
   toastMessage: string | null;
+  toastTimestamp: number;
   toggleWishlist: (serviceId: string, serviceName?: string) => boolean;
   isInWishlist: (serviceId: string) => boolean;
   removeFromWishlist: (serviceId: string, serviceName?: string) => void;
@@ -16,6 +17,7 @@ export const useWishlistStore = create<WishlistState>()(
       // Initially seed with first 3 popular tours so the wishlist is not completely empty on first load
       wishlistIds: ['serv-01', 'serv-02', 'serv-03'],
       toastMessage: null,
+      toastTimestamp: 0,
 
       isInWishlist: (serviceId: string) => {
         return get().wishlistIds.includes(serviceId);
@@ -27,13 +29,15 @@ export const useWishlistStore = create<WishlistState>()(
         if (exists) {
           set({
             wishlistIds: current.filter((id) => id !== serviceId),
-            toastMessage: `Đã bỏ lưu "${serviceName || 'trải nghiệm'}" khỏi danh sách yêu thích!`,
+            toastMessage: "Đã bỏ lưu khỏi yêu thích!",
+            toastTimestamp: Date.now(),
           });
           return false;
         } else {
           set({
             wishlistIds: [...current, serviceId],
-            toastMessage: `Đã lưu "${serviceName || 'trải nghiệm'}" vào danh sách yêu thích!`,
+            toastMessage: "Đã lưu vào yêu thích!",
+            toastTimestamp: Date.now(),
           });
           return true;
         }
@@ -42,7 +46,8 @@ export const useWishlistStore = create<WishlistState>()(
       removeFromWishlist: (serviceId: string, serviceName?: string) => {
         set({
           wishlistIds: get().wishlistIds.filter((id) => id !== serviceId),
-          toastMessage: `Đã bỏ lưu "${serviceName || 'trải nghiệm'}" khỏi danh sách yêu thích!`,
+          toastMessage: "Đã bỏ lưu khỏi yêu thích!",
+            toastTimestamp: Date.now(),
         });
       },
 

@@ -36,7 +36,6 @@ const IMAGE_SCENES: ImageScene[] = [
 
 export const CinematicSceneBackdrop: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const progressBarRef = useRef<HTMLDivElement | null>(null);
   const [activeSceneId, setActiveSceneId] = useState<string>('hero');
 
   // 1. Mouse Parallax (Stratum Drift)
@@ -98,34 +97,6 @@ export const CinematicSceneBackdrop: React.FC = () => {
       document.removeEventListener('pointerleave', handlePointerLeave);
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, []);
-
-  // 2. High-performance direct scroll progress bar (No React state re-rendering!)
-  useEffect(() => {
-    let ticking = false;
-
-    const updateScrollProgress = () => {
-      const scrollY = window.scrollY || document.documentElement.scrollTop;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = Math.min(Math.max(scrollY / Math.max(docHeight, 1), 0), 1);
-
-      if (progressBarRef.current) {
-        progressBarRef.current.style.transform = `scaleX(${progress.toFixed(4)})`;
-      }
-      ticking = false;
-    };
-
-    const onScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(updateScrollProgress);
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    updateScrollProgress();
-
-    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   // 3. Scene switching driven by scroll position (Symmetric Up & Down, and Instant on Scroll-to-Top)
@@ -195,12 +166,6 @@ export const CinematicSceneBackdrop: React.FC = () => {
 
   return (
     <>
-      {/* Top Scroll Progress Line (Direct DOM transform, zero FPS drop) */}
-      <div
-        ref={progressBarRef}
-        className="fixed top-0 left-0 right-0 h-[2.5px] z-[60] bg-gradient-to-r from-cyan-400 via-teal-300 to-amber-300 origin-left pointer-events-none transition-transform duration-75 ease-out"
-        style={{ transform: 'scaleX(0)' }}
-      />
 
       {/* Full-Page Background Container */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-slate-950 select-none">
@@ -232,17 +197,6 @@ export const CinematicSceneBackdrop: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/40 via-slate-950/20 to-slate-950/60 pointer-events-none transition-opacity duration-700" />
       </div>
 
-      {/* HUD Floating Scene Indicator Badge */}
-      <div className="fixed bottom-6 left-6 z-40 pointer-events-none hidden md:flex items-center gap-3 px-4 py-2 rounded-full bg-slate-950/70 backdrop-blur-md border border-white/20 text-white shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-all duration-500">
-        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-        <span className="font-mono text-xs font-bold text-cyan-300 tracking-wider">
-          {activeScene.badge}
-        </span>
-        <span className="text-white/40 text-xs">|</span>
-        <span className="text-xs font-semibold tracking-wide text-slate-100">
-          {activeScene.label}
-        </span>
-      </div>
     </>
   );
 };

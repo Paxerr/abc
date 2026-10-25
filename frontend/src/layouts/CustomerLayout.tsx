@@ -16,16 +16,40 @@ export function CustomerLayout() {
   const location = useLocation();
   const [prevPath, setPrevPath] = useState(location.pathname);
   const [animationClass, setAnimationClass] = useState("animate-fade-in-up");
-  const { toastMessage, clearToast } = useWishlistStore();
+  const { toastMessage, toastTimestamp, clearToast } = useWishlistStore();
+  const [currentToast, setCurrentToast] = useState<{ text: string; id: number } | null>(null);
+  const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    if (toastMessage) {
-      const timer = setTimeout(() => {
+    if (toastMessage && toastTimestamp) {
+      setIsExiting(false);
+      setCurrentToast({ text: toastMessage, id: toastTimestamp });
+
+      // After 2.5s, trigger exit slide-out animation to the right
+      const exitTimer = setTimeout(() => {
+        setIsExiting(true);
+      }, 2500);
+
+      // After 2.5s + 380ms = 2880ms, clean up
+      const clearTimer = setTimeout(() => {
         clearToast();
-      }, 3000);
-      return () => clearTimeout(timer);
+        setCurrentToast(null);
+      }, 2880);
+
+      return () => {
+        clearTimeout(exitTimer);
+        clearTimeout(clearTimer);
+      };
     }
-  }, [toastMessage, clearToast]);
+  }, [toastMessage, toastTimestamp, clearToast]);
+
+  const handleCloseToast = () => {
+    setIsExiting(true);
+    setTimeout(() => {
+      clearToast();
+      setCurrentToast(null);
+    }, 350);
+  };
 
   if (location.pathname !== prevPath) {
     const prevOrder = PAGE_ORDER[prevPath] ?? 0;
@@ -70,23 +94,28 @@ export function CustomerLayout() {
       </div>
       {!isAuthPage && <Footer />}
 
-      {/* Global Floating Wishlist Toast Notification (Chuyển lên góc phải trên, tone màu nền cyan chủ đạo) */}
-      {toastMessage && (
-        <div className="fixed top-24 right-6 sm:top-24 sm:right-8 z-[99999] bg-gradient-to-r from-cyan-600 via-cyan-700 to-teal-700 text-white px-5 py-3.5 rounded-2xl shadow-[0_12px_32px_-4px_rgba(6,182,212,0.4),0_4px_12px_rgba(0,0,0,0.1)] flex items-center gap-3 backdrop-blur-md border border-cyan-300/40 animate-fade-in-down">
-          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+      {/* Global Floating Wishlist Toast Notification (Carousel slide: right-to-left in, left-to-right out) */}
+      {currentToast && (
+        <div
+          key={currentToast.id}
+          className={`fixed top-24 right-5 sm:top-24 sm:right-8 z-[99999] bg-emerald-500/35 backdrop-blur-xl text-white px-4 py-2.5 rounded-2xl shadow-[0_12px_36px_-4px_rgba(5,150,105,0.35)] flex items-center gap-3 border border-emerald-400/40 transform-gpu pointer-events-auto ${
+            isExiting ? 'animate-toast-slide-out' : 'animate-toast-slide-in'
+          }`}
+        >
+          <div className="w-7 h-7 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
             <span
-              className="material-symbols-outlined text-rose-300 text-[20px]"
+              className="material-symbols-outlined text-rose-400 text-[18px]"
               style={{ fontVariationSettings: "'FILL' 1" }}
             >
               favorite
             </span>
           </div>
-          <span className="font-medium text-sm text-white max-w-xs sm:max-w-md drop-shadow-sm">
-            {toastMessage}
+          <span className="font-semibold text-xs sm:text-sm text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] whitespace-nowrap pr-1">
+            {currentToast.text}
           </span>
           <button
-            onClick={clearToast}
-            className="ml-2 p-1 rounded-full hover:bg-white/20 text-white/80 hover:text-white cursor-pointer transition-colors"
+            onClick={handleCloseToast}
+            className="ml-auto p-1 rounded-full text-white/70 hover:text-white hover:bg-white/20 cursor-pointer transition-colors"
             aria-label="Close toast"
           >
             <span className="material-symbols-outlined text-[16px]">close</span>

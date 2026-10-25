@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useCartStore } from "../../../store/useCartStore";
+import { useLoadingStore } from "../../../store/useLoadingStore";
 import { FEATURED_SERVICES, MOCK_IMAGES } from "../../../mockData";
 import { useState, useEffect } from "react";
 
@@ -59,10 +60,15 @@ export function Checkout() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  const { triggerDemoLoading } = useLoadingStore();
+
   const handlePayment = () => {
-    // Navigate to payment result and clear cart
-    clearCart();
-    navigate('/checkout/result');
+    // Seamless liquid wave transition for payment processing & QR ticket issuance
+    triggerDemoLoading(2000, "Đang xử lý giao dịch vé tour...", "Hệ thống đang khóa chỗ cano và sinh mã vé QR");
+    setTimeout(() => {
+      clearCart();
+      navigate('/checkout/result');
+    }, 1800);
   };
 
   if (items.length === 0) return null;
@@ -140,9 +146,7 @@ export function Checkout() {
                   </p>
                 </div>
               </div>
-              <span className="px-space-sm py-1 rounded-full bg-surface-container-lowest font-label-sm text-label-sm text-primary font-bold shadow-sm whitespace-nowrap">
-                An toàn
-              </span>
+
             </div>
 
             {/* Section 1: Customer Information */}

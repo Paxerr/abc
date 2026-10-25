@@ -143,9 +143,6 @@ export const GuestGalleryMarquee: React.FC = () => {
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] drop-shadow-[0_8px_20px_rgba(0,0,0,0.7)]">
           {t.gallery.title}
         </h2>
-        <p className="text-xs sm:text-sm text-slate-100 mt-1.5 max-w-xl mx-auto font-medium drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]">
-          {language === 'en' ? 'Authentic feedback and moments shared by our ocean explorers' : 'Hình ảnh và cảm nhận thực tế từ những du khách đã đồng hành cùng DANASEA'}
-        </p>
       </div>
 
       {/* Mask container: Real CSS mask gradient instead of opaque fake color blocks */}

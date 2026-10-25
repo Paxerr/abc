@@ -1,11 +1,25 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { COASTAL_BAYS } from '../../data/customerHomeData';
 import type { CoastalBayData } from '../../data/customerHomeData';
 import { useLanguageStore } from '../../store/useLanguageStore';
 
 export const ExpandingBaysSection: React.FC = () => {
   const { language, t } = useLanguageStore();
+  const navigate = useNavigate();
+
+  const handleNavigate = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+      (document as any).startViewTransition(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        navigate('/search?category=bays');
+      });
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      navigate('/search?category=bays');
+    }
+  };
   const sectionRef = useRef<HTMLDivElement>(null);
   const [isRevealed, setIsRevealed] = useState(false);
   const [hoveredBayId, setHoveredBayId] = useState<string | null>(null);
@@ -36,19 +50,15 @@ export const ExpandingBaysSection: React.FC = () => {
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] drop-shadow-[0_8px_20px_rgba(0,0,0,0.7)]">
             {t.panels.title}
           </h2>
-          <p className="text-xs sm:text-sm text-slate-100 mt-1 max-w-xl font-medium drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]">
-            {language === 'en'
-              ? 'Discover four pristine coastal bays, each offering unique tides, crystal visibility and untouched marine life.'
-              : 'Khám phá 4 vùng vịnh biển hoang sơ tuyệt mỹ, với điều kiện sóng êm, làn nước trong vắt và hệ sinh thái san hô phong phú.'}
-          </p>
         </div>
 
         <Link
           to="/search?category=bays"
-          className="text-xs font-bold text-cyan-300 hover:text-white transition-colors hidden sm:inline-flex items-center gap-1 shrink-0 drop-shadow-md"
+          onClick={handleNavigate}
+          className="group/all text-xs sm:text-sm font-bold text-cyan-300 hover:text-white transition-all inline-flex items-center gap-1.5 shrink-0 drop-shadow-md cursor-pointer hover:translate-x-0.5"
         >
           <span>{t.sections.viewAll}</span>
-          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+          <span className="material-symbols-outlined text-[16px] transition-transform duration-200 group-hover/all:translate-x-1.5">arrow_forward</span>
         </Link>
       </div>
 
@@ -87,11 +97,11 @@ export const ExpandingBaysSection: React.FC = () => {
               />
 
               {/* Gradient Scrim */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-950/15 to-transparent" />
 
               {/* Top Floating Badge */}
               <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-                <span className="px-2.5 py-1 rounded-full bg-slate-950/70 backdrop-blur-sm border border-white/20 text-cyan-300 text-[11px] font-medium flex items-center gap-1 shadow-xs">
+                <span className="px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm border border-white/60 text-cyan-800 font-bold text-[11px] font-medium flex items-center gap-1 shadow-xs">
                   <span className="material-symbols-outlined text-[13px]">schedule</span>
                   <span>{displayBestTime}</span>
                 </span>

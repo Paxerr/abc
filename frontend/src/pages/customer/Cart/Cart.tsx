@@ -51,24 +51,7 @@ export function Cart() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-start">
           {/* Left Column: Experiences List */}
           <div className="lg:col-span-8 flex flex-col gap-space-lg">
-            {/* Marine Weather Brief Banner */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm p-space-md rounded-lg bg-secondary/10 text-on-secondary-container">
-              <div className="flex items-center gap-space-sm">
-                <span className="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center text-secondary shadow-sm flex-shrink-0">
-                  <span className="material-symbols-outlined text-[22px]">waves</span>
-                </span>
-                <div>
-                  <p className="font-label-lg text-label-lg text-secondary">Thời tiết biển Đà Nẵng hôm nay & ngày mai: Rất tốt</p>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">Sóng êm 0.4 - 0.7m, nắng nhẹ, triều dâng chuẩn xác vào buổi sáng.</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 self-start sm:self-center">
-                <span className="inline-flex w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="font-label-sm text-label-sm text-secondary font-bold uppercase">Cấp phép bến</span>
-              </div>
-            </div>
-
-            {items.length === 0 ? (
+{items.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 bg-surface-container-lowest rounded-lg">
                 <span className="material-symbols-outlined text-[64px] text-outline mb-4">shopping_cart</span>
                 <h2 className="font-headline-sm">Giỏ hàng của bạn đang trống</h2>

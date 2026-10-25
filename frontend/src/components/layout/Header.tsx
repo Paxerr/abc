@@ -52,7 +52,7 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 border-b border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(16,47,58,0.06)] transform-gpu will-change-transform">
       <div className="h-20 max-w-[1440px] w-full mx-auto px-4 sm:px-8 lg:px-12 flex items-center justify-between gap-space-lg">
         <div className="flex items-center gap-space-sm flex-shrink-0">
-          <img alt="DANASEA Brand Logo" className="h-8 w-auto object-contain" src="/images/danasea-logo.png" />
+          <img alt="DANASEA Brand Logo" className="h-8 w-8 object-contain shrink-0" src="/images/danasea-logo.png" />
           <Link to="/" className="font-headline-md text-headline-md tracking-tight text-slate-900 hover:text-primary transition-colors flex items-center gap-1.5 font-bold">DANASEA</Link>
         </div>
         
