@@ -104,6 +104,7 @@ class CatalogRepository {
         startTime: item['startTime'] as String,
         endTime: item['endTime'] as String,
         availableCapacity: (item['availablePaxOrPackages'] as num).toInt(),
+        maxPaxPerPackage: (item['maxPaxPerPackage'] as num?)?.toInt(),
         price: item['price'] as num?,
         pricingUnit: item['pricingUnit'] as String?,
         bookable: item['bookable'] as bool,
