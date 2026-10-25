@@ -14,6 +14,9 @@ import com.danasea.backend.modules.admin.domain.exceptions.UserAlreadyUnlockedEx
 import com.danasea.backend.modules.admin.domain.exceptions.UserNotFoundException;
 import com.danasea.backend.modules.admin.domain.exceptions.AuditLogNotFoundException;
 import com.danasea.backend.modules.admin.domain.exceptions.VendorDocumentsIncompleteException;
+import com.danasea.backend.modules.vendor.domain.exceptions.VendorDocumentNotFoundException;
+import com.danasea.backend.modules.vendor.domain.exceptions.InvalidVendorDocumentStateException;
+import com.danasea.backend.modules.vendor.domain.exceptions.VendorNotFoundException;
 import com.danasea.backend.security.authorization.domain.exceptions.AccessDeniedException;
 import com.danasea.backend.shared.i18n.LocalizedMessageService;
 import com.danasea.backend.shared.presentation.ErrorResponse;
@@ -22,6 +25,21 @@ import java.util.Locale;
 @RestControllerAdvice
 public class AdminExceptionHandler {
     private LocalizedMessageService messages = LocalizedMessageService.standalone();
+
+    @ExceptionHandler(VendorDocumentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleVendorDocumentNotFound(VendorDocumentNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error("VENDOR_DOCUMENT_NOT_FOUND"));
+    }
+
+    @ExceptionHandler(InvalidVendorDocumentStateException.class)
+    public ResponseEntity<ErrorResponse> handleVendorDocumentState(InvalidVendorDocumentStateException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error("INVALID_VENDOR_DOCUMENT_STATE"));
+    }
+
+    @ExceptionHandler(VendorNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleVendorNotFound(VendorNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error("VENDOR_NOT_FOUND"));
+    }
 
     @Autowired(required = false)
     void setLocalizedMessageService(LocalizedMessageService messages) {
