@@ -468,63 +468,84 @@ export function ExperienceDetail() {
                     </svg>
                   </div>
 
-                  {/* Previous Button */}
-                  {allImages.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={handlePrevImage}
-                      aria-label="Ảnh trước"
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-xs border border-white/10 flex items-center justify-center transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 shadow-md cursor-pointer active:scale-90 z-10"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">chevron_left</span>
-                    </button>
-                  )}
+                  {/* Previous Button on Main Image - Always visible, dimmed & disabled if only 1 image */}
+                  <button
+                    type="button"
+                    onClick={handlePrevImage}
+                    disabled={allImages.length <= 1}
+                    aria-label="Ảnh trước"
+                    className={`absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white backdrop-blur-xs border border-white/10 flex items-center justify-center transition-all shadow-md z-10 ${
+                      allImages.length <= 1
+                        ? 'opacity-35 cursor-not-allowed pointer-events-none'
+                        : 'hover:bg-black/80 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer active:scale-90'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+                  </button>
 
-                  {/* Next Button */}
-                  {allImages.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={handleNextImage}
-                      aria-label="Ảnh sau"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-xs border border-white/10 flex items-center justify-center transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 shadow-md cursor-pointer active:scale-90 z-10"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">chevron_right</span>
-                    </button>
-                  )}
+                  {/* Next Button on Main Image - Always visible, dimmed & disabled if only 1 image */}
+                  <button
+                    type="button"
+                    onClick={handleNextImage}
+                    disabled={allImages.length <= 1}
+                    aria-label="Ảnh sau"
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white backdrop-blur-xs border border-white/10 flex items-center justify-center transition-all shadow-md z-10 ${
+                      allImages.length <= 1
+                        ? 'opacity-35 cursor-not-allowed pointer-events-none'
+                        : 'hover:bg-black/80 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer active:scale-90'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+                  </button>
 
-                  {/* Compact Pure Black Counter Badge (No Icon) */}
-                  {allImages.length > 1 && (
-                    <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-white/95 text-[10px] font-medium tracking-wide shadow-xs z-10 pointer-events-none">
-                      {activeImageIndex + 1} / {allImages.length}
-                    </div>
-                  )}
+                  {/* Compact Pure Black Counter Badge - Always visible */}
+                  <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-white/95 text-[10px] font-medium tracking-wide shadow-xs z-10 pointer-events-none">
+                    {activeImageIndex + 1} / {allImages.length}
+                  </div>
 
-                  {/* Indicator Dots */}
-                  {allImages.length > 1 && (
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
-                      {allImages.map((_, dotIdx) => (
-                        <button
-                          key={dotIdx}
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveImageIndex(dotIdx);
-                          }}
-                          className={`transition-all duration-300 rounded-full cursor-pointer ${
-                            activeImageIndex === dotIdx
-                              ? 'w-5 h-1.5 bg-white shadow-xs'
-                              : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
-                          }`}
-                          aria-label={`Chuyển tới ảnh ${dotIdx + 1}`}
-                        />
-                      ))}
-                    </div>
-                  )}
+                  {/* Indicator Dots - Always visible */}
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+                    {allImages.map((_, dotIdx) => (
+                      <button
+                        key={dotIdx}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveImageIndex(dotIdx);
+                        }}
+                        disabled={allImages.length <= 1}
+                        className={`transition-all duration-300 rounded-full ${
+                          allImages.length <= 1 ? 'cursor-default' : 'cursor-pointer'
+                        } ${
+                          activeImageIndex === dotIdx
+                            ? 'w-5 h-1.5 bg-white shadow-xs'
+                            : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
+                        }`}
+                        aria-label={`Chuyển tới ảnh ${dotIdx + 1}`}
+                      />
+                    ))}
+                  </div>
                 </div>
 
-                {/* Dải ảnh phụ nhỏ ngay bên dưới ảnh chính */}
-                {allImages.length > 1 && (
-                  <div className="flex items-center gap-2.5 overflow-x-auto py-1 scrollbar-none">
+                {/* Dải ảnh phụ nhỏ ngay bên dưới ảnh chính kèm 2 nút trái phải */}
+                <div className="relative flex items-center gap-1.5 w-full pt-0.5">
+                  {/* Nút mũi tên trái cho dải ảnh phụ */}
+                  <button
+                    type="button"
+                    onClick={handlePrevImage}
+                    disabled={allImages.length <= 1}
+                    aria-label="Dải ảnh trước"
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center shrink-0 transition-all shadow-2xs ${
+                      allImages.length <= 1
+                        ? 'border-slate-200/60 bg-slate-100/60 text-slate-300 cursor-not-allowed'
+                        : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-950 active:scale-95 cursor-pointer'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                  </button>
+
+                  {/* Dải các thẻ ảnh phụ nhỏ */}
+                  <div className="flex-1 flex items-center gap-2 overflow-x-auto py-1 scrollbar-none scroll-smooth">
                     {allImages.map((imgUrl, idx) => {
                       const isCurrentActive = activeImageIndex === idx;
                       return (
@@ -549,7 +570,22 @@ export function ExperienceDetail() {
                       );
                     })}
                   </div>
-                )}
+
+                  {/* Nút mũi tên phải cho dải ảnh phụ */}
+                  <button
+                    type="button"
+                    onClick={handleNextImage}
+                    disabled={allImages.length <= 1}
+                    aria-label="Dải ảnh sau"
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center shrink-0 transition-all shadow-2xs ${
+                      allImages.length <= 1
+                        ? 'border-slate-200/60 bg-slate-100/60 text-slate-300 cursor-not-allowed'
+                        : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-950 active:scale-95 cursor-pointer'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                  </button>
+                </div>
               </section>
 
               {/* Mô tả trải nghiệm & Thông tin vận hành (Gộp vào 1 ô nội dung duy nhất) */}
