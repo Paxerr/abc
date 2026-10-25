@@ -10,21 +10,21 @@ echo.
 :: 1. Kiểm tra và bật Docker Desktop nếu chưa chạy
 echo [1/3] Kiểm tra Docker...
 docker info >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
-    echo Docker chưa chạy. Đang tự động mở Docker Desktop...
-    start "" "C:\Program Files\Docker\Docker\Docker Desktop.exe"
-    echo Đang chờ Docker Desktop khởi động hoàn tất (khoảng 15-30 giây)...
-    :wait_docker
-    timeout /t 4 /nobreak >nul
-    docker info >nul 2>&1
-    if %ERRORLEVEL% NEQ 0 (
-        echo   ...đang chờ Docker Engine kết nối...
-        goto wait_docker
-    )
-    echo   - Docker đã sẵn sàng!
-) else (
-    echo   - Docker đang hoạt động tốt.
-)
+if %ERRORLEVEL% EQU 0 goto docker_ready
+
+echo Docker chưa chạy. Đang tự động mở Docker Desktop...
+start "" "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+echo Đang chờ Docker Desktop khởi động hoàn tất (khoảng 15-30 giây)...
+
+:wait_docker
+timeout /t 4 /nobreak >nul
+docker info >nul 2>&1
+if %ERRORLEVEL% EQU 0 goto docker_ready
+echo   ...đang chờ Docker Engine kết nối...
+goto wait_docker
+
+:docker_ready
+echo   - Docker đã sẵn sàng!
 
 echo.
 :: 2. Chỉ khởi động Database & Backend trên Docker (tránh đè bản cũ của Frontend)
