@@ -426,134 +426,227 @@ export function ExperienceDetail() {
             </p>
           </div>
 
-          {/* Editorial Gallery Grid */}
+          {/* Editorial Gallery Grid - Strictly uses Backend Images */}
           <section className="w-full">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 rounded-2xl overflow-hidden shadow-md bg-white border border-slate-200/80 p-2">
-              {/* Large Main Carousel Image with Auto-play, Zoom Popup & Prev/Next Navigation */}
-              <div
-                onClick={() => handleOpenLightbox(activeImageIndex)}
-                className="lg:col-span-7 relative group overflow-hidden rounded-xl h-[300px] sm:h-[400px] lg:h-full min-h-[300px] sm:min-h-[400px] bg-black select-none cursor-pointer"
-                onMouseEnter={() => setIsHoveringGallery(true)}
-                onMouseLeave={() => setIsHoveringGallery(false)}
-                title="Bấm vào để phóng to xem ảnh"
-              >
-                {/* Smooth Sliding Carousel Track */}
+            <div className="rounded-2xl overflow-hidden shadow-md bg-white border border-slate-200/80 p-2">
+              {allImages.length <= 2 ? (
+                /* Full Width Smooth Carousel for 1 or 2 images from BE */
                 <div
-                  className="flex w-full h-full transition-transform duration-500 ease-out"
-                  style={{ transform: `translateX(-${activeImageIndex * 100}%)` }}
+                  onClick={() => handleOpenLightbox(activeImageIndex)}
+                  className="relative group overflow-hidden rounded-xl h-[320px] sm:h-[430px] bg-black select-none cursor-pointer"
+                  onMouseEnter={() => setIsHoveringGallery(true)}
+                  onMouseLeave={() => setIsHoveringGallery(false)}
+                  title="Bấm vào để phóng to xem ảnh"
                 >
-                  {allImages.map((imgUrl, imgIdx) => (
-                    <div key={imgIdx} className="w-full h-full shrink-0 relative overflow-hidden">
-                      <img
-                        src={imgUrl}
-                        alt={`${service.name} - ${imgIdx + 1}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                        loading={imgIdx === 0 ? 'eager' : 'lazy'}
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Zoom Hint Icon - Slim & Elegant SVG */}
-                <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-black/40 backdrop-blur-xs border border-white/15 text-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none shadow-xs">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <circle cx="10.5" cy="10.5" r="6.5" strokeWidth="1.25" />
-                    <path d="M15.5 15.5L20 20" strokeWidth="1.25" strokeLinecap="round" />
-                    <path d="M10.5 7.5v6M7.5 10.5h6" strokeWidth="1.25" strokeLinecap="round" />
-                  </svg>
-                </div>
-
-                {/* Previous Button */}
-                {allImages.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={handlePrevImage}
-                    aria-label="Ảnh trước"
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-xs border border-white/10 flex items-center justify-center transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 shadow-md cursor-pointer active:scale-90 z-10"
+                  {/* Smooth Sliding Carousel Track */}
+                  <div
+                    className="flex w-full h-full transition-transform duration-500 ease-out"
+                    style={{ transform: `translateX(-${activeImageIndex * 100}%)` }}
                   >
-                    <span className="material-symbols-outlined text-[20px]">chevron_left</span>
-                  </button>
-                )}
-
-                {/* Next Button */}
-                {allImages.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={handleNextImage}
-                    aria-label="Ảnh sau"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-xs border border-white/10 flex items-center justify-center transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 shadow-md cursor-pointer active:scale-90 z-10"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">chevron_right</span>
-                  </button>
-                )}
-
-                {/* Compact Pure Black Counter Badge (No Icon) */}
-                {allImages.length > 1 && (
-                  <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-white/95 text-[10px] font-medium tracking-wide shadow-xs z-10 pointer-events-none">
-                    {activeImageIndex + 1} / {allImages.length}
-                  </div>
-                )}
-
-                {/* Indicator Dots */}
-                {allImages.length > 1 && (
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
-                    {allImages.map((_, dotIdx) => (
-                      <button
-                        key={dotIdx}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveImageIndex(dotIdx);
-                        }}
-                        className={`transition-all duration-300 rounded-full cursor-pointer ${
-                          activeImageIndex === dotIdx
-                            ? 'w-5 h-1.5 bg-white shadow-xs'
-                            : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
-                        }`}
-                        aria-label={`Chuyển tới ảnh ${dotIdx + 1}`}
-                      />
+                    {allImages.map((imgUrl, imgIdx) => (
+                      <div key={imgIdx} className="w-full h-full shrink-0 relative overflow-hidden">
+                        <img
+                          src={imgUrl}
+                          alt={`${service.name} - ${imgIdx + 1}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                          loading={imgIdx === 0 ? 'eager' : 'lazy'}
+                        />
+                      </div>
                     ))}
                   </div>
-                )}
-              </div>
 
-              {/* Secondary Thumbnails */}
-              <div className="lg:col-span-5 grid grid-cols-2 gap-3">
-                {allImages.slice(0, 4).map((imgUrl, idx) => {
-                  const isCurrentActive = activeImageIndex === idx;
-                  return (
-                    <div
-                      key={idx}
-                      onClick={() => {
-                        setActiveImageIndex(idx);
-                        handleOpenLightbox(idx);
-                      }}
-                      className={`relative group cursor-pointer overflow-hidden rounded-xl aspect-[4/3] bg-slate-100 transition-all ${
-                        isCurrentActive ? 'ring-2 ring-cyan-500 ring-offset-2' : 'hover:opacity-90'
-                      }`}
-                      title="Bấm vào để phóng to xem ảnh"
+                  {/* Zoom Hint Icon - Slim & Elegant SVG */}
+                  <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-black/40 backdrop-blur-xs border border-white/15 text-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none shadow-xs">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <circle cx="10.5" cy="10.5" r="6.5" strokeWidth="1.25" />
+                      <path d="M15.5 15.5L20 20" strokeWidth="1.25" strokeLinecap="round" />
+                      <path d="M10.5 7.5v6M7.5 10.5h6" strokeWidth="1.25" strokeLinecap="round" />
+                    </svg>
+                  </div>
+
+                  {/* Previous Button */}
+                  {allImages.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={handlePrevImage}
+                      aria-label="Ảnh trước"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-xs border border-white/10 flex items-center justify-center transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 shadow-md cursor-pointer active:scale-90 z-10"
                     >
-                      <img
-                        src={imgUrl}
-                        alt={`${service.name} - ${idx + 1}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center">
-                        <div className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-xs border border-white/15 text-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-xs">
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <circle cx="10.5" cy="10.5" r="6.5" strokeWidth="1.25" />
-                            <path d="M15.5 15.5L20 20" strokeWidth="1.25" strokeLinecap="round" />
-                            <path d="M10.5 7.5v6M7.5 10.5h6" strokeWidth="1.25" strokeLinecap="round" />
-                          </svg>
-                        </div>
-                      </div>
-                      {isCurrentActive && (
-                        <div className="absolute inset-0 bg-cyan-900/10 pointer-events-none" />
-                      )}
+                      <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+                    </button>
+                  )}
+
+                  {/* Next Button */}
+                  {allImages.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={handleNextImage}
+                      aria-label="Ảnh sau"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-xs border border-white/10 flex items-center justify-center transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 shadow-md cursor-pointer active:scale-90 z-10"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+                    </button>
+                  )}
+
+                  {/* Compact Pure Black Counter Badge (No Icon) */}
+                  {allImages.length > 1 && (
+                    <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-white/95 text-[10px] font-medium tracking-wide shadow-xs z-10 pointer-events-none">
+                      {activeImageIndex + 1} / {allImages.length}
                     </div>
-                  );
-                })}
-              </div>
+                  )}
+
+                  {/* Indicator Dots */}
+                  {allImages.length > 1 && (
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+                      {allImages.map((_, dotIdx) => (
+                        <button
+                          key={dotIdx}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveImageIndex(dotIdx);
+                          }}
+                          className={`transition-all duration-300 rounded-full cursor-pointer ${
+                            activeImageIndex === dotIdx
+                              ? 'w-5 h-1.5 bg-white shadow-xs'
+                              : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
+                          }`}
+                          aria-label={`Chuyển tới ảnh ${dotIdx + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Split Layout when BE provides 3 or more images */
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                  {/* Large Main Carousel Image */}
+                  <div
+                    onClick={() => handleOpenLightbox(activeImageIndex)}
+                    className="lg:col-span-7 relative group overflow-hidden rounded-xl h-[300px] sm:h-[400px] lg:h-full min-h-[300px] sm:min-h-[400px] bg-black select-none cursor-pointer"
+                    onMouseEnter={() => setIsHoveringGallery(true)}
+                    onMouseLeave={() => setIsHoveringGallery(false)}
+                    title="Bấm vào để phóng to xem ảnh"
+                  >
+                    {/* Smooth Sliding Carousel Track */}
+                    <div
+                      className="flex w-full h-full transition-transform duration-500 ease-out"
+                      style={{ transform: `translateX(-${activeImageIndex * 100}%)` }}
+                    >
+                      {allImages.map((imgUrl, imgIdx) => (
+                        <div key={imgIdx} className="w-full h-full shrink-0 relative overflow-hidden">
+                          <img
+                            src={imgUrl}
+                            alt={`${service.name} - ${imgIdx + 1}`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                            loading={imgIdx === 0 ? 'eager' : 'lazy'}
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Zoom Hint Icon - Slim & Elegant SVG */}
+                    <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-black/40 backdrop-blur-xs border border-white/15 text-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none shadow-xs">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="10.5" cy="10.5" r="6.5" strokeWidth="1.25" />
+                        <path d="M15.5 15.5L20 20" strokeWidth="1.25" strokeLinecap="round" />
+                        <path d="M10.5 7.5v6M7.5 10.5h6" strokeWidth="1.25" strokeLinecap="round" />
+                      </svg>
+                    </div>
+
+                    {/* Previous Button */}
+                    {allImages.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={handlePrevImage}
+                        aria-label="Ảnh trước"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-xs border border-white/10 flex items-center justify-center transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 shadow-md cursor-pointer active:scale-90 z-10"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+                      </button>
+                    )}
+
+                    {/* Next Button */}
+                    {allImages.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={handleNextImage}
+                        aria-label="Ảnh sau"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-xs border border-white/10 flex items-center justify-center transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 shadow-md cursor-pointer active:scale-90 z-10"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+                      </button>
+                    )}
+
+                    {/* Compact Pure Black Counter Badge (No Icon) */}
+                    {allImages.length > 1 && (
+                      <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-white/95 text-[10px] font-medium tracking-wide shadow-xs z-10 pointer-events-none">
+                        {activeImageIndex + 1} / {allImages.length}
+                      </div>
+                    )}
+
+                    {/* Indicator Dots */}
+                    {allImages.length > 1 && (
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+                        {allImages.map((_, dotIdx) => (
+                          <button
+                            key={dotIdx}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveImageIndex(dotIdx);
+                            }}
+                            className={`transition-all duration-300 rounded-full cursor-pointer ${
+                              activeImageIndex === dotIdx
+                                ? 'w-5 h-1.5 bg-white shadow-xs'
+                                : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
+                            }`}
+                            aria-label={`Chuyển tới ảnh ${dotIdx + 1}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Secondary Thumbnails */}
+                  <div className="lg:col-span-5 grid grid-cols-2 gap-3">
+                    {allImages.slice(0, 4).map((imgUrl, idx) => {
+                      const isCurrentActive = activeImageIndex === idx;
+                      return (
+                        <div
+                          key={idx}
+                          onClick={() => {
+                            setActiveImageIndex(idx);
+                            handleOpenLightbox(idx);
+                          }}
+                          className={`relative group cursor-pointer overflow-hidden rounded-xl aspect-[4/3] bg-slate-100 transition-all ${
+                            isCurrentActive ? 'ring-2 ring-cyan-500 ring-offset-2' : 'hover:opacity-90'
+                          }`}
+                          title="Bấm vào để phóng to xem ảnh"
+                        >
+                          <img
+                            src={imgUrl}
+                            alt={`${service.name} - ${idx + 1}`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center">
+                            <div className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-xs border border-white/15 text-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-xs">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="10.5" cy="10.5" r="6.5" strokeWidth="1.25" />
+                                <path d="M15.5 15.5L20 20" strokeWidth="1.25" strokeLinecap="round" />
+                                <path d="M10.5 7.5v6M7.5 10.5h6" strokeWidth="1.25" strokeLinecap="round" />
+                              </svg>
+                            </div>
+                          </div>
+                          {isCurrentActive && (
+                            <div className="absolute inset-0 bg-cyan-900/10 pointer-events-none" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 
