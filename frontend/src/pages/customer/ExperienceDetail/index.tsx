@@ -678,11 +678,11 @@ export function ExperienceDetail() {
                               <p className="text-xs text-slate-600 leading-normal">{opt.benefits}</p>
                             )}
                           </div>
-                          <div className="text-left sm:text-right shrink-0">
-                            <span className="font-extrabold text-base sm:text-lg text-cyan-700 block">
+                          <div className="flex items-baseline gap-1.5 sm:justify-end shrink-0 whitespace-nowrap">
+                            <span className="font-extrabold text-base sm:text-lg text-cyan-700">
                               {opt.price.toLocaleString('vi-VN')}₫
                             </span>
-                            <span className="text-[11px] text-slate-500">
+                            <span className="text-xs text-slate-500 font-medium">
                               {opt.pricingUnit === 'PER_PERSON' ? '/ người' : '/ gói'}
                             </span>
                           </div>
