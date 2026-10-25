@@ -83,7 +83,7 @@ export const MarineWeatherPill: React.FC<MarineWeatherPillProps> = ({ className 
 
   return (
     <div
-      className={`inline-flex items-center flex-wrap sm:flex-nowrap justify-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border border-white/60 dark:border-slate-700/60 shadow-[0_4px_20px_rgba(0,0,0,0.12)] text-xs sm:text-[13px] text-slate-800 dark:text-slate-100 transition-all duration-200 select-none ${className}`}
+      className={`inline-flex items-center flex-wrap sm:flex-nowrap justify-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border border-white/60 dark:border-slate-700/60 shadow-[0_4px_20px_rgba(0,0,0,0.12)] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.16)] text-xs sm:text-[13px] text-slate-800 dark:text-slate-100 transition-all duration-300 select-none cursor-default ${className}`}
     >
       {/* 1. Status Indicator Dot (Color pulse only, no text) */}
       <span
