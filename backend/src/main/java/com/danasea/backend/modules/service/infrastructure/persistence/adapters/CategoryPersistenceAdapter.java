@@ -26,7 +26,7 @@ public class CategoryPersistenceAdapter implements CategoryRepositoryPort, Activ
     @Override
     public Category save(Category category) {
         CategoryJpaEntity entity = categoryMapper.toEntity(category);
-        CategoryJpaEntity saved = jpaCategoryRepository.save(entity);
+        CategoryJpaEntity saved = jpaCategoryRepository.saveAndFlush(entity);
         return categoryMapper.toDomain(saved);
     }
 

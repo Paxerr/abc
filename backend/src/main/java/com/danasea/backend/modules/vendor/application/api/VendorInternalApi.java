@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import com.danasea.backend.modules.vendor.domain.models.Vendor;
 import com.danasea.backend.modules.vendor.domain.models.VerificationStatus;
 import com.danasea.backend.modules.vendor.domain.models.DocType;
+import com.danasea.backend.modules.vendor.domain.models.VendorDocument;
 import java.util.Set;
 
 public interface VendorInternalApi {
@@ -23,4 +24,8 @@ public interface VendorInternalApi {
     Page<Vendor> getVendors(VerificationStatus status, Pageable pageable);
 
     Set<DocType> getApprovedDocumentTypes(UUID vendorId);
+
+    Optional<VendorDocument> findDocumentForReview(UUID vendorId, UUID documentId);
+
+    VendorDocument saveDocument(VendorDocument document);
 }

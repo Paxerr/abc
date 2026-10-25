@@ -5,22 +5,31 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.danasea.backend.modules.service.application.ports.output.CategoryRepositoryPort;
+import com.danasea.backend.modules.service.application.ports.output.ActiveServiceCheckPort;
+import com.danasea.backend.modules.service.domain.exceptions.CategoryHasActiveServicesException;
 import com.danasea.backend.modules.service.domain.exceptions.CategoryHierarchyLoopException;
 import com.danasea.backend.modules.service.domain.exceptions.CategoryNotFoundException;
 import com.danasea.backend.modules.service.domain.exceptions.SlugAlreadyExistsException;
 import com.danasea.backend.modules.service.domain.models.Category;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class UpdateCategoryUseCase {
 
     private final CategoryRepositoryPort categoryRepositoryPort;
+    private final ActiveServiceCheckPort activeServiceCheckPort;
 
+    @Transactional
     public Category execute(UUID id, UpdateCategoryCommand command) {
         Category category = categoryRepositoryPort.findById(id)
                 .orElseThrow(() -> new CategoryNotFoundException("Category not found with id: " + id));
+
+        if (Boolean.FALSE.equals(command.isActive()) && activeServiceCheckPort.hasActiveServices(id)) {
+            throw new CategoryHasActiveServicesException(id);
+        }
 
         if (command.slug() != null && !command.slug().isBlank() && !command.slug().equals(category.getSlug())) {
             if (categoryRepositoryPort.existsBySlug(command.slug())) {
@@ -53,9 +62,13 @@ public class UpdateCategoryUseCase {
             category.setParentId(command.parentId());
         }
 
+        if (command.isActive() != null) {
+            category.setIsActive(command.isActive());
+        }
         return categoryRepositoryPort.save(category);
     }
 
+    @Transactional
     public Category execute(UUID id, String name, String nameEn, String slug, UUID parentId, String iconUrl) {
         return execute(id, new UpdateCategoryCommand(name, nameEn, slug, parentId, iconUrl));
     }

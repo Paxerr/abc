@@ -11,6 +11,8 @@ import com.danasea.backend.modules.vendor.application.api.VendorInternalApi;
 import com.danasea.backend.modules.vendor.domain.models.Vendor;
 import com.danasea.backend.modules.vendor.domain.models.VerificationStatus;
 import com.danasea.backend.modules.vendor.infrastructure.mappers.VendorMapper;
+import com.danasea.backend.modules.vendor.infrastructure.mappers.VendorDocumentMapper;
+import com.danasea.backend.modules.vendor.domain.models.VendorDocument;
 import com.danasea.backend.modules.vendor.infrastructure.persistence.entities.VendorJpaEntity;
 import com.danasea.backend.modules.vendor.infrastructure.persistence.repositories.JpaVendorRepository;
 import com.danasea.backend.modules.vendor.infrastructure.persistence.repositories.JpaVendorDocumentRepository;
@@ -27,6 +29,19 @@ public class VendorInternalService implements VendorInternalApi {
     private final JpaVendorRepository vendorRepository;
     private final JpaVendorDocumentRepository vendorDocumentRepository;
     private final VendorMapper vendorMapper;
+    private final VendorDocumentMapper vendorDocumentMapper;
+
+    @Override
+    public Optional<VendorDocument> findDocumentForReview(UUID vendorId, UUID documentId) {
+        return vendorDocumentRepository.findForReview(vendorId, documentId)
+                .map(vendorDocumentMapper::toDomain);
+    }
+
+    @Override
+    public VendorDocument saveDocument(VendorDocument document) {
+        return vendorDocumentMapper.toDomain(
+                vendorDocumentRepository.saveAndFlush(vendorDocumentMapper.toEntity(document)));
+    }
 
     @Override
     public Optional<Vendor> findByUserId(UUID userId) {

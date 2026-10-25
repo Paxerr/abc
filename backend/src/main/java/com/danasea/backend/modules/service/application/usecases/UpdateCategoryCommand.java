@@ -7,5 +7,10 @@ public record UpdateCategoryCommand(
     String nameEn,
     String slug,
     UUID parentId,
-    String iconUrl
-) {}
+    String iconUrl,
+    Boolean isActive
+) {
+    public UpdateCategoryCommand(String name, String nameEn, String slug, UUID parentId, String iconUrl) {
+        this(name, nameEn, slug, parentId, iconUrl, null);
+    }
+}

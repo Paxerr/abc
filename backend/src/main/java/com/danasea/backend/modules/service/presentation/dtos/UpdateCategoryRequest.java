@@ -9,5 +9,10 @@ public record UpdateCategoryRequest(
     @Size(max = 100) String nameEn,
     @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") @Size(max = 120) String slug,
     UUID parentId,
-    @Size(max = 2048) String iconUrl
-) {}
+    @Size(max = 2048) String iconUrl,
+    Boolean isActive
+) {
+    public UpdateCategoryRequest(String name, String nameEn, String slug, UUID parentId, String iconUrl) {
+        this(name, nameEn, slug, parentId, iconUrl, null);
+    }
+}

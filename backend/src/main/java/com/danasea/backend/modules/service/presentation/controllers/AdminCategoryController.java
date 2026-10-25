@@ -7,6 +7,7 @@ import com.danasea.backend.modules.service.application.usecases.CreateCategoryUs
 import com.danasea.backend.modules.service.application.usecases.DeactivateCategoryUseCase;
 import com.danasea.backend.modules.service.application.usecases.GetCategoryTreeUseCase;
 import com.danasea.backend.modules.service.application.usecases.UpdateCategoryUseCase;
+import com.danasea.backend.modules.service.application.usecases.UpdateCategoryCommand;
 import com.danasea.backend.modules.service.domain.models.Category;
 import com.danasea.backend.modules.service.infrastructure.mappers.CategoryMapper;
 import com.danasea.backend.modules.service.presentation.dtos.CategoryResponse;
@@ -61,11 +62,9 @@ public class AdminCategoryController {
             @Valid @RequestBody UpdateCategoryRequest request) {
         Category category = updateCategoryUseCase.execute(
                 id,
-                request.name(),
-                request.nameEn(),
-                request.slug(),
-                request.parentId(),
-                request.iconUrl()
+                new UpdateCategoryCommand(
+                        request.name(), request.nameEn(), request.slug(),
+                        request.parentId(), request.iconUrl(), request.isActive())
         );
         return ResponseEntity.ok(categoryMapper.toResponse(category));
     }

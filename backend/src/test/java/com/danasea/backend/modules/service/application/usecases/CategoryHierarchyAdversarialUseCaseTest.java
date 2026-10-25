@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.danasea.backend.modules.service.application.ports.output.CategoryRepositoryPort;
+import com.danasea.backend.modules.service.application.ports.output.ActiveServiceCheckPort;
 import com.danasea.backend.modules.service.domain.exceptions.CategoryHierarchyLoopException;
 import com.danasea.backend.modules.service.domain.models.Category;
 import com.danasea.backend.modules.service.presentation.dtos.CategoryTreeResponse;
@@ -32,7 +33,7 @@ class CategoryHierarchyAdversarialUseCaseTest {
     void setUp() {
         categoryRepositoryPort = mock(CategoryRepositoryPort.class);
         createCategoryUseCase = new CreateCategoryUseCase(categoryRepositoryPort);
-        updateCategoryUseCase = new UpdateCategoryUseCase(categoryRepositoryPort);
+        updateCategoryUseCase = new UpdateCategoryUseCase(categoryRepositoryPort, mock(ActiveServiceCheckPort.class));
         getCategoryTreeUseCase = new GetCategoryTreeUseCase(categoryRepositoryPort);
     }
 
