@@ -74,9 +74,6 @@ export function FlashSaleSection({ experiences = FLASH_SALE_EXPERIENCES }: Flash
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] drop-shadow-[0_8px_20px_rgba(0,0,0,0.7)]">
             {t.flashSale.title}
           </h2>
-          <p className="text-xs sm:text-sm text-slate-100 mt-1 max-w-xl font-medium drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]">
-            {t.flashSale.subtitle}
-          </p>
         </div>
 
         {/* Countdown Clock */}

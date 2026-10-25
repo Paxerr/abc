@@ -1,11 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { OCEAN_SPORTS_SHOWCASE } from '../../data/customerHomeData';
 import type { OceanSportShowcase } from '../../data/customerHomeData';
 import { useLanguageStore } from '../../store/useLanguageStore';
 
 export const OceanSportsShowcase: React.FC = () => {
   const { language, t } = useLanguageStore();
+  const navigate = useNavigate();
+
+  const handleNavigate = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+      (document as any).startViewTransition(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        navigate('/search?category=sports');
+      });
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      navigate('/search?category=sports');
+    }
+  };
   const [activeSportIndex, setActiveSportIndex] = useState<number>(0);
   const hoverTimeoutRef = useRef<number | null>(null);
 
@@ -46,19 +60,15 @@ export const OceanSportsShowcase: React.FC = () => {
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] drop-shadow-[0_8px_20px_rgba(0,0,0,0.7)]">
             {t.sportsShowcase.title}
           </h2>
-          <p className="text-xs sm:text-sm text-slate-100 mt-1 max-w-xl font-medium drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]">
-            {language === 'en'
-              ? 'Select an activity to preview gear, certified coaching, and real-time wave safety conditions.'
-              : 'Chọn môn thể thao bạn muốn thử sức để xem chi tiết trang thiết bị, huấn luyện viên và mức giá ưu đãi.'}
-          </p>
         </div>
 
         <Link
           to="/search?category=sports"
-          className="inline-flex items-center gap-1 text-cyan-300 hover:text-white font-bold text-xs transition-colors shrink-0 drop-shadow-md"
+          onClick={handleNavigate}
+          className="group/all inline-flex items-center gap-1.5 text-cyan-300 hover:text-white font-bold text-xs sm:text-sm transition-all shrink-0 drop-shadow-md cursor-pointer hover:translate-x-0.5"
         >
           <span>{t.sections.viewAll}</span>
-          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+          <span className="material-symbols-outlined text-[16px] transition-transform duration-200 group-hover/all:translate-x-1.5">arrow_forward</span>
         </Link>
       </div>
 

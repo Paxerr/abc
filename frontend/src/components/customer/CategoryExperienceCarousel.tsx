@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { ActivityCardData } from '../../data/customerHomeData';
 import { useWishlistStore } from '../../store/useWishlistStore';
 import { useLanguageStore } from '../../store/useLanguageStore';
@@ -16,7 +16,6 @@ interface CategoryExperienceCarouselProps {
 
 export function CategoryExperienceCarousel({
   title,
-  subtitle,
   categoryLink,
   categorySlug,
   items,
@@ -24,9 +23,24 @@ export function CategoryExperienceCarousel({
 }: CategoryExperienceCarouselProps) {
   const { toggleWishlist, isInWishlist } = useWishlistStore();
   const { language, t } = useLanguageStore();
+  const navigate = useNavigate();
 
   const displayItems = experiences || items || [];
   const linkHref = categoryLink || (categorySlug ? `/search?category=${encodeURIComponent(categorySlug)}` : '/search');
+
+  // Smooth page transition handler
+  const handleNavigate = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+      (document as any).startViewTransition(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        navigate(linkHref);
+      });
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      navigate(linkHref);
+    }
+  };
 
   // Initialize Embla Carousel with Snap & Peek physics
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -84,31 +98,27 @@ export function CategoryExperienceCarousel({
 
   return (
     <div ref={sectionRef} className="py-2">
-      {/* Header */}
+      {/* Header: Clean title without duplicate arrow, no subtitle, single 'Xem tất cả →' */}
       <div className="flex items-center justify-between mb-4 gap-4">
         <div>
           <Link
             to={linkHref}
-            className="group/title inline-flex items-center gap-2 font-extrabold text-2xl sm:text-3xl text-white hover:text-cyan-200 transition-colors drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] drop-shadow-[0_8px_20px_rgba(0,0,0,0.7)] tracking-tight"
+            onClick={handleNavigate}
+            className="font-extrabold text-2xl sm:text-3xl text-white hover:text-cyan-200 transition-colors drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] drop-shadow-[0_8px_20px_rgba(0,0,0,0.7)] tracking-tight block cursor-pointer"
           >
-            <span>{title}</span>
-            <span className="material-symbols-outlined text-[20px] transition-transform group-hover/title:translate-x-1 text-cyan-300">
-              arrow_forward
-            </span>
+            {title}
           </Link>
-          {subtitle && (
-            <p className="text-xs sm:text-sm text-slate-100 font-medium drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)] mt-1">
-              {subtitle}
-            </p>
-          )}
         </div>
 
         <Link
           to={linkHref}
-          className="text-xs font-bold text-cyan-300 hover:text-white transition-colors hidden sm:inline-flex items-center gap-1 drop-shadow-md"
+          onClick={handleNavigate}
+          className="group/all text-xs sm:text-sm font-bold text-cyan-300 hover:text-white transition-all inline-flex items-center gap-1.5 drop-shadow-md cursor-pointer hover:translate-x-0.5"
         >
           <span>{t.sections.viewAll}</span>
-          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+          <span className="material-symbols-outlined text-[16px] transition-transform duration-200 group-hover/all:translate-x-1.5">
+            arrow_forward
+          </span>
         </Link>
       </div>
 
