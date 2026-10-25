@@ -1,6 +1,9 @@
 // English UI catalog. Vietnamese source phrases are stable lookup keys.
 // Numbered placeholders retain values from the existing presentation layer.
 const englishTranslations = <String, String>{
+  "Khung giờ trong 30 ngày tới": "Time slots for the next 30 days",
+  "Chưa có khung giờ trong khoảng thời gian này.": "No time slots in this period.",
+  "Còn lại: {0}": "Remaining: {0}",
   "Chưa có dịch vụ.": "No services yet.",
   "Không tải được danh sách yêu thích.": "Unable to load favorites.",
   "Chưa có trải nghiệm yêu thích.": "No favorite experiences yet.",
