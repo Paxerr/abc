@@ -897,16 +897,8 @@ export function ExperienceDetail() {
             <img
               src={allImages[lightboxIndex]}
               alt={`${service.name} - ${lightboxIndex + 1}`}
-              className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl transition-all duration-300 ring-1 ring-slate-900/10"
+              className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl transition-all duration-300 ring-1 ring-slate-900/10"
             />
-            {/* Caption & Counter Capsule */}
-            <div className="mt-3.5 px-4 py-2 rounded-full bg-white/90 backdrop-blur-md border border-slate-200/80 shadow-md flex items-center gap-2.5 text-xs sm:text-sm font-medium text-slate-800">
-              <span className="truncate max-w-md font-medium text-slate-900">{service.name}</span>
-              <span className="text-slate-300">•</span>
-              <span className="font-semibold text-cyan-700 bg-cyan-50 border border-cyan-100 px-2 py-0.5 rounded-full text-xs">
-                {lightboxIndex + 1} / {allImages.length}
-              </span>
-            </div>
           </div>
         </div>
       )}
