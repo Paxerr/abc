@@ -314,17 +314,6 @@ export function ExperienceDetail() {
           {/* Title & Quick Actions Header */}
           <section className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <div className="flex flex-col gap-2 max-w-3xl">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-teal-800 border border-teal-200/70 text-xs font-semibold shadow-xs">
-                  <span className="material-symbols-outlined text-[14px]">verified</span>
-                  {service.businessName || 'Nhà cung cấp đã xác minh'}
-                </span>
-                {service.badgeTier && (
-                  <span className="px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-800 border border-cyan-200 text-xs font-bold uppercase tracking-wider">
-                    {service.badgeTier}
-                  </span>
-                )}
-              </div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-snug">
                 {service.name}
               </h1>
@@ -375,6 +364,14 @@ export function ExperienceDetail() {
             </div>
           </section>
 
+          {/* 1. Lưu ý an toàn biển (Đưa lên trên phần ảnh, bỏ "& hoàn hủy") */}
+          <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-amber-50/90 border border-amber-200/80 text-amber-900 text-xs sm:text-sm shadow-xs">
+            <span className="material-symbols-outlined text-amber-600 text-[18px] shrink-0">health_and_safety</span>
+            <p className="leading-snug">
+              <strong className="font-semibold text-amber-950">Lưu ý an toàn:</strong> Bắt buộc mặc áo phao, đủ sức khỏe tham gia và tuân thủ huấn luyện viên. Miễn phí đổi ngày hoặc hoàn tiền 100% nếu hủy trước 24h hoặc do biển động theo lệnh cảng vụ.
+            </p>
+          </div>
+
           {/* Editorial Gallery Grid */}
           <section className="w-full">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 rounded-2xl overflow-hidden shadow-md bg-white border border-slate-200/80 p-2">
@@ -405,15 +402,7 @@ export function ExperienceDetail() {
             {/* LEFT COLUMN: Detailed Experience Intel */}
             <main className="lg:col-span-8 flex flex-col gap-5">
               
-              {/* 1. Quy định & Lưu ý an toàn biển (Đơn giản 1 dòng chú ý đặt đầu tiên) */}
-              <div className="flex items-start sm:items-center gap-2.5 p-3 sm:px-4 sm:py-2.5 rounded-xl bg-amber-50/90 border border-amber-200/80 text-amber-900 text-xs sm:text-sm">
-                <span className="material-symbols-outlined text-amber-600 text-[20px] shrink-0 mt-0.5 sm:mt-0">health_and_safety</span>
-                <p className="leading-snug">
-                  <strong className="font-semibold text-amber-950">Lưu ý an toàn &amp; hoàn hủy:</strong> Bắt buộc mặc áo phao, đủ sức khỏe tham gia và tuân thủ huấn luyện viên. Miễn phí đổi ngày hoặc hoàn tiền 100% nếu hủy trước 24h hoặc do biển động theo lệnh cảng vụ.
-                </p>
-              </div>
-
-              {/* 2. Mô tả trải nghiệm & Thông tin vận hành (Gộp vào 1 ô nội dung duy nhất) */}
+              {/* Mô tả trải nghiệm & Thông tin vận hành (Gộp vào 1 ô nội dung duy nhất) */}
               <section className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
                 <div>
                   <h2 className="text-xl font-bold text-slate-900 mb-2">Mô tả trải nghiệm</h2>
@@ -424,27 +413,34 @@ export function ExperienceDetail() {
 
                 <div className="pt-4 border-t border-slate-100 space-y-3">
                   <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Thông tin vận hành</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-xs sm:text-sm">
-                    <div className="flex items-center gap-2 text-slate-700">
-                      <span className="material-symbols-outlined text-cyan-600 text-[18px] shrink-0">schedule</span>
-                      <span className="text-slate-500">Thời lượng:</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2.5 text-xs sm:text-sm">
+                    <div className="flex items-baseline gap-2 text-slate-700">
+                      <span className="text-slate-500 whitespace-nowrap shrink-0">Thời lượng:</span>
                       <span className="font-semibold text-slate-900">{service.duration || 120} phút / ca</span>
                     </div>
-                    <div className="flex items-center gap-2 text-slate-700">
-                      <span className="material-symbols-outlined text-cyan-600 text-[18px] shrink-0">group</span>
-                      <span className="text-slate-500">Sức chứa:</span>
+                    <div className="flex items-baseline gap-2 text-slate-700">
+                      <span className="text-slate-500 whitespace-nowrap shrink-0">Sức chứa:</span>
                       <span className="font-semibold text-slate-900">Tối đa {service.capacity || 15} người / ca</span>
                     </div>
-                    <div className="flex items-center gap-2 text-slate-700">
-                      <span className="material-symbols-outlined text-cyan-600 text-[18px] shrink-0">waves</span>
-                      <span className="text-slate-500">Điều kiện thời tiết:</span>
+                    <div className="flex items-baseline gap-2 text-slate-700 sm:col-span-2">
+                      <span className="text-slate-500 whitespace-nowrap shrink-0">Điều kiện thời tiết:</span>
                       <span className="font-semibold text-slate-900">{localizedSafetyRules}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-slate-700 min-w-0">
-                      <span className="material-symbols-outlined text-cyan-600 text-[18px] shrink-0">location_on</span>
-                      <span className="text-slate-500 shrink-0">Điểm tập trung:</span>
+                    <div className="flex items-baseline gap-2 text-slate-700 sm:col-span-2 min-w-0">
+                      <span className="text-slate-500 whitespace-nowrap shrink-0">Điểm tập trung:</span>
                       <span className="font-semibold text-slate-900 truncate" title={service.address}>{service.address || 'Ven biển Đà Nẵng'}</span>
                     </div>
+                    {service.businessName && (
+                      <div className="flex items-baseline gap-2 text-slate-700 sm:col-span-2 min-w-0">
+                        <span className="text-slate-500 whitespace-nowrap shrink-0">Đơn vị tổ chức:</span>
+                        <span className="font-semibold text-slate-900 truncate">{service.businessName}</span>
+                        {service.badgeTier && (
+                          <span className="text-[11px] font-bold text-teal-800 bg-teal-50 border border-teal-200/70 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
+                            {service.badgeTier === 'VERIFIED' ? 'Đã xác minh' : service.badgeTier}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </section>
@@ -494,31 +490,6 @@ export function ExperienceDetail() {
                   </div>
                 </section>
               )}
-
-              {/* Verified Vendor Card */}
-              <section className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-700 font-bold text-xl">
-                    <span className="material-symbols-outlined text-3xl">sailing</span>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-slate-900 text-base">{service.businessName || 'DANASEA Official Partner'}</h3>
-                      <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 text-xs font-semibold border border-teal-200">
-                        {service.badgeTier || 'Đã xác minh'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">Đầy đủ giấy phép kinh doanh thể thao biển &amp; chứng chỉ an toàn hàng hải</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigate('/search')}
-                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors shrink-0 cursor-pointer"
-                >
-                  Xem thêm dịch vụ
-                </button>
-              </section>
             </main>
 
             {/* RIGHT COLUMN: Sticky Interactive Booking Box */}
