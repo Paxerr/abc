@@ -200,15 +200,6 @@ export function CategoryExperienceCarousel({
                         loading="lazy"
                       />
 
-                      {/* Top-left Badge */}
-                      {badge && (
-                        <div className="absolute top-2.5 left-2.5">
-                          <span className="px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-slate-900 text-[11px] font-semibold shadow-sm">
-                            {badge}
-                          </span>
-                        </div>
-                      )}
-
                       {/* Top-right Wishlist Button */}
                       <button
                         type="button"
