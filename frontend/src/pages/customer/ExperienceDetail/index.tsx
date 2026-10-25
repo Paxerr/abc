@@ -364,9 +364,9 @@ export function ExperienceDetail() {
             </div>
           </section>
 
-          {/* Lưu ý an toàn biển (Gọn gàng, chữ nhỏ, ô hẹp vừa vặn) */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50/80 border border-amber-200/70 text-amber-900 text-[11px] sm:text-xs max-w-3xl self-start">
-            <span className="material-symbols-outlined text-amber-600 text-[15px] shrink-0">health_and_safety</span>
+          {/* Lưu ý an toàn biển (Thanh mỏng trải dài ngang bằng ảnh, gọn theo chiều dọc, đúng 1 dòng) */}
+          <div className="w-full flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-amber-50/80 border border-amber-200/70 text-amber-900 text-xs shadow-2xs">
+            <span className="material-symbols-outlined text-amber-600 text-[16px] shrink-0">health_and_safety</span>
             <p className="leading-tight">
               <strong className="font-semibold text-amber-950">Lưu ý an toàn:</strong> Bắt buộc mặc áo phao, đủ sức khỏe tham gia và tuân thủ huấn luyện viên. Hoàn 100% nếu hủy trước 24h hoặc do biển động theo lệnh cảng vụ.
             </p>
