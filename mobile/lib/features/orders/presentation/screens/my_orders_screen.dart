@@ -8,6 +8,7 @@ import '../../../../core/theme/app_shapes.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../checkout/presentation/screens/e_ticket_qr_screen.dart';
 import 'order_detail_screen.dart';
+import 'my_bookings_screen.dart';
 
 class MyOrdersScreen extends StatefulWidget {
   final VoidCallback? onExplore;
@@ -127,6 +128,14 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       ),
       body: Column(
         children: [
+          ListTile(
+            leading: const Icon(Icons.event_note, color: AppColors.secondary),
+            title: const LocalizedText('Booking của tôi'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(
+              builder: (_) => const MyBookingsScreen(),
+            )),
+          ),
           // STATUS FILTER TABS
           Container(
             height: 48,
