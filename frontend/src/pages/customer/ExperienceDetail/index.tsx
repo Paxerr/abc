@@ -364,11 +364,11 @@ export function ExperienceDetail() {
             </div>
           </section>
 
-          {/* 1. Lưu ý an toàn biển (Đưa lên trên phần ảnh, bỏ "& hoàn hủy") */}
-          <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-amber-50/90 border border-amber-200/80 text-amber-900 text-xs sm:text-sm shadow-xs">
-            <span className="material-symbols-outlined text-amber-600 text-[18px] shrink-0">health_and_safety</span>
-            <p className="leading-snug">
-              <strong className="font-semibold text-amber-950">Lưu ý an toàn:</strong> Bắt buộc mặc áo phao, đủ sức khỏe tham gia và tuân thủ huấn luyện viên. Miễn phí đổi ngày hoặc hoàn tiền 100% nếu hủy trước 24h hoặc do biển động theo lệnh cảng vụ.
+          {/* Lưu ý an toàn biển (Gọn gàng, chữ nhỏ, ô hẹp vừa vặn) */}
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50/80 border border-amber-200/70 text-amber-900 text-[11px] sm:text-xs max-w-3xl self-start">
+            <span className="material-symbols-outlined text-amber-600 text-[15px] shrink-0">health_and_safety</span>
+            <p className="leading-tight">
+              <strong className="font-semibold text-amber-950">Lưu ý an toàn:</strong> Bắt buộc mặc áo phao, đủ sức khỏe tham gia và tuân thủ huấn luyện viên. Hoàn 100% nếu hủy trước 24h hoặc do biển động theo lệnh cảng vụ.
             </p>
           </div>
 
