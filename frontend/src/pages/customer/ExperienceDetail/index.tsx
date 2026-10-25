@@ -841,12 +841,12 @@ export function ExperienceDetail() {
         </div>
       </div>
 
-      {/* Lightbox Pop-up Modal for Enlarged Image Preview */}
+      {/* Lightbox Pop-up Modal for Enlarged Image Preview (Frosted Glass Blur Backdrop, No Dark Overlay) */}
       {isLightboxOpen && (
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4 sm:p-8 animate-fade-in select-none"
+          className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-2xl bg-black/15 p-4 sm:p-8 animate-fade-in select-none"
           onClick={() => setIsLightboxOpen(false)}
         >
           {/* Close button */}
@@ -854,9 +854,9 @@ export function ExperienceDetail() {
             type="button"
             onClick={() => setIsLightboxOpen(false)}
             aria-label="Đóng xem ảnh"
-            className="absolute top-5 right-5 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-all cursor-pointer z-50 border border-white/20 active:scale-90"
+            className="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/85 hover:bg-white text-slate-700 hover:text-slate-900 flex items-center justify-center transition-all cursor-pointer z-50 border border-slate-200/80 shadow-md hover:shadow-lg active:scale-90"
           >
-            <span className="material-symbols-outlined text-[24px]">close</span>
+            <span className="material-symbols-outlined text-[22px]">close</span>
           </button>
 
           {/* Prev button */}
@@ -868,9 +868,9 @@ export function ExperienceDetail() {
                 setLightboxIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
               }}
               aria-label="Ảnh trước"
-              className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-all cursor-pointer z-50 border border-white/20 active:scale-90"
+              className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/85 hover:bg-white text-slate-700 hover:text-slate-900 flex items-center justify-center transition-all cursor-pointer z-50 border border-slate-200/80 shadow-md hover:shadow-lg active:scale-90"
             >
-              <span className="material-symbols-outlined text-[28px]">chevron_left</span>
+              <span className="material-symbols-outlined text-[24px]">chevron_left</span>
             </button>
           )}
 
@@ -883,9 +883,9 @@ export function ExperienceDetail() {
                 setLightboxIndex((prev) => (prev + 1) % allImages.length);
               }}
               aria-label="Ảnh sau"
-              className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-all cursor-pointer z-50 border border-white/20 active:scale-90"
+              className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/85 hover:bg-white text-slate-700 hover:text-slate-900 flex items-center justify-center transition-all cursor-pointer z-50 border border-slate-200/80 shadow-md hover:shadow-lg active:scale-90"
             >
-              <span className="material-symbols-outlined text-[28px]">chevron_right</span>
+              <span className="material-symbols-outlined text-[24px]">chevron_right</span>
             </button>
           )}
 
@@ -897,13 +897,15 @@ export function ExperienceDetail() {
             <img
               src={allImages[lightboxIndex]}
               alt={`${service.name} - ${lightboxIndex + 1}`}
-              className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl transition-all duration-300"
+              className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl transition-all duration-300 ring-1 ring-slate-900/10"
             />
-            {/* Caption & Counter */}
-            <div className="mt-3.5 flex items-center gap-3 text-white/80 text-xs sm:text-sm font-medium">
-              <span className="truncate max-w-md">{service.name}</span>
-              <span>•</span>
-              <span className="text-cyan-400 font-semibold">{lightboxIndex + 1} / {allImages.length}</span>
+            {/* Caption & Counter Capsule */}
+            <div className="mt-3.5 px-4 py-2 rounded-full bg-white/90 backdrop-blur-md border border-slate-200/80 shadow-md flex items-center gap-2.5 text-xs sm:text-sm font-medium text-slate-800">
+              <span className="truncate max-w-md font-medium text-slate-900">{service.name}</span>
+              <span className="text-slate-300">•</span>
+              <span className="font-semibold text-cyan-700 bg-cyan-50 border border-cyan-100 px-2 py-0.5 rounded-full text-xs">
+                {lightboxIndex + 1} / {allImages.length}
+              </span>
             </div>
           </div>
         </div>
