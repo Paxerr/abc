@@ -1432,12 +1432,6 @@ const englishTranslations = <String, String>{
   "Hỗ trợ": "Support",
   "Lịch sử giao dịch thanh toán": "Payment transaction history",
   "Yêu cầu hoàn tiền": "Refund requests",
-  "Chức năng xem vé QR (POST /api/bookings/{id}/qr-code) sẽ được nối ở bước tiếp theo.":
-      "QR ticket functionality (POST /api/bookings/{id}/qr-code) will be connected in a subsequent step.",
-  "Chức năng ký miễn trừ / đổi lịch (/api/sub-orders/*) sẽ được nối ở bước tiếp theo.":
-      "Waiver acceptance / reschedule functionality (/api/sub-orders/*) will be connected in a subsequent step.",
-  "Chức năng khiếu nại (/api/orders/{id}/disputes) sẽ được nối ở bước tiếp theo.":
-      "Dispute functionality (/api/orders/{id}/disputes) will be connected in a subsequent step.",
   "Vui lòng đăng nhập để theo dõi hoàn tiền.":
       "Please sign in to track refunds.",
   "Không tải được dữ liệu hoàn tiền.": "Unable to load refund data.",
