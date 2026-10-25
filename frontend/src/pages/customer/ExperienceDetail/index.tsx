@@ -468,30 +468,38 @@ export function ExperienceDetail() {
                     </svg>
                   </div>
 
-                  {/* Previous Button on Main Image - Always visible, dimmed & disabled if only 1 image */}
+                  {/* Previous Button on Main Image - Always visible, dimmed & inert if only 1 image */}
                   <button
                     type="button"
-                    onClick={handlePrevImage}
-                    disabled={allImages.length <= 1}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (allImages.length > 1) {
+                        handlePrevImage(e);
+                      }
+                    }}
                     aria-label="Ảnh trước"
                     className={`absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white backdrop-blur-xs border border-white/10 flex items-center justify-center transition-all shadow-md z-10 ${
                       allImages.length <= 1
-                        ? 'opacity-35 cursor-not-allowed pointer-events-none'
+                        ? 'opacity-35 cursor-not-allowed'
                         : 'hover:bg-black/80 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer active:scale-90'
                     }`}
                   >
                     <span className="material-symbols-outlined text-[20px]">chevron_left</span>
                   </button>
 
-                  {/* Next Button on Main Image - Always visible, dimmed & disabled if only 1 image */}
+                  {/* Next Button on Main Image - Always visible, dimmed & inert if only 1 image */}
                   <button
                     type="button"
-                    onClick={handleNextImage}
-                    disabled={allImages.length <= 1}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (allImages.length > 1) {
+                        handleNextImage(e);
+                      }
+                    }}
                     aria-label="Ảnh sau"
                     className={`absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white backdrop-blur-xs border border-white/10 flex items-center justify-center transition-all shadow-md z-10 ${
                       allImages.length <= 1
-                        ? 'opacity-35 cursor-not-allowed pointer-events-none'
+                        ? 'opacity-35 cursor-not-allowed'
                         : 'hover:bg-black/80 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer active:scale-90'
                     }`}
                   >
@@ -504,16 +512,20 @@ export function ExperienceDetail() {
                   </div>
 
                   {/* Indicator Dots - Always visible */}
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10"
+                  >
                     {allImages.map((_, dotIdx) => (
                       <button
                         key={dotIdx}
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setActiveImageIndex(dotIdx);
+                          if (allImages.length > 1) {
+                            setActiveImageIndex(dotIdx);
+                          }
                         }}
-                        disabled={allImages.length <= 1}
                         className={`transition-all duration-300 rounded-full ${
                           allImages.length <= 1 ? 'cursor-default' : 'cursor-pointer'
                         } ${
@@ -528,20 +540,22 @@ export function ExperienceDetail() {
                 </div>
 
                 {/* Dải ảnh phụ nhỏ ngay bên dưới ảnh chính kèm 2 nút trái phải */}
-                <div className="relative flex items-center gap-1.5 w-full pt-0.5">
-                  {/* Nút mũi tên trái cho dải ảnh phụ */}
+                <div className="relative flex items-center gap-1 w-full pt-1 px-0.5">
+                  {/* Nút mũi tên trái cho dải ảnh phụ - Bỏ nền, không viền, thanh thoát */}
                   <button
                     type="button"
-                    onClick={handlePrevImage}
-                    disabled={allImages.length <= 1}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (allImages.length > 1) handlePrevImage(e);
+                    }}
                     aria-label="Dải ảnh trước"
-                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center shrink-0 transition-all shadow-2xs ${
+                    className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center shrink-0 transition-all rounded-full ${
                       allImages.length <= 1
-                        ? 'border-slate-200/60 bg-slate-100/60 text-slate-300 cursor-not-allowed'
-                        : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-950 active:scale-95 cursor-pointer'
+                        ? 'text-slate-300 opacity-40 cursor-not-allowed'
+                        : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100 active:scale-90 cursor-pointer'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                    <span className="material-symbols-outlined text-[20px]">chevron_left</span>
                   </button>
 
                   {/* Dải các thẻ ảnh phụ nhỏ */}
@@ -571,19 +585,21 @@ export function ExperienceDetail() {
                     })}
                   </div>
 
-                  {/* Nút mũi tên phải cho dải ảnh phụ */}
+                  {/* Nút mũi tên phải cho dải ảnh phụ - Bỏ nền, không viền, thanh thoát */}
                   <button
                     type="button"
-                    onClick={handleNextImage}
-                    disabled={allImages.length <= 1}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (allImages.length > 1) handleNextImage(e);
+                    }}
                     aria-label="Dải ảnh sau"
-                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center shrink-0 transition-all shadow-2xs ${
+                    className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center shrink-0 transition-all rounded-full ${
                       allImages.length <= 1
-                        ? 'border-slate-200/60 bg-slate-100/60 text-slate-300 cursor-not-allowed'
-                        : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-950 active:scale-95 cursor-pointer'
+                        ? 'text-slate-300 opacity-40 cursor-not-allowed'
+                        : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100 active:scale-90 cursor-pointer'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                    <span className="material-symbols-outlined text-[20px]">chevron_right</span>
                   </button>
                 </div>
               </section>
