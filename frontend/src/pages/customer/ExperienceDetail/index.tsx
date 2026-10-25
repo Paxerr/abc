@@ -432,21 +432,31 @@ export function ExperienceDetail() {
               {/* Large Main Carousel Image with Auto-play, Zoom Popup & Prev/Next Navigation */}
               <div
                 onClick={() => handleOpenLightbox(activeImageIndex)}
-                className="lg:col-span-7 relative group overflow-hidden rounded-xl min-h-[300px] sm:min-h-[420px] bg-slate-900 select-none cursor-pointer"
+                className="lg:col-span-7 relative group overflow-hidden rounded-xl h-[300px] sm:h-[400px] lg:h-full min-h-[300px] sm:min-h-[400px] bg-black select-none cursor-pointer"
                 onMouseEnter={() => setIsHoveringGallery(true)}
                 onMouseLeave={() => setIsHoveringGallery(false)}
                 title="Bấm vào để phóng to xem ảnh"
               >
-                <img
-                  key={activeImageIndex}
-                  src={allImages[activeImageIndex] || allImages[0]}
-                  alt={`${service.name} - ${activeImageIndex + 1}`}
-                  className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105"
-                />
+                {/* Smooth Sliding Carousel Track */}
+                <div
+                  className="flex w-full h-full transition-transform duration-500 ease-out"
+                  style={{ transform: `translateX(-${activeImageIndex * 100}%)` }}
+                >
+                  {allImages.map((imgUrl, imgIdx) => (
+                    <div key={imgIdx} className="w-full h-full shrink-0 relative overflow-hidden">
+                      <img
+                        src={imgUrl}
+                        alt={`${service.name} - ${imgIdx + 1}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                        loading={imgIdx === 0 ? 'eager' : 'lazy'}
+                      />
+                    </div>
+                  ))}
+                </div>
 
                 {/* Zoom Hint Icon */}
-                <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-900/50 hover:bg-slate-900/70 backdrop-blur-md border border-white/20 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none shadow-xs">
-                  <span className="material-symbols-outlined text-[17px]">zoom_in</span>
+                <div className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/50 hover:bg-black/75 backdrop-blur-xs border border-white/10 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none shadow-xs">
+                  <span className="material-symbols-outlined text-[16px]">zoom_in</span>
                 </div>
 
                 {/* Previous Button */}
@@ -455,9 +465,9 @@ export function ExperienceDetail() {
                     type="button"
                     onClick={handlePrevImage}
                     aria-label="Ảnh trước"
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/40 hover:bg-slate-900/70 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 shadow-md cursor-pointer active:scale-90 z-10"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-xs border border-white/10 flex items-center justify-center transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 shadow-md cursor-pointer active:scale-90 z-10"
                   >
-                    <span className="material-symbols-outlined text-[22px]">chevron_left</span>
+                    <span className="material-symbols-outlined text-[20px]">chevron_left</span>
                   </button>
                 )}
 
@@ -467,17 +477,16 @@ export function ExperienceDetail() {
                     type="button"
                     onClick={handleNextImage}
                     aria-label="Ảnh sau"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/40 hover:bg-slate-900/70 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 shadow-md cursor-pointer active:scale-90 z-10"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-xs border border-white/10 flex items-center justify-center transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 shadow-md cursor-pointer active:scale-90 z-10"
                   >
-                    <span className="material-symbols-outlined text-[22px]">chevron_right</span>
+                    <span className="material-symbols-outlined text-[20px]">chevron_right</span>
                   </button>
                 )}
 
-                {/* Counter Badge */}
+                {/* Compact Pure Black Counter Badge (No Icon) */}
                 {allImages.length > 1 && (
-                  <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-slate-900/60 backdrop-blur-md border border-white/20 text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-xs z-10">
-                    <span className="material-symbols-outlined text-[13px] text-cyan-300">photo_library</span>
-                    <span>{activeImageIndex + 1} / {allImages.length}</span>
+                  <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-white/95 text-[10px] font-medium tracking-wide shadow-xs z-10 pointer-events-none">
+                    {activeImageIndex + 1} / {allImages.length}
                   </div>
                 )}
 
@@ -494,8 +503,8 @@ export function ExperienceDetail() {
                         }}
                         className={`transition-all duration-300 rounded-full cursor-pointer ${
                           activeImageIndex === dotIdx
-                            ? 'w-6 h-1.5 bg-white shadow-xs'
-                            : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/80'
+                            ? 'w-5 h-1.5 bg-white shadow-xs'
+                            : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
                         }`}
                         aria-label={`Chuyển tới ảnh ${dotIdx + 1}`}
                       />
