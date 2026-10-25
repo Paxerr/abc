@@ -99,14 +99,21 @@ class CategoryModel {
 
 enum ServiceStatus { draft, pendingReview, published, rejected, paused }
 
+class CatalogOption {
+  final String id, name;
+  const CatalogOption({required this.id, required this.name});
+}
+
 class CatalogSlot {
   final String id, date, startTime, endTime;
+  final String? optionId;
   final int? availableCapacity;
   final num? price;
   final String? pricingUnit;
   final bool bookable;
   const CatalogSlot({
     required this.id,
+    this.optionId,
     required this.date,
     required this.startTime,
     required this.endTime,
@@ -151,6 +158,7 @@ class ServiceModel {
       safetyRules;
   final bool? waiverRequired;
   final List<CatalogSlot> catalogSlots;
+  final List<CatalogOption> options;
   final List<String> availableSlots;
 
   const ServiceModel({
@@ -187,10 +195,11 @@ class ServiceModel {
     this.safetyRules = '',
     this.waiverRequired,
     this.catalogSlots = const [],
+    this.options = const [],
     this.availableSlots = const [],
   });
 
-  ServiceModel copyWith({bool? isFavorite}) {
+  ServiceModel copyWith({bool? isFavorite, List<CatalogSlot>? catalogSlots}) {
     return ServiceModel(
       id: id,
       vendorId: vendorId,
@@ -224,7 +233,8 @@ class ServiceModel {
       cancellationPolicy: cancellationPolicy,
       safetyRules: safetyRules,
       waiverRequired: waiverRequired,
-      catalogSlots: catalogSlots,
+      catalogSlots: catalogSlots ?? this.catalogSlots,
+      options: options,
       availableSlots: availableSlots,
     );
   }
