@@ -751,22 +751,13 @@ export function ExperienceDetail() {
               <div className="w-full p-5 rounded-2xl bg-white border border-slate-200/80 shadow-lg flex flex-col gap-4">
                 
                 {/* Price Display */}
-                <div className="border-b border-slate-100 pb-4 flex flex-col gap-2">
-                  <div className="flex items-baseline gap-1.5 flex-wrap">
-                    <span className="text-3xl font-extrabold text-cyan-700 tracking-tight">
-                      {unitPrice.toLocaleString('vi-VN')}₫
-                    </span>
-                    <span className="text-xs text-slate-500 font-medium whitespace-nowrap">
-                      {selectedOption?.pricingUnit === 'PER_PACKAGE' ? '/ gói' : '/ người'}
-                    </span>
-                  </div>
-                  {selectedOption && (
-                    <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 border border-slate-200/80 px-2.5 py-1.5 rounded-lg w-full">
-                      <span className="material-symbols-outlined text-cyan-600 text-[15px] shrink-0">confirmation_number</span>
-                      <span className="text-slate-500 shrink-0">Đang chọn:</span>
-                      <span className="font-semibold text-slate-900 truncate">{selectedOption.name}</span>
-                    </div>
-                  )}
+                <div className="border-b border-slate-100 pb-3 flex items-baseline gap-1.5 flex-wrap">
+                  <span className="text-3xl font-extrabold text-cyan-700 tracking-tight">
+                    {unitPrice.toLocaleString('vi-VN')}₫
+                  </span>
+                  <span className="text-xs text-slate-500 font-medium whitespace-nowrap">
+                    {selectedOption?.pricingUnit === 'PER_PACKAGE' ? '/ gói' : '/ người'}
+                  </span>
                 </div>
 
                 {/* Date Selection */}
