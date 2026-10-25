@@ -336,7 +336,7 @@ export function ExperienceDetail() {
         {/* Breadcrumb Navigation */}
         <div className="w-full bg-white/70 backdrop-blur-md border-b border-slate-200/60">
           <div className="max-w-[1440px] w-full mx-auto px-4 sm:px-8 lg:px-12 py-3">
-            <nav className="flex items-center gap-2 text-xs sm:text-sm text-slate-500 overflow-x-auto whitespace-nowrap">
+            <nav className="flex items-center gap-2 text-xs sm:text-sm text-slate-500 overflow-x-auto overflow-y-hidden scrollbar-none whitespace-nowrap py-0.5">
               <span
                 onClick={() => navigate('/')}
                 className="hover:text-cyan-700 transition-colors flex items-center gap-1 cursor-pointer"
