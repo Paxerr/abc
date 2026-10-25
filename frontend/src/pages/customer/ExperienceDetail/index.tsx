@@ -30,6 +30,15 @@ export function ExperienceDetail() {
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [isHoveringGallery, setIsHoveringGallery] = useState<boolean>(false);
 
+  // Lightbox Modal state for full-screen image preview
+  const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number>(0);
+
+  const handleOpenLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setIsLightboxOpen(true);
+  };
+
   // Fetch Service Detail from Backend API (with graceful fallback to mock if legacy ID)
   useEffect(() => {
     if (!id) {
@@ -300,6 +309,25 @@ export function ExperienceDetail() {
     setActiveImageIndex((prev) => (prev + 1) % allImages.length);
   };
 
+  // Keyboard navigation & body scroll lock for Lightbox Modal
+  useEffect(() => {
+    if (!isLightboxOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsLightboxOpen(false);
+      if (e.key === 'ArrowLeft') setLightboxIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+      if (e.key === 'ArrowRight') setLightboxIndex((prev) => (prev + 1) % allImages.length);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [isLightboxOpen, allImages.length]);
+
   const isSaved = isInWishlist(service.id);
 
   return (
@@ -401,11 +429,13 @@ export function ExperienceDetail() {
           {/* Editorial Gallery Grid */}
           <section className="w-full">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 rounded-2xl overflow-hidden shadow-md bg-white border border-slate-200/80 p-2">
-              {/* Large Main Carousel Image with Auto-play & Prev/Next Navigation */}
+              {/* Large Main Carousel Image with Auto-play, Zoom Popup & Prev/Next Navigation */}
               <div
+                onClick={() => handleOpenLightbox(activeImageIndex)}
                 className="lg:col-span-7 relative group overflow-hidden rounded-xl min-h-[300px] sm:min-h-[420px] bg-slate-900 select-none cursor-pointer"
                 onMouseEnter={() => setIsHoveringGallery(true)}
                 onMouseLeave={() => setIsHoveringGallery(false)}
+                title="Bấm vào để phóng to xem ảnh"
               >
                 <img
                   key={activeImageIndex}
@@ -413,6 +443,11 @@ export function ExperienceDetail() {
                   alt={`${service.name} - ${activeImageIndex + 1}`}
                   className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105"
                 />
+
+                {/* Zoom Hint Icon */}
+                <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-900/50 hover:bg-slate-900/70 backdrop-blur-md border border-white/20 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none shadow-xs">
+                  <span className="material-symbols-outlined text-[17px]">zoom_in</span>
+                </div>
 
                 {/* Previous Button */}
                 {allImages.length > 1 && (
@@ -476,16 +511,23 @@ export function ExperienceDetail() {
                   return (
                     <div
                       key={idx}
-                      onClick={() => setActiveImageIndex(idx)}
+                      onClick={() => {
+                        setActiveImageIndex(idx);
+                        handleOpenLightbox(idx);
+                      }}
                       className={`relative group cursor-pointer overflow-hidden rounded-xl aspect-[4/3] bg-slate-100 transition-all ${
                         isCurrentActive ? 'ring-2 ring-cyan-500 ring-offset-2' : 'hover:opacity-90'
                       }`}
+                      title="Bấm vào để phóng to xem ảnh"
                     >
                       <img
                         src={imgUrl}
                         alt={`${service.name} - ${idx + 1}`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                       />
+                      <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/25 transition-colors flex items-center justify-center">
+                        <span className="material-symbols-outlined text-white text-[22px] opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md">zoom_in</span>
+                      </div>
                       {isCurrentActive && (
                         <div className="absolute inset-0 bg-cyan-900/10 pointer-events-none" />
                       )}
@@ -779,6 +821,74 @@ export function ExperienceDetail() {
           </div>
         </div>
       </div>
+
+      {/* Lightbox Pop-up Modal for Enlarged Image Preview */}
+      {isLightboxOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4 sm:p-8 animate-fade-in select-none"
+          onClick={() => setIsLightboxOpen(false)}
+        >
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={() => setIsLightboxOpen(false)}
+            aria-label="Đóng xem ảnh"
+            className="absolute top-5 right-5 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-all cursor-pointer z-50 border border-white/20 active:scale-90"
+          >
+            <span className="material-symbols-outlined text-[24px]">close</span>
+          </button>
+
+          {/* Prev button */}
+          {allImages.length > 1 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+              }}
+              aria-label="Ảnh trước"
+              className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-all cursor-pointer z-50 border border-white/20 active:scale-90"
+            >
+              <span className="material-symbols-outlined text-[28px]">chevron_left</span>
+            </button>
+          )}
+
+          {/* Next button */}
+          {allImages.length > 1 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxIndex((prev) => (prev + 1) % allImages.length);
+              }}
+              aria-label="Ảnh sau"
+              className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-all cursor-pointer z-50 border border-white/20 active:scale-90"
+            >
+              <span className="material-symbols-outlined text-[28px]">chevron_right</span>
+            </button>
+          )}
+
+          {/* Active Image container */}
+          <div
+            className="relative max-w-5xl max-h-[85vh] flex flex-col items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={allImages[lightboxIndex]}
+              alt={`${service.name} - ${lightboxIndex + 1}`}
+              className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl transition-all duration-300"
+            />
+            {/* Caption & Counter */}
+            <div className="mt-3.5 flex items-center gap-3 text-white/80 text-xs sm:text-sm font-medium">
+              <span className="truncate max-w-md">{service.name}</span>
+              <span>•</span>
+              <span className="text-cyan-400 font-semibold">{lightboxIndex + 1} / {allImages.length}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
