@@ -309,7 +309,7 @@ export function ExperienceDetail() {
           </div>
         </div>
 
-        <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-8 lg:px-12 pt-6 pb-20 flex flex-col gap-8">
+        <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-8 lg:px-12 pt-5 pb-16 flex flex-col gap-5">
           
           {/* Title & Quick Actions Header */}
           <section className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
@@ -397,23 +397,23 @@ export function ExperienceDetail() {
           </section>
 
           {/* Main Content Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
             
             {/* LEFT COLUMN: Detailed Experience Intel */}
-            <main className="lg:col-span-8 flex flex-col gap-5">
+            <main className="lg:col-span-8 flex flex-col gap-3.5">
               
               {/* Mô tả trải nghiệm & Thông tin vận hành (Gộp vào 1 ô nội dung duy nhất) */}
-              <section className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
+              <section className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-3.5">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900 mb-2">Mô tả trải nghiệm</h2>
+                  <h2 className="text-xl font-bold text-slate-900 mb-1.5">Mô tả trải nghiệm</h2>
                   <p className="text-slate-700 leading-relaxed text-[15px] whitespace-pre-line">
                     {service.description}
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 space-y-3">
+                <div className="pt-3.5 border-t border-slate-100 space-y-2.5">
                   <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Thông tin vận hành</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2.5 text-xs sm:text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-xs sm:text-sm">
                     <div className="flex items-baseline gap-2 text-slate-700">
                       <span className="text-slate-500 whitespace-nowrap shrink-0">Thời lượng:</span>
                       <span className="font-semibold text-slate-900">{service.duration || 120} phút / ca</span>
@@ -447,19 +447,19 @@ export function ExperienceDetail() {
 
               {/* Service Options (Gói dịch vụ) */}
               {service.options && service.options.length > 0 && (
-                <section className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+                <section className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
                   <div className="flex items-center justify-between">
                     <h2 className="text-xl font-bold text-slate-900">Lựa chọn gói dịch vụ</h2>
                     <span className="text-xs text-cyan-700 font-semibold">{service.options.length} gói có sẵn</span>
                   </div>
-                  <div className="grid grid-cols-1 gap-3">
+                  <div className="grid grid-cols-1 gap-2.5">
                     {service.options.map((opt) => {
                       const isSelected = selectedOptionId === opt.id;
                       return (
                         <div
                           key={opt.id}
                           onClick={() => setSelectedOptionId(opt.id)}
-                          className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                          className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                             isSelected
                               ? 'bg-cyan-50/50 border-cyan-500 shadow-sm'
                               : 'bg-slate-50/60 border-slate-200/70 hover:border-slate-300'
@@ -494,7 +494,7 @@ export function ExperienceDetail() {
 
             {/* RIGHT COLUMN: Sticky Interactive Booking Box */}
             <aside className="lg:col-span-4 w-full lg:sticky lg:top-24">
-              <div className="w-full p-6 rounded-2xl bg-white border border-slate-200/80 shadow-lg flex flex-col gap-5">
+              <div className="w-full p-5 rounded-2xl bg-white border border-slate-200/80 shadow-lg flex flex-col gap-4">
                 
                 {/* Price Display */}
                 <div className="border-b border-slate-100 pb-4 flex flex-col gap-2">
