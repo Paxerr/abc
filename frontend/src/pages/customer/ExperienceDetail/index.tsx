@@ -652,7 +652,6 @@ export function ExperienceDetail() {
                 <section className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
                   <div className="flex items-center justify-between">
                     <h2 className="text-xl font-bold text-slate-900">Lựa chọn gói dịch vụ</h2>
-                    <span className="text-xs text-cyan-700 font-semibold">{service.options.length} gói có sẵn</span>
                   </div>
                   <div className="grid grid-cols-1 gap-2.5">
                     {service.options.map((opt) => {
