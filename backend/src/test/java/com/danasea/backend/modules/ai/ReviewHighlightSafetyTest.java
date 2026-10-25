@@ -11,7 +11,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import com.danasea.backend.modules.ai.application.ports.LlmClientPort;
 import com.danasea.backend.modules.ai.domain.models.LlmResponse;
-import com.danasea.backend.modules.ai.infrastructure.groq.GroqReviewHighlightAdapter;
+import com.danasea.backend.modules.ai.infrastructure.cliproxy.CliProxyReviewHighlightAdapter;
 import com.danasea.backend.modules.operation.application.api.AiReviewReadApi.ReviewEvidence;
 import com.danasea.backend.shared.i18n.SupportedLanguage;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 class ReviewHighlightSafetyTest {
     @Test void inventedSourceIdsAreRejectedWhileVerifiedIdsAreDeduplicated() {
         var llm = mock(LlmClientPort.class);
-        var adapter = new GroqReviewHighlightAdapter(llm, new ObjectMapper().findAndRegisterModules());
+        var adapter = new CliProxyReviewHighlightAdapter(llm, new ObjectMapper().findAndRegisterModules());
         var source = new ReviewEvidence(UUID.randomUUID(), UUID.randomUUID(), 5, "Good", OffsetDateTime.now());
         var response = new LlmResponse();
         response.setContent("{\"reviewIds\":[\"" + UUID.randomUUID() + "\"]}");

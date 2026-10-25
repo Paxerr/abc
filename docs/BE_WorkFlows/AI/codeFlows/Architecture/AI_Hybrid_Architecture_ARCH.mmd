@@ -1,7 +1,7 @@
 graph TB
     %% ==========================================
     %% 6. DANASEA AI HYBRID ARCHITECTURE (COMPREHENSIVE)
-    %% Groq Cloud LLM + Quyet Small + Core Backend + Postgres V21-V25 + Redis
+    %% CLI Proxy LLM + Quyet Small + Core Backend + Postgres V21-V25 + Redis
     %% ==========================================
 
     subgraph ClientLayer["🖥️ TẦNG GIAO DIỆN (CLIENT APPS)"]
@@ -54,11 +54,10 @@ graph TB
     end
 
     subgraph AiInferenceLayer["🧠 TẦNG TRÍ TUỆ NHÂN TẠO LAI (HYBRID AI ENGINE)"]
-        subgraph GroqCloud["☁️ GROQ CLOUD LLM (Online)"]
-            GroqClient["GroqLlmClient<br/>(Llama 3.3 / Llama 3.1)"]
-            GroqRotator["GroqKeyRotator<br/>(5 API Keys: ACTIVE / COOLDOWN / DISABLED)"]
-            GroqModeration["GroqModerationClient<br/>(Prompt Guard - Max 1800 ký tự)"]
-            GroqHighlight["GroqReviewHighlightAdapter<br/>(Trích xuất ID review có nguồn thật)"]
+        subgraph ProxyGateway["☁️ CLI PROXY OAUTH (Online)"]
+            ProxyClient["CliProxyLlmClient<br/>(Primary and fallback models through gateway)"]
+            ProxyModeration["CliProxyModerationClient<br/>(Prompt Guard - Max 1800 ký tự)"]
+            ProxyHighlight["CliProxyReviewHighlightAdapter<br/>(Trích xuất ID review có nguồn thật)"]
         end
 
         subgraph QuyetLocal["⚡ QUYET SMALL INFERENCE WORKER (Offline / Local CPU)"]
@@ -81,7 +80,6 @@ graph TB
             Redis_Rate["Token Bucket Quota"]
             Redis_Cards["Draft Confirmation Cards (15p)"]
             Redis_Locks["Distributed Locks (Lua Script 30s)"]
-            Redis_Keys["Groq Key Pool (5 Keys)"]
             Redis_Idem["Idempotency Claim Locks"]
         end
     end
@@ -106,18 +104,17 @@ graph TB
     AdminAiCtrl --> RiskUC
     ManualSupportCtrl --> SupportRequestUC
 
-    ChatUC --> GroqModeration
-    ChatUC --> GroqClient
+    ChatUC --> ProxyModeration
+    ChatUC --> ProxyClient
     ChatUC --> ToolRegistryLayer
     ChatUC --> ArtifactMapper
-    GroqClient --> GroqRotator
 
     ToolRegistryLayer --> CoreApplicationLayer
     DiscoveryUC --> QuyetClient
     AssessTextUC --> QuyetClient
     RiskUC --> QuyetClient
     ReviewUC --> QuyetClient
-    ReviewUC --> GroqHighlight
+    ReviewUC --> ProxyHighlight
 
     MonitoringJob --> ItineraryUC
     MonitoringJob --> PostgreSQL
@@ -139,7 +136,7 @@ graph TB
     classDef controller fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
     classDef core fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
     classDef jobs fill:#e0f2f1,stroke:#00897b,stroke-width:2px;
-    classDef groq fill:#fbe9e7,stroke:#d84315,stroke-width:2px;
+    classDef proxy fill:#fbe9e7,stroke:#d84315,stroke-width:2px;
     classDef quyet fill:#ede7f6,stroke:#512da8,stroke-width:2px;
     classDef storage fill:#eceff1,stroke:#455a64,stroke-width:2px;
 
@@ -148,6 +145,7 @@ graph TB
     class AssistantCtrl,CustomerAiCtrl,ItineraryCtrl,PrefCtrl,SupportWorkflowCtrl,AssessmentCtrl,AdminAiCtrl,ManualSupportCtrl controller;
     class ChatUC,IdemService,ArtifactMapper,DiscoveryUC,ItineraryUC,ComparisonUC,ReviewUC,WeatherUC,SupportUC,SupportRequestUC,PrefUC,AssessTextUC,RiskUC,ConfirmBookingUC core;
     class MonitoringJob jobs;
-    class GroqClient,GroqRotator,GroqModeration,GroqHighlight groq;
     class QuyetClient,QuyetTasks quyet;
-    class DB_Core,DB_V21,DB_V22,DB_V23,DB_V24,DB_V25,Redis_Rate,Redis_Cards,Redis_Locks,Redis_Keys,Redis_Idem storage;
+    class DB_Core,DB_V21,DB_V22,DB_V23,DB_V24,DB_V25,Redis_Rate,Redis_Cards,Redis_Locks,Redis_Idem storage;
+
+    class ProxyClient,ProxyModeration,ProxyHighlight proxy;

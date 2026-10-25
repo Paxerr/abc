@@ -1,0 +1,12 @@
+flowchart TD
+    Start([Chat request]) --> Budget{Enough time for transport?}
+    Budget -- No --> Partial[Return PARTIAL timeout]
+    Budget -- Yes --> Primary[Call primary model through CLI Proxy]
+    Primary --> Result{Request succeeds?}
+    Result -- Yes --> Return[Return text or tool calls]
+    Result -- No --> FallbackBudget{Enough time for fallback?}
+    FallbackBudget -- No --> Partial
+    FallbackBudget -- Yes --> Fallback[Call fallback model through the same CLI Proxy]
+    Fallback --> Status{Request succeeds?}
+    Status -- Yes --> Return
+    Status -- No --> Error[Raise proxy exception]

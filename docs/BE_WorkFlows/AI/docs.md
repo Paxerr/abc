@@ -1,6 +1,6 @@
 # 📖 TÓM TẮT CÁC SƠ ĐỒ — HỆ THỐNG DANASEA AI (HYBRID ARCHITECTURE & WORKFLOWS)
 
-> Thư mục này chứa **12 sơ đồ kỹ thuật chuẩn UML** mô tả toàn diện kiến trúc AI Lai (Groq LLM + Quyet Small Inference Worker), luồng Chat Assistant đa công cụ, cơ chế bảo vệ Moderation & Idempotency, chu trình đặt chỗ Re-validation bền vững (Flyway V25), vòng đời Lập lịch trình 3 giai đoạn (V23), hệ thống quản lý sở thích & phản hồi gợi ý (V24), luồng hỗ trợ khách hàng và hàng đợi thẩm định của Quản trị viên.
+> Thư mục này chứa **12 sơ đồ kỹ thuật chuẩn UML** mô tả toàn diện kiến trúc AI Lai (CLI Proxy LLM + Quyet Small Inference Worker), luồng Chat Assistant đa công cụ, cơ chế bảo vệ Moderation & Idempotency, chu trình đặt chỗ Re-validation bền vững (Flyway V25), vòng đời Lập lịch trình 3 giai đoạn (V23), hệ thống quản lý sở thích & phản hồi gợi ý (V24), luồng hỗ trợ khách hàng và hàng đợi thẩm định của Quản trị viên.
 
 | # | Sơ đồ | Loại | Mã Nguồn (.mmd) | Nội dung cốt lõi |
 |---|-------|------|-----------------|-------------------|
@@ -8,7 +8,7 @@
 | 2 | `Chat_ModerationFlow` | Sequence Diagram | [`codeFlows/Sequence_Diagram/Chat_Moderation_SD.mmd`](codeFlows/Sequence_Diagram/Chat_Moderation_SD.mmd) | Chi tiết bảo vệ: Rate Limit 2 tầng, cắt chuỗi 1800 ký tự chống Padding, Tool Calling 5 lượt, Policy Guard thu hồi câu trả lời không có căn cứ |
 | 3 | `RevalidBooking` | Sequence Diagram | [`codeFlows/Sequence_Diagram/RevalidBooking_SD.mmd`](codeFlows/Sequence_Diagram/RevalidBooking_SD.mmd) | Xác nhận đặt chỗ thời gian thực: Outcome bền vững V25, Khóa phân tán Redis 30s, Ràng buộc 3 bên, Grouping gói riêng, Tái thẩm định giá/slot & Bù trừ rollback |
 | 4 | `RevalidBookingFlow` | Decision Flowchart | [`codeFlows/Decision_Flowchart/RevalidBooking_DF.mmd`](codeFlows/Decision_Flowchart/RevalidBooking_DF.mmd) | Cây quyết định phân nhánh Re-validation chi tiết: Outcome replay → PENDING check → Package grouping → Slot/Price check → Retry count < 2 → Khóa tồn kho nguyên tử |
-| 5 | `RollKeys_ModelFallBack` | Decision Flowchart | [`codeFlows/Decision_Flowchart/RollKeys_ModelFallBack_DF.mmd`](codeFlows/Decision_Flowchart/RollKeys_ModelFallBack_DF.mmd) | Cây quyết định xoay 5 API Key Groq (ACTIVE / COOLDOWN 1p / DISABLED) + Fallback Model tức thời khi gặp lỗi 429/401/5xx |
+| 5 | `CliProxy_ModelFallback` | Decision Flowchart | [`codeFlows/Decision_Flowchart/CliProxy_ModelFallback_DF.mmd`](codeFlows/Decision_Flowchart/CliProxy_ModelFallback_DF.mmd) | Thử model chính và model dự phòng qua cùng CLI Proxy, kiểm tra deadline, không gọi provider trực tiếp |
 | 6 | `AI_Hybrid_Architecture` | Architecture Diagram | [`codeFlows/Architecture/AI_Hybrid_Architecture_ARCH.mmd`](codeFlows/Architecture/AI_Hybrid_Architecture_ARCH.mmd) | Bức tranh kiến trúc phân tầng 3 lớp Hybrid AI toàn diện: 8 Controllers, AiExecutionBudgetFilter, 14 Use Cases, Monitoring Job, 15 Tools, Dual-Brain AI, Postgres V21-V25 & Redis |
 | 7 | `Customer_AI_Discovery_Flow` | Sequence Diagram | [`codeFlows/Sequence_Diagram/Customer_AI_Discovery_SD.mmd`](codeFlows/Sequence_Diagram/Customer_AI_Discovery_SD.mmd) | Khám phá Dịch vụ Thông minh (Search, Recommend, Nearby): Quét Catalog 10k items budget 8s, Preferences Consented, Lọc thời tiết 20 slot, Quyet Relevance top 5, Tracking recommendationId |
 | 8 | `Itinerary_Planning_And_Replan_Flow` | Sequence Diagram | [`codeFlows/Sequence_Diagram/Itinerary_Planning_And_Replan_SD.mmd`](codeFlows/Sequence_Diagram/Itinerary_Planning_And_Replan_SD.mmd) | Chu trình Lập lịch 3 giai đoạn: (1) Preview → Save Draft → Accept tái kiểm tra giá/thời tiết; (2) Re-plan tạo Proposal PENDING (diff); (3) Job nền giám sát nguồn tự động mỗi 60s |
@@ -19,9 +19,9 @@
 
 ---
 
-## 1. AI_Chat_SD.png — Luồng tổng quan AI Chat
+## 1. AI_Chat_SD.mmd — Luồng tổng quan AI Chat
 
-**Thành phần:** `User (Client)` → `AiExecutionBudgetFilter` → `LocaleContextFilter` → `AssistantController` → `RedisRateLimiter` → `ChatIdempotencyService` → `GroqModerationClient (Prompt Guard)` → `ChatHistoryService` → `ChatUseCase` → `GroqLlmClient` → `AIToolRegistry (15 Tools)` → `AssistantArtifactMapper` → `PostgreSQL`
+**Thành phần:** `User (Client)` → `AiExecutionBudgetFilter` → `LocaleContextFilter` → `AssistantController` → `RedisRateLimiter` → `ChatIdempotencyService` → `CliProxyModerationClient` → `ChatHistoryService` → `ChatUseCase` → `CliProxyLlmClient` → `AIToolRegistry (15 Tools)` → `AssistantArtifactMapper` → `PostgreSQL`
 
 **Luồng xử lý:**
 1. Khách gửi tin nhắn qua `POST /api/assistant/chat` kèm các headers: `Accept-Language: vi`, `Idempotency-Key` (tùy chọn) và `X-Execution-Budget-Ms: 8000`.
@@ -31,18 +31,18 @@
 5. `ChatIdempotencyService` kiểm tra khóa gửi trùng:
    - Nếu tìm thấy yêu cầu cùng `Idempotency-Key` hoặc hash câu hỏi đã hoàn tất trước đó trong bảng `ai_chat_requests` (V22) → Trả lại ngay kết quả đã lưu (`replay = true`), không tốn chi phí gọi LLM.
 6. `ChatHistoryService.getOrCreateConversation`: Đọc hoặc tạo hội thoại. Kiểm tra ràng buộc ngôn ngữ: nếu ngôn ngữ header khác ngôn ngữ đã khởi tạo hội thoại → Ném `AiConversationLocaleMismatchException` (HTTP 400).
-7. `GroqModerationClient (Prompt Guard)` quét `isSafe(truncatedContent max 1800 chars)`:
+7. `CliProxyModerationClient` phân loại `isSafe(truncatedContent max 1800 chars)` qua gateway, chỉ chấp nhận đúng nhãn `BENIGN`:
    - Phát hiện Prompt Injection / Tấn công bẻ khóa (Jailbreak) → Ghi log vi phạm và ném ngoại lệ trả về HTTP 400.
-8. `ChatUseCase` nạp lịch sử tin nhắn từ PostgreSQL, gửi ngữ cảnh tới `GroqLlmClient` kèm danh sách 15 công cụ kỹ thuật.
-9. Vòng lặp Tool Calling: Nếu Groq yêu cầu gọi công cụ, backend thực thi và trả kết quả để Groq hoàn thiện câu trả lời tự nhiên.
+8. `ChatUseCase` nạp lịch sử tin nhắn từ PostgreSQL, gửi ngữ cảnh tới `CliProxyLlmClient` kèm danh sách 15 công cụ kỹ thuật.
+9. Vòng lặp Tool Calling: Nếu CLI Proxy yêu cầu gọi công cụ, backend thực thi và trả kết quả để CLI Proxy hoàn thiện câu trả lời tự nhiên.
 10. `AssistantArtifactMapper` ánh xạ các kết quả tool thực tế thành các thẻ dữ liệu có cấu trúc (`AssistantArtifact`): `BOOKING_CONFIRMATION_CARD`, `ITINERARY_PREVIEW`, `DISCOVERY_SUGGESTION`, `SERVICE_COMPARISON`, `REVIEW_HIGHLIGHT`, `CANONICAL_POLICY`, `SUPPORT_ACTION`.
 11. Lưu `AiMessage` và ghi `AssistantAuditLog`, hoàn tất claim idempotency và trả về HTTP 200 kèm cờ `generatedTextVerified = false` (văn bản do AI sinh không tự động trở thành sự thật nguồn).
 
 ---
 
-## 2. Chat_Moderation_SD.png — Chi tiết Moderation & Tool Calling
+## 2. Chat_Moderation_SD.mmd — Chi tiết Moderation & Tool Calling
 
-**Thành phần:** `Khách Hàng` → `AssistantController` → `RedisRateLimiter (2-Layer)` → `GroqModerationClient` → `ChatUseCase` → `GroqLlmClient (Rotator 5 Keys)` → `ToolExecutor [ConversationAware]` → `PolicyGuard` → `Postgres & Redis`
+**Thành phần:** `Khách Hàng` → `AssistantController` → `RedisRateLimiter (2-Layer)` → `CliProxyModerationClient` → `ChatUseCase` → `CliProxyLlmClient` → `ToolExecutor [ConversationAware]` → `PolicyGuard` → `Postgres & Redis`
 
 **Luồng chi tiết:**
 1. **Kiểm soát 2 tầng (2-Layer Rate Limiting):** Kiểm tra hạn mức theo IP và cấp độ tin cậy `TrustTier`. Khách chưa xác thực hoặc bị hạn chế nếu vượt quota sẽ nhận HTTP 429.
@@ -51,7 +51,7 @@
    - Unsafe: Ghi nhận vi phạm vào `AssistantAuditLog`, trả về mã lỗi chuẩn hóa `ai.moderation.blocked`.
    - Benign: Lưu câu hỏi của User vào cơ sở dữ liệu và tiếp tục.
 4. **Vòng lặp Tool Calling (Tối đa 5 lượt):**
-   - Groq LLM trả `ToolCall` → Backend thực thi công cụ thông qua `ToolExecutor` với đầy đủ ngữ cảnh `ToolExecutionContext{language, convId, userId}` để đảm bảo dữ liệu truy vấn tuân thủ quyền hạn và ngôn ngữ của người dùng.
+   - CLI Proxy LLM trả `ToolCall` → Backend thực thi công cụ thông qua `ToolExecutor` với đầy đủ ngữ cảnh `ToolExecutionContext{language, convId, userId}` để đảm bảo dữ liệu truy vấn tuân thủ quyền hạn và ngôn ngữ của người dùng.
 5. **Bộ bảo vệ chính sách (Policy Guard):**
    - Nếu LLM tự ý trả lời các câu hỏi về chính sách hủy vé, hoàn tiền hoặc quy chuẩn thời tiết mà **CHƯA** gọi tool `get_policy` → Hệ thống tự động **THU HỒI & THAY THẾ** phản hồi bằng văn bản chính sách quy chuẩn (`CANONICAL_POLICY`) từ hệ thống.
 6. Hoàn tất phản hồi và lưu vết kiểm toán.
@@ -127,28 +127,19 @@
 
 ---
 
-## 5. RollKeys_ModelFallBack_DF.png — Xoay API Key & Fallback Model Groq
+## 5. CLI Proxy — Model fallback
 
-**Chiến lược độ tin cậy dịch vụ (Zero-Downtime Resilience):**
-- Quản lý **5 API Key Groq** trong Redis Key Pool với 3 trạng thái:
-  - `ACTIVE`: Sẵn sàng phục vụ.
-  - `COOLDOWN`: Tạm ngưng trong 1 phút khi bị Rate Limit (HTTP 429).
-  - `DISABLED`: Khóa vĩnh viễn khi Key sai hoặc bị thu hồi (HTTP 401).
+Backend gửi request đến CLI Proxy bằng client key nội bộ (`AI_CLIPROXY_API_KEY`). Proxy sử dụng tài khoản OAuth trong thư mục auth; backend không quản lý pool API key của nhà cung cấp.
 
-**Xử lý mã phản hồi HTTP:**
+`CliProxyLlmClient` thử `AI_CLIPROXY_MODEL`, sau đó thử `AI_CLIPROXY_FALLBACK_MODEL` qua cùng gateway khi request lỗi. Nếu cả hai lỗi, client trả exception để tầng ứng dụng xử lý. Không gọi trực tiếp nhà cung cấp khác. Kiểm tra deadline trước mỗi lần gọi; timeout trả trạng thái `PARTIAL`.
 
-| Mã HTTP | Ý nghĩa | Hành vi xử lý của Hệ thống |
-|:---:|---|---|
-| **200** | Thành công | Trả kết quả sinh văn bản / gọi tool cho người dùng |
-| **429** | Quá tải tần suất | Đánh dấu Key → `COOLDOWN` (1 phút) → `GroqKeyRotator` lấy Key ACTIVE tiếp theo → Gửi lại request |
-| **401** | Sai mã / Khóa Key | Đánh dấu Key → `DISABLED` vĩnh viễn, phát cảnh báo quản trị viên → Lấy Key khác gửi lại |
-| **5xx** | Lỗi Server Groq Cloud | Tự động chuyển model sang **`GROQ_FALLBACK_MODEL`** (Llama 3.1 8B Instant Fallback) → Gửi lại request |
+`CliProxyModerationClient` cũng đi qua gateway; chỉ chấp nhận kết quả đúng `BENIGN`. Lỗi mạng, HTTP lỗi, JSON lỗi hoặc nhãn không hợp lệ đều từ chối input.
 
-Khi cạn toàn bộ 5 Key trong pool hoặc vượt quá ngân sách thời gian xử lý: Hệ thống chuyển sang **Baseline Mode** an toàn và trả thông báo hệ thống chuẩn hóa, không để lộ stack trace.
+Sơ đồ nguồn: `codeFlows/Decision_Flowchart/CliProxy_ModelFallback_DF.mmd`.
 
 ---
 
-## 6. AI_Hybrid_Architecture_ARCH.png — Kiến trúc phân tầng 3 lớp Hybrid AI (Toàn diện)
+## 6. AI_Hybrid_Architecture_ARCH.mmd — Kiến trúc phân tầng 3 lớp Hybrid AI (Toàn diện)
 
 **Sự kết hợp hoàn chỉnh của hệ thống AI DANASEA:**
 1. **Tầng Giao Diện (Client Apps):** Web App (React / Vite) và Mobile App (Flutter).
@@ -171,7 +162,7 @@ Khi cạn toàn bộ 5 Key trong pool hoặc vượt quá ngân sách thời gia
 5. **Tầng Tác Vụ Nền (Background Jobs):**
    - `ItinerarySourceMonitoringJob`: Quét định kỳ mỗi 60s các biến động slot và cảnh báo thời tiết để tự động đề xuất phương án thay thế mà không can thiệp vào tài chính.
 6. **Tầng Trí Tuệ Nhân Tạo Lai (Dual-Brain Hybrid Engine):**
-   - **Groq Cloud LLM (Online):** Mô hình Llama 3.3 / 3.1 đảm nhiệm tương tác tự nhiên, Prompt Guard và trích dẫn bằng chứng từ review có ID nguồn thực tế.
+   - **CLI Proxy (OAuth):** Model chính và dự phòng được cấu hình qua biến môi trường đảm nhiệm tương tác tự nhiên, Prompt Guard và trích dẫn bằng chứng từ review có ID nguồn thực tế.
    - **Quyet Small Inference Worker (Offline / Local CPU):** Máy chủ suy luận siêu tốc thực hiện 6 nhiệm vụ quyết định có cấu trúc: `INTENT`, `RELEVANCE` (top 5), `SERVICE_CATEGORY`, `MODERATION`, `RISK`, `REVIEW`.
 7. **Tầng Lưu Trữ & Hạ Tầng Dữ Liệu:**
    - **PostgreSQL Database:** Bao gồm dữ liệu nghiệp vụ cốt lõi và chuỗi Migrations Flyway chuyên dụng:
@@ -180,7 +171,7 @@ Khi cạn toàn bộ 5 Key trong pool hoặc vượt quá ngân sách thời gia
      - `V23`: `ai_itinerary_proposals` (Diff), `ai_itinerary_previews` (TTL 15m), `ai_itinerary_revisions` (Lịch sử phiên bản), `ai_itinerary_items`.
      - `V24`: `ai_customer_preferences` (Consent), `ai_recommendations`, `ai_recommendation_feedbacks`, `ai_customer_support_requests`.
      - `V25`: `ai_confirmation_outcomes` (Lưu trữ bền vững kết quả xác nhận đặt vé).
-   - **Redis Cache:** Quản lý Token Bucket, Draft Confirmation Cards (TTL 15m), Khóa phân tán Lua Script (TTL 30s), Groq Key Pool và Idempotency Locks.
+   - **Redis Cache:** Quản lý Token Bucket, Draft Confirmation Cards (TTL 15m), Khóa phân tán Lua Script (TTL 30s), Idempotency Locks.
 
 ---
 
@@ -279,13 +270,13 @@ Khi cạn toàn bộ 5 Key trong pool hoặc vượt quá ngân sách thời gia
 
 ---
 
-## 10. AI_Travel_Assistant_MultiTool_SD.png — Trợ Lý Du Lịch Đa Công Cụ (15 Tools & Structured Artifacts)
+## 10. AI_Travel_Assistant_MultiTool_SD.mmd — Trợ Lý Du Lịch Đa Công Cụ (15 Tools & Structured Artifacts)
 
-**Thành phần:** `Client` → `AiExecutionBudgetFilter` → `AssistantController` → `ChatIdempotencyService` → `GroqLlmClient` → `AIToolRegistry (15 Tools)` → `CustomerFeatureTool` → `AssistantArtifactMapper` → `ConfirmBookingUseCase` → `CreateBookingHoldUseCase`
+**Thành phần:** `Client` → `AiExecutionBudgetFilter` → `AssistantController` → `ChatIdempotencyService` → `CliProxyLlmClient` → `AIToolRegistry (15 Tools)` → `CustomerFeatureTool` → `AssistantArtifactMapper` → `ConfirmBookingUseCase` → `CreateBookingHoldUseCase`
 
 **Luồng thực thi:**
 1. **Hội thoại & Vòng lặp gọi Tool (Tối đa 5 lượt):**
-   - Groq LLM nhận danh sách **15 công cụ kỹ thuật** đã đăng ký:
+   - CLI Proxy LLM nhận danh sách **15 công cụ kỹ thuật** đã đăng ký:
      - 6 công cụ cơ bản: `search_services`, `get_service_detail`, `get_policy`, `get_weather_forecast`, `get_safety_alert`, `request_booking_confirmation`.
      - 9 công cụ khách hàng mở rộng: `ai_smart_search`, `ai_recommend_services`, `ai_nearby_services`, `ai_compare_services`, `ai_plan_itinerary`, `ai_replan_itinerary`, `ai_review_summary`, `ai_weather_slot`, `ai_customer_support`.
    - Khi LLM gọi Tool, `CustomerFeatureTool` thực thi nghiệp vụ thật từ CSDL, đảm bảo kiểm tra quyền truy cập của người dùng.
@@ -384,6 +375,8 @@ Moderation      15 Tools & Card                                     Dịch Vụ 
     [Sơ đồ 3 & 4: Re-validation]                                                 │
     (Xác thực tồn kho & khóa giữ chỗ V25)                                [Sơ đồ 9: Thẩm Định]
              │                                                           (Kiểm duyệt & Rủi ro 3/5/3)
-    [Sơ đồ 5: RollKeys & Fallback]
-    (Độ tin cậy hạ tầng Groq Cloud)
+    [Sơ đồ 5: CLI Proxy & Fallback]
+    (Độ tin cậy hạ tầng CLI Proxy)
 ```
+
+Các sơ đồ đã đổi provider có nguồn Mermaid trong `codeFlows/`; ảnh PNG cũ tương ứng đã được xoá để tránh mô tả sai hệ thống hiện tại.

@@ -12,7 +12,7 @@ modules/<module_name>/
 ├── infrastructure/          # Chi tiết công nghệ, external tools, DB
 │   ├── persistence/         # JPA Entities, Repositories, Database Adapters
 │   ├── redis/               # Redis Adapters, Distributed Cache
-│   └── <external_service>/  # Client gọi API bên ngoài (Groq, OpenMeteo,...)
+│   └── <external_service>/  # Client gọi API bên ngoài (CLI Proxy, OpenMeteo,...)
 └── presentation/            # Giao tiếp với thế giới bên ngoài (Inbound Adapters)
     ├── controllers/         # NƠI CHỨA TẤT CẢ @RestController HTTP ENDPOINTS
     └── dtos/                # Request/Response body từ client gửi lên

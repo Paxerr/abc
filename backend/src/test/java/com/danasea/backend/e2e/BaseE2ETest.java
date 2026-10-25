@@ -202,7 +202,8 @@ public abstract class BaseE2ETest extends BaseSecurityIntegrationTest {
             });
         }
         jdbc.execute("""
-                TRUNCATE TABLE notifications, refunds, payments, sub_orders, master_orders,
+                TRUNCATE TABLE sub_order_reschedule_history, sub_order_reschedule_proposals,
+                    notifications, refunds, payments, sub_orders, master_orders,
                     booking_item_allocations, booking_items, bookings, service_slot_units,
                     service_slots, service_options, services, categories, vendors, users CASCADE
                 """);

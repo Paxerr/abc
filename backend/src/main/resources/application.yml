@@ -169,9 +169,3 @@ ai:
     api-key: ${AI_CLIPROXY_API_KEY:sk-cliproxy-pbl6-local-key}
     model: ${AI_CLIPROXY_MODEL:gemini-3.5-flash}
     fallback-model: ${AI_CLIPROXY_FALLBACK_MODEL:openai/gpt-oss-120b}
-  groq:
-    base-url: ${GROQ_BASE_URL:https://api.groq.com/openai/v1}
-    api-keys: ${GROQ_API_KEYS:}
-    model: ${GROQ_MODEL:openai/gpt-oss-120b}
-    fallback-model: ${GROQ_FALLBACK_MODEL:openai/gpt-oss-20b}
-    moderation-model: ${GROQ_MODERATION_MODEL:meta-llama/llama-prompt-guard-2-86m}

@@ -6,8 +6,19 @@ spring:
     virtual-host: ${SPRING_RABBITMQ_VIRTUAL_HOST}
 
 app:
+  jwt:
+    secret: ${APP_JWT_SECRET}
+  checkin:
+    qr-secret: ${APP_CHECKIN_QR_SECRET}
+  payment:
+    webhook-secret: ${APP_PAYMENT_WEBHOOK_SECRET}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS}
+
+server:
+  tomcat:
+    remoteip:
+      internal-proxies: '172\.30\.10\.2'
 
 springdoc:
   api-docs:

@@ -1,59 +1,37 @@
-# Hướng dẫn Quản lý và Vận hành CLI Proxy API
+# CLI Proxy cho DANASEA
 
-## 1. Thông tin truy cập Web Management & API
+Backend chỉ gọi LLM và moderation qua CLI Proxy. Proxy dùng các tài khoản OAuth trong `cli-proxy/auths/`; không cấu hình API key trực tiếp của nhà cung cấp trong backend.
 
-| Thông tin | Giá trị |
-| :--- | :--- |
-| **Giao diện Web Management** | [http://localhost:8318/management.html](http://localhost:8318/management.html) |
-| **Mật khẩu quản trị (Secret Key)** | `admin123456` *(Được mã hóa bcrypt an toàn trong `cli-proxy/config.yaml`)* |
-| **OpenAI Compatible Base URL** | `http://localhost:8318/v1` |
-| **Client API Key (gọi API)** | `sk-cliproxy-pbl6-local-key` |
-| **Trạng thái Healthcheck** | `healthy` (`bash -c 'echo > /dev/tcp/127.0.0.1/8317'`) |
+`AI_CLIPROXY_API_KEY` là **client key nội bộ** để backend xác thực với proxy. `CLIPROXY_MANAGEMENT_KEY` là khóa quản trị riêng. Hai khóa này không phải API key của model provider.
 
-> **Lưu ý về cổng host:** Cổng được ánh xạ mặc định là **`8318`** để tránh xung đột với container `aiagent-rag-cliproxyapi-1` (đang chiếm cổng `8317` trên máy). Bạn có thể cấu hình lại cổng tùy ý qua biến môi trường `CLIPROXYAPI_PORT` trong file `.env`.
+## Chuẩn bị cấu hình riêng
 
----
-
-## 2. Hướng dẫn sử dụng Web Management Panel
-
-1. Mở trình duyệt truy cập: [http://localhost:8318/management.html](http://localhost:8318/management.html)
-2. Nhập mật khẩu: **`admin123456`** và nhấn Đăng nhập.
-3. **Kết nối tài khoản AI (OAuth / API Key):**
-   - Vào tab **OAuth** (hoặc **Auth files & OAuth**):
-     - Chọn nhà cung cấp bạn muốn kết nối (ví dụ: **Antigravity**, **Gemini**, **Claude**, **Codex**).
-     - Nhấn nút đăng nhập, trình duyệt sẽ mở luồng xác thực Google / Anthropic / OpenAI để cấp quyền.
-     - Sau khi xác thực thành công, token sẽ tự động lưu bền vững vào thư mục `cli-proxy/auths/` (đã được cấu hình mount volume và đưa vào `.gitignore`).
-   - Hoặc vào tab **AI Providers** để nhập trực tiếp Gemini / Claude / OpenAI API Key nếu có.
-4. **Kiểm tra mô hình & Quota:**
-   - Tab **Models**: Danh sách các model đang hoạt động (ví dụ: `gemini-2.5-pro`, `claude-3-7-sonnet`, `gpt-4o`, `antigravity`,...).
-
----
-
-## 3. Lệnh vận hành Docker Compose
-
-Triển khai độc lập thông qua file [docker-compose.cli-proxy.yml](file:///Users/capkimkhanh/Documents/DUT4_1/PBL6/docker-compose.cli-proxy.yml):
+Từ thư mục gốc repo, tạo `.env` từ `.env.example`, điền các cấu hình dịch vụ, sau đó:
 
 ```bash
-# Khởi động dịch vụ ở chế độ chạy ngầm
-docker compose -f docker-compose.cli-proxy.yml up -d
-
-# Xem log thời gian thực
-docker compose -f docker-compose.cli-proxy.yml logs -f
-
-# Khởi động lại dịch vụ
-docker compose -f docker-compose.cli-proxy.yml restart
-
-# Dừng dịch vụ
-docker compose -f docker-compose.cli-proxy.yml stop
+python3 scripts/production.py prepare
 ```
 
----
+Script sinh các khóa còn thiếu và config riêng `private/cli-proxy/config.yaml`. Không ghi giá trị khóa vào Git, không ghi đè cấu hình proxy đã tồn tại, không xoá token OAuth. File `cli-proxy/config.yaml` trong Git chỉ là mẫu với management tắt và danh sách client key rỗng.
 
-## 4. Kết nối với Spring Boot Backend (PBL6)
+Production đã có service `cli-proxy-api` trong `docker-compose.prod.yml`; không chạy thêm Compose độc lập cùng lúc vì trùng tên container và cổng. Compose độc lập dành cho backend chạy trực tiếp trên host:
 
-- **Khi Backend chạy trực tiếp trên máy Host (Local / IDE):**
-  - AI Base URL: `http://localhost:8318/v1`
-  - AI API Key: `sk-cliproxy-pbl6-local-key`
-- **Khi Backend chạy trong Docker (`docker-compose.yml`):**
-  - AI Base URL: `http://host.docker.internal:8318/v1`
-  - AI API Key: `sk-cliproxy-pbl6-local-key`
+```bash
+docker compose -f docker-compose.cli-proxy.yml up -d
+```
+
+## Quản trị qua SSH
+
+Trên Mac:
+
+```bash
+ssh -L 8318:localhost:8318 -L 8085:localhost:8085 <user>@<server-tailscale-ip>
+```
+
+Mở `http://localhost:8318/management.html` và dùng management key trong `.env` của máy chạy proxy. Đăng nhập tài khoản tại mục OAuth; giữ `cli-proxy/auths/` ngoài Git. Kiểm tra `/v1/models` rồi cấu hình `AI_CLIPROXY_MODEL` và `AI_CLIPROXY_FALLBACK_MODEL` theo model tài khoản thực sự được cấp quyền.
+
+Production backend dùng `http://cli-proxy-api:8317/v1` qua mạng Docker `danasea_ai`. Backend chạy trực tiếp trên host dùng `http://127.0.0.1:8318/v1`. Không dùng địa chỉ localhost của host cho backend trong container.
+
+Các cổng publish chỉ bind `127.0.0.1`. Không Funnel management/OAuth; Funnel chỉ trỏ frontend. Proxy production chạy UID/GID cấu hình trong `CLIPROXY_UID`/`CLIPROXY_GID`; thư mục token, config và static cần cho user đó đọc/ghi. Giữ nguyên token khi chuyển quyền sở hữu, không xoá thư mục auth để sửa lỗi quyền.
+
+Các test HTTP local kiểm tra route, header xác thực, fallback và moderation. Chúng không chứng minh tài khoản OAuth trên server đã được refresh hoặc model thật gọi thành công; cần kiểm tra riêng trước khi deploy.

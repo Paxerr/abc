@@ -1,9 +1,6 @@
 package com.danasea.backend.modules.ai;
 
-import com.danasea.backend.modules.ai.application.ports.KeyRotatorPort;
 import com.danasea.backend.modules.ai.domain.TrustTier;
-import com.danasea.backend.modules.ai.domain.services.AIToolRegistry;
-import com.danasea.backend.modules.ai.infrastructure.groq.GroqLlmClient;
 import com.danasea.backend.modules.ai.infrastructure.redis.RedisRateLimiter;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
@@ -13,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.web.client.RestClient;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
