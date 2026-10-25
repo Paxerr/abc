@@ -176,7 +176,8 @@ export function CategoryExperienceCarousel({
                   className="flex-[0_0_100%] sm:flex-[0_0_50%] md:flex-[0_0_33.333%] lg:flex-[0_0_25%] min-w-0 pl-4 sm:pl-5 select-none flex flex-col relative py-2"
                   style={{ zIndex: isThisHovered ? 20 : 1 }}
                 >
-                  <div
+                  <Link
+                    to={`/tour/${item.id}`}
                     onMouseEnter={() => setHoveredCardId(item.id)}
                     onMouseLeave={() => setHoveredCardId(null)}
                     style={{
@@ -216,6 +217,11 @@ export function CategoryExperienceCarousel({
                           e.stopPropagation();
                           toggleWishlist(item.id);
                         }}
+                        onKeyDown={(e) => {
+                          if (e.key === ' ' || e.key === 'Enter') {
+                            e.stopPropagation();
+                          }
+                        }}
                         aria-label="Save to wishlist"
                         className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-90 transition-transform shadow-sm cursor-pointer z-10"
                       >
@@ -226,15 +232,15 @@ export function CategoryExperienceCarousel({
                     </div>
 
                     {/* Card Content & Details */}
-                    <Link to={`/tour/${item.id}`} className="flex-1 flex flex-col justify-between px-1">
+                    <div className="flex-1 flex flex-col justify-between px-1">
                       <div>
                         {/* Category & Duration */}
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-1">
-                          <span className="font-semibold text-cyan-700">{category}</span>
-                          <span>•</span>
-                          <span>{duration}</span>
-                          <span>•</span>
-                          <span className="truncate">{item.location}</span>
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-1.5 min-w-0">
+                          <span className="font-semibold text-cyan-700 whitespace-nowrap shrink-0">{category}</span>
+                          <span className="shrink-0 text-slate-300">•</span>
+                          <span className="whitespace-nowrap shrink-0 font-medium text-slate-600">{duration}</span>
+                          <span className="shrink-0 text-slate-300">•</span>
+                          <span className="truncate min-w-0 flex-1">{item.location}</span>
                         </div>
 
                         {/* Title */}
@@ -261,8 +267,8 @@ export function CategoryExperienceCarousel({
                           <span className="text-slate-400 text-[11px]">({item.reviewCount})</span>
                         </div>
                       </div>
-                    </Link>
-                  </div>
+                    </div>
+                  </Link>
                 </div>
               );
             })}
