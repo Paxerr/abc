@@ -202,6 +202,53 @@ export function ExperienceDetail() {
     return raw;
   }, [service?.waiverContent]);
 
+  const allImages: string[] = useMemo(() => {
+    if (service?.imageUrls && service.imageUrls.length > 0) {
+      return service.imageUrls;
+    }
+    return ['https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=800'];
+  }, [service?.imageUrls]);
+
+  // Auto-play loop every 3.5 seconds in circular cycle (pauses when hovering)
+  useEffect(() => {
+    if (allImages.length <= 1 || isHoveringGallery) return;
+
+    const timer = setInterval(() => {
+      setActiveImageIndex((prev) => (prev + 1) % allImages.length);
+    }, 3500);
+
+    return () => clearInterval(timer);
+  }, [allImages.length, isHoveringGallery]);
+
+  const handlePrevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
+
+  const handleNextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveImageIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  // Keyboard navigation & body scroll lock for Lightbox Modal
+  useEffect(() => {
+    if (!isLightboxOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsLightboxOpen(false);
+      if (e.key === 'ArrowLeft') setLightboxIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+      if (e.key === 'ArrowRight') setLightboxIndex((prev) => (prev + 1) % allImages.length);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [isLightboxOpen, allImages.length]);
+
   const handleAddToCart = () => {
     if (!service) return;
     if (!activeSlot) {
@@ -280,53 +327,6 @@ export function ExperienceDetail() {
       </main>
     );
   }
-
-  const allImages: string[] = useMemo(() => {
-    if (service?.imageUrls && service.imageUrls.length > 0) {
-      return service.imageUrls;
-    }
-    return ['https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=800'];
-  }, [service?.imageUrls]);
-
-  // Auto-play loop every 3.5 seconds in circular cycle (pauses when hovering)
-  useEffect(() => {
-    if (allImages.length <= 1 || isHoveringGallery) return;
-
-    const timer = setInterval(() => {
-      setActiveImageIndex((prev) => (prev + 1) % allImages.length);
-    }, 3500);
-
-    return () => clearInterval(timer);
-  }, [allImages.length, isHoveringGallery]);
-
-  const handlePrevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setActiveImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
-  };
-
-  const handleNextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setActiveImageIndex((prev) => (prev + 1) % allImages.length);
-  };
-
-  // Keyboard navigation & body scroll lock for Lightbox Modal
-  useEffect(() => {
-    if (!isLightboxOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsLightboxOpen(false);
-      if (e.key === 'ArrowLeft') setLightboxIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
-      if (e.key === 'ArrowRight') setLightboxIndex((prev) => (prev + 1) % allImages.length);
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-    };
-  }, [isLightboxOpen, allImages.length]);
 
   const isSaved = isInWishlist(service.id);
 
