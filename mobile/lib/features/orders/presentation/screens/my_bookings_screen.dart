@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../../../core/auth/auth_session.dart';
 import '../../../../core/data/booking_repository.dart';
+import '../../../../core/data/order_repository.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shapes.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/app_pill_button.dart';
+import 'order_detail_screen.dart';
 
 const _statuses = {
   'HOLD': 'Đang giữ chỗ',
@@ -221,11 +223,15 @@ class BookingDetailScreen extends StatefulWidget {
 
 class _BookingDetailScreenState extends State<BookingDetailScreen> {
   final _repository = BookingRepository();
+  final _orderRepository = OrderRepository();
   CustomerBooking? _booking;
   BookingCancellation? _cancellation;
   String? _failure;
-  bool _loading = true, _cancelling = false;
+  bool _loading = true, _cancelling = false, _creatingOrder = false;
+  bool _orderUncertain = false;
   int _generation = 0;
+  late final String _orderIdempotencyKey =
+      OrderRepository.generateIdempotencyKey('ord');
 
   @override
   void initState() {
@@ -249,6 +255,70 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     } finally {
       if (mounted && generation == _generation)
         setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _createOrder() async {
+    if (_creatingOrder || _cancelling || _orderUncertain) return;
+    String discountCode = '';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const LocalizedText('Tạo đơn hàng'),
+        content: TextField(
+          onChanged: (value) => discountCode = value,
+          textCapitalization: TextCapitalization.characters,
+          decoration: InputDecoration(
+            labelText: tr(context, 'Mã giảm giá (không bắt buộc)'),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const LocalizedText('Quay lại'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const LocalizedText('Tạo đơn hàng'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _creatingOrder = true);
+    try {
+      final order = await _orderRepository.createOrder(
+        bookingId: widget.bookingId,
+        idempotencyKey: _orderIdempotencyKey,
+        discountCode: discountCode,
+      );
+      if (!mounted) return;
+      await _load();
+      if (!mounted) return;
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OrderDetailScreen(masterOrder: order),
+        ),
+      );
+    } on AuthFailure catch (e) {
+      if (mounted) {
+        if (e.status == 0 || e.status >= 500) {
+          setState(() => _orderUncertain = true);
+        }
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: LocalizedText(e.message)));
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _orderUncertain = true);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: LocalizedText(_error(e))));
+      }
+    } finally {
+      if (mounted) setState(() => _creatingOrder = false);
     }
   }
 
@@ -376,11 +446,29 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                     ),
                   ]),
                 ),
-              if (booking.canCancel && cancellation == null) ...[
+              if (booking.status == 'HOLD' && cancellation == null) ...[
                 const SizedBox(height: 24),
                 AppPillButton(
+                  label: _creatingOrder ? 'Đang tạo đơn...' : 'Tạo đơn hàng',
+                  onPressed:
+                      _creatingOrder || _cancelling || _orderUncertain
+                          ? null
+                          : _createOrder,
+                ),
+                if (_orderUncertain)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: LocalizedText(
+                      'Chưa xác định được kết quả tạo đơn hàng. Không tự động gửi lại để tránh trùng lặp, vui lòng kiểm tra Đơn hàng của tôi.',
+                    ),
+                  ),
+              ],
+              if (booking.canCancel && cancellation == null) ...[
+                const SizedBox(height: 12),
+                AppPillButton(
                   label: _cancelling ? 'Đang gửi yêu cầu...' : 'Hủy booking',
-                  onPressed: _cancelling ? null : _cancel,
+                  variant: AppButtonVariant.outline,
+                  onPressed: _cancelling || _creatingOrder ? null : _cancel,
                 ),
               ],
             ],

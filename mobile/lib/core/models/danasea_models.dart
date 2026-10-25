@@ -296,6 +296,7 @@ enum PaymentStatus { pending, success, failed, refunded }
 
 class MasterOrderModel {
   final String id; // Code, e.g. "DNS-8924"
+  final String? bookingId;
   final String customerId;
   final MasterOrderStatus status;
   final int totalAmount;
@@ -303,10 +304,12 @@ class MasterOrderModel {
   final String? discountCodeId;
   final String? discountCode;
   final DateTime createdAt;
+  final DateTime? updatedAt;
   final List<SubOrderModel> subOrders;
 
   const MasterOrderModel({
     required this.id,
+    this.bookingId,
     required this.customerId,
     required this.status,
     required this.totalAmount,
@@ -314,6 +317,7 @@ class MasterOrderModel {
     this.discountCodeId,
     this.discountCode,
     required this.createdAt,
+    this.updatedAt,
     required this.subOrders,
   });
 
@@ -336,9 +340,20 @@ class SubOrderModel {
   final int quantity;
   final int unitPrice;
   final int subtotalAmount;
+  final int discountAmount;
+  final int finalAmount;
   final SubOrderStatus status;
+  final String? rawStatus;
+  final bool waiverRequired;
+  final int? waiverVersion;
+  final String? waiverContent;
+  final String? waiverLanguage;
+  final bool waiverFallbackUsed;
   final bool waiverAccepted;
   final DateTime? waiverAcceptedAt;
+  final String? waiverAcceptedBy;
+  final String? waiverAcceptedLanguage;
+  final String? cancellationPolicyVersion;
   final String qrSecret; // UUID for verification
   final DateTime? checkedInAt;
 
@@ -357,12 +372,24 @@ class SubOrderModel {
     required this.quantity,
     required this.unitPrice,
     required this.subtotalAmount,
+    int? discountAmount,
+    int? finalAmount,
     required this.status,
+    this.rawStatus,
+    this.waiverRequired = false,
+    this.waiverVersion,
+    this.waiverContent,
+    this.waiverLanguage,
+    this.waiverFallbackUsed = false,
     this.waiverAccepted = true,
     this.waiverAcceptedAt,
+    this.waiverAcceptedBy,
+    this.waiverAcceptedLanguage,
+    this.cancellationPolicyVersion,
     required this.qrSecret,
     this.checkedInAt,
-  });
+  }) : discountAmount = discountAmount ?? 0,
+       finalAmount = finalAmount ?? subtotalAmount;
 }
 
 // ==========================================
@@ -377,12 +404,17 @@ class RefundModel {
   final String id;
   final String subOrderId;
   final String subOrderCode;
+  final String? masterOrderId;
   final String serviceName;
   final int amount;
   final double refundPercentage;
   final RefundReason reason;
+  final String? rawReason;
   final RefundStatus status;
   final String originalPaymentMethod;
+  final String? providerTransactionId;
+  final String? providerRefundId;
+  final String? lastError;
   final DateTime? processedAt;
   final DateTime createdAt;
 
@@ -390,12 +422,17 @@ class RefundModel {
     required this.id,
     required this.subOrderId,
     required this.subOrderCode,
+    this.masterOrderId,
     required this.serviceName,
     required this.amount,
     required this.refundPercentage,
     required this.reason,
+    this.rawReason,
     required this.status,
     required this.originalPaymentMethod,
+    this.providerTransactionId,
+    this.providerRefundId,
+    this.lastError,
     this.processedAt,
     required this.createdAt,
   });

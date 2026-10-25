@@ -44,6 +44,7 @@ class AuthSession {
     String path, {
     String method = 'GET',
     Map<String, dynamic>? data,
+    Map<String, String>? headers,
     bool retry = true,
     bool authenticated = true,
   }) async {
@@ -51,6 +52,7 @@ class AuthSession {
       path,
       method: method,
       data: data,
+      headers: headers,
       retry: retry,
       authenticated: authenticated,
     );
@@ -64,6 +66,7 @@ class AuthSession {
     String path, {
     String method = 'GET',
     Map<String, dynamic>? data,
+    Map<String, String>? headers,
     bool retry = true,
     bool authenticated = true,
   }) async {
@@ -79,6 +82,9 @@ class AuthSession {
       req.headers.set('Accept-Language', AppLanguage.instance.code);
       if (authenticated && _access != null)
         req.headers.set('Authorization', 'Bearer $_access');
+      if (headers != null) {
+        headers.forEach(req.headers.set);
+      }
       if (_refresh != null &&
           (path == '/api/auth/refresh' || path == '/api/auth/logout')) {
         req.cookies.add(Cookie('refresh_token', _refresh!));
@@ -108,6 +114,7 @@ class AuthSession {
           path,
           method: method,
           data: data,
+          headers: headers,
           retry: false,
           authenticated: authenticated,
         );
@@ -126,6 +133,67 @@ class AuthSession {
       if (body is Map && body['accessToken'] is String)
         _access = body['accessToken'];
       return body;
+    } on SocketException {
+      throw AuthFailure(
+        'Không kết nối được máy chủ. Kiểm tra mạng và địa chỉ backend.',
+      );
+    } on TimeoutException {
+      throw AuthFailure('Máy chủ phản hồi quá lâu. Vui lòng thử lại.');
+    }
+  }
+
+  Future<Uint8List> requestBytes(
+    String path, {
+    String method = 'GET',
+    Map<String, String>? headers,
+    bool retry = true,
+    bool authenticated = true,
+  }) async {
+    final uri = Uri.parse('$baseUrl$path');
+    if (kReleaseMode && uri.scheme != 'https')
+      throw AuthFailure('Backend phải dùng HTTPS.');
+    try {
+      final req = await client
+          .openUrl(method, uri)
+          .timeout(const Duration(seconds: 15));
+      req.followRedirects = false;
+      req.headers.set('Accept-Language', AppLanguage.instance.code);
+      if (authenticated && _access != null)
+        req.headers.set('Authorization', 'Bearer $_access');
+      if (headers != null) {
+        headers.forEach(req.headers.set);
+      }
+      final response = await req.close().timeout(const Duration(seconds: 20));
+      final chunks = await response
+          .fold<List<int>>(<int>[], (acc, chunk) => acc..addAll(chunk))
+          .timeout(const Duration(seconds: 20));
+      if (response.statusCode == 401 &&
+          authenticated &&
+          _access != null &&
+          retry &&
+          !pendingVerification &&
+          !path.startsWith('/api/auth/')) {
+        await refresh();
+        return requestBytes(
+          path,
+          method: method,
+          headers: headers,
+          retry: false,
+          authenticated: authenticated,
+        );
+      }
+      if (response.statusCode >= 300) {
+        String? message;
+        try {
+          final decoded = jsonDecode(utf8.decode(chunks));
+          if (decoded is Map) message = decoded['message']?.toString();
+        } catch (_) {}
+        throw AuthFailure(
+          message ?? 'Không thể thực hiện yêu cầu. Vui lòng thử lại.',
+          response.statusCode,
+        );
+      }
+      return Uint8List.fromList(chunks);
     } on SocketException {
       throw AuthFailure(
         'Không kết nối được máy chủ. Kiểm tra mạng và địa chỉ backend.',
