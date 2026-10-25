@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../../../store/useCartStore';
 import { useWishlistStore } from '../../../store/useWishlistStore';
@@ -29,7 +29,6 @@ export function ExperienceDetail() {
   // Gallery slider state for the large main image
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [isHoveringGallery, setIsHoveringGallery] = useState<boolean>(false);
-  const thumbStripRef = useRef<HTMLDivElement>(null);
 
   // Lightbox Modal state for full-screen image preview
   const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
@@ -540,17 +539,14 @@ export function ExperienceDetail() {
                   </div>
                 </div>
 
-                {/* Dải ảnh phụ nhỏ ngay bên dưới ảnh chính kèm 2 nút trái phải - Canh giữa cân đối và thanh thoát */}
-                <div className="flex items-center justify-center gap-2.5 w-full pt-1.5 pb-0.5">
+                {/* Dải ảnh phụ nhỏ ngay bên dưới ảnh chính kèm 2 nút trái phải */}
+                <div className="relative flex items-center gap-1 w-full pt-1 px-0.5">
                   {/* Nút mũi tên trái cho dải ảnh phụ - Bỏ nền, không viền, thanh thoát */}
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (allImages.length > 1) {
-                        handlePrevImage(e);
-                        thumbStripRef.current?.scrollBy({ left: -100, behavior: 'smooth' });
-                      }
+                      if (allImages.length > 1) handlePrevImage(e);
                     }}
                     aria-label="Dải ảnh trước"
                     className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center shrink-0 transition-all rounded-full ${
@@ -562,11 +558,8 @@ export function ExperienceDetail() {
                     <span className="material-symbols-outlined text-[20px]">chevron_left</span>
                   </button>
 
-                  {/* Dải các thẻ ảnh phụ nhỏ - Canh giữa đối xứng với ảnh lớn, cuộn mượt khi nhiều ảnh */}
-                  <div
-                    ref={thumbStripRef}
-                    className="flex items-center gap-2.5 overflow-x-auto py-1 scrollbar-none scroll-smooth max-w-[calc(100%-80px)]"
-                  >
+                  {/* Dải các thẻ ảnh phụ nhỏ */}
+                  <div className="flex-1 flex items-center gap-2 overflow-x-auto py-1 scrollbar-none scroll-smooth">
                     {allImages.map((imgUrl, idx) => {
                       const isCurrentActive = activeImageIndex === idx;
                       return (
@@ -597,10 +590,7 @@ export function ExperienceDetail() {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (allImages.length > 1) {
-                        handleNextImage(e);
-                        thumbStripRef.current?.scrollBy({ left: 100, behavior: 'smooth' });
-                      }
+                      if (allImages.length > 1) handleNextImage(e);
                     }}
                     aria-label="Dải ảnh sau"
                     className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center shrink-0 transition-all rounded-full ${
@@ -706,149 +696,151 @@ export function ExperienceDetail() {
 
             {/* RIGHT COLUMN: Sticky Interactive Booking Box */}
             <aside className="lg:col-span-4 w-full lg:sticky lg:top-24">
-              <div className="w-full p-5 rounded-2xl bg-white border border-slate-200/80 shadow-lg flex flex-col gap-4">
+              <div className="w-full p-5 sm:p-6 rounded-2xl bg-white border border-slate-200/80 shadow-lg flex flex-col justify-between min-h-[528px]">
                 
-                {/* Price Display */}
-                <div className="border-b border-slate-100 pb-3 flex items-baseline gap-1.5 flex-wrap">
-                  <span className="text-3xl font-extrabold text-cyan-700 tracking-tight">
-                    {unitPrice.toLocaleString('vi-VN')}₫
-                  </span>
-                  <span className="text-xs text-slate-500 font-medium whitespace-nowrap">
-                    {selectedOption?.pricingUnit === 'PER_PACKAGE' ? '/ gói' : '/ người'}
-                  </span>
-                </div>
+                {/* Upper Booking Configuration (Price, Date, Time Slots, Qty, Waiver) */}
+                <div className="flex flex-col gap-4">
+                  {/* Price Display */}
+                  <div className="border-b border-slate-100 pb-3 flex items-baseline gap-1.5 flex-wrap">
+                    <span className="text-3xl font-extrabold text-cyan-700 tracking-tight">
+                      {unitPrice.toLocaleString('vi-VN')}₫
+                    </span>
+                    <span className="text-xs text-slate-500 font-medium whitespace-nowrap">
+                      {selectedOption?.pricingUnit === 'PER_PACKAGE' ? '/ gói' : '/ người'}
+                    </span>
+                  </div>
 
-                {/* Date Selection */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs uppercase tracking-wider text-slate-600 font-bold">Ngày khởi hành</label>
-                  {availableDates.length > 0 ? (
-                    <select
-                      value={selectedDate}
-                      onChange={(e) => {
-                        const newDate = e.target.value;
-                        setSelectedDate(newDate);
-                        const slotsOnDate = service?.slots?.filter((s) => s.date === newDate) || [];
-                        const firstBookable = slotsOnDate.find((s) => s.bookable && s.availableCapacity > 0) || slotsOnDate[0];
-                        setSelectedSlotId(firstBookable ? firstBookable.slotId : null);
-                      }}
-                      className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm font-medium cursor-pointer hover:bg-slate-100/80 transition-colors outline-none focus:ring-2 focus:ring-cyan-500"
-                    >
-                      {availableDates.map((d) => (
-                        <option key={d} value={d}>
-                          {d === new Date().toISOString().split('T')[0] ? `Hôm nay (${d})` : d}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <div className="p-3 rounded-xl bg-slate-50 text-xs text-slate-500">
-                      Chưa có lịch mở bán cho dịch vụ này
+                  {/* Date Selection */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs uppercase tracking-wider text-slate-600 font-bold">Ngày khởi hành</label>
+                    {availableDates.length > 0 ? (
+                      <select
+                        value={selectedDate}
+                        onChange={(e) => {
+                          const newDate = e.target.value;
+                          setSelectedDate(newDate);
+                          const slotsOnDate = service?.slots?.filter((s) => s.date === newDate) || [];
+                          const firstBookable = slotsOnDate.find((s) => s.bookable && s.availableCapacity > 0) || slotsOnDate[0];
+                          setSelectedSlotId(firstBookable ? firstBookable.slotId : null);
+                        }}
+                        className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm font-medium cursor-pointer hover:bg-slate-100/80 transition-colors outline-none focus:ring-2 focus:ring-cyan-500"
+                      >
+                        {availableDates.map((d) => (
+                          <option key={d} value={d}>
+                            {d === new Date().toISOString().split('T')[0] ? `Hôm nay (${d})` : d}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="p-3 rounded-xl bg-slate-50 text-xs text-slate-500">
+                        Chưa có lịch mở bán cho dịch vụ này
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Structured Slots Selection */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs uppercase tracking-wider text-slate-600 font-bold">Khung giờ khởi hành</label>
+                    <div className="flex flex-col gap-2">
+                      {slotsForSelectedDate.length === 0 ? (
+                        <p className="text-slate-500 text-xs text-center py-2 bg-slate-50 rounded-xl">
+                          Không có ca giờ nào trong ngày này.
+                        </p>
+                      ) : (
+                        slotsForSelectedDate.map((slot) => {
+                          const isSelected = activeSlot?.slotId === slot.slotId;
+                          const remain = slot.availableCapacity;
+                          const isFull = remain <= 0 || !slot.bookable;
+
+                          return (
+                            <div
+                              key={slot.slotId}
+                              onClick={() => !isFull && setSelectedSlotId(slot.slotId)}
+                              className={`p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                                isSelected
+                                  ? 'bg-cyan-50/70 border-cyan-500 shadow-xs'
+                                  : isFull
+                                  ? 'bg-slate-100 border-transparent opacity-50 cursor-not-allowed'
+                                  : 'bg-slate-50 border-slate-200/80 hover:bg-slate-100/80'
+                              }`}
+                            >
+                              <div className="flex flex-col">
+                                <span className={`text-sm font-bold ${isSelected ? 'text-cyan-800' : 'text-slate-800'}`}>
+                                  {slot.startTime} - {slot.endTime}
+                                </span>
+                                <span className="text-[11px] text-slate-500 mt-0.5">
+                                  {isFull ? 'Đã hết chỗ' : `Còn ${remain} chỗ trống (Tổng ${slot.capacity})`}
+                                </span>
+                              </div>
+                              {isSelected && (
+                                <span className="material-symbols-outlined text-cyan-600 text-lg">check_circle</span>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Quantity */}
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-800">Số lượng người</span>
+                      {activeSlot && (
+                        <span className="text-[11px] text-slate-500">Tối đa {maxCapacity} người</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setQty(Math.max(1, qty - 1))}
+                        disabled={qty <= 1}
+                        className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-700 flex items-center justify-center font-bold hover:bg-slate-100 transition-colors shadow-xs active:scale-95 disabled:opacity-40 cursor-pointer"
+                      >
+                        -
+                      </button>
+                      <span className="font-bold text-base text-slate-900 min-w-[20px] text-center">{qty}</span>
+                      <button
+                        type="button"
+                        onClick={() => setQty(Math.min(maxCapacity > 0 ? maxCapacity : 1, qty + 1))}
+                        disabled={!activeSlot || isSoldOut || qty >= maxCapacity}
+                        className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-700 flex items-center justify-center font-bold hover:bg-slate-100 transition-colors shadow-xs active:scale-95 disabled:opacity-40 cursor-pointer"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Waiver Checkbox */}
+                  {service.waiverRequired && (
+                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col gap-2">
+                      <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={isWaiverChecked}
+                          onChange={(e) => setIsWaiverChecked(e.target.checked)}
+                          className="mt-1 w-4 h-4 rounded text-cyan-600 accent-cyan-600 cursor-pointer"
+                        />
+                        <span className="text-xs text-slate-700 leading-snug">
+                          Tôi đã đọc, hiểu rõ và đồng ý với{' '}
+                          <strong className="text-slate-900">Điều khoản an toàn &amp; miễn trừ trách nhiệm</strong> khi tham gia hoạt động biển.
+                        </span>
+                      </label>
                     </div>
                   )}
                 </div>
 
-                {/* Structured Slots Selection */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs uppercase tracking-wider text-slate-600 font-bold">Khung giờ khởi hành</label>
-                  <div className="flex flex-col gap-2">
-                    {slotsForSelectedDate.length === 0 ? (
-                      <p className="text-slate-500 text-xs text-center py-2 bg-slate-50 rounded-xl">
-                        Không có ca giờ nào trong ngày này.
-                      </p>
-                    ) : (
-                      slotsForSelectedDate.map((slot) => {
-                        const isSelected = activeSlot?.slotId === slot.slotId;
-                        const remain = slot.availableCapacity;
-                        const isFull = remain <= 0 || !slot.bookable;
-
-                        return (
-                          <div
-                            key={slot.slotId}
-                            onClick={() => !isFull && setSelectedSlotId(slot.slotId)}
-                            className={`p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between ${
-                              isSelected
-                                ? 'bg-cyan-50/70 border-cyan-500 shadow-xs'
-                                : isFull
-                                ? 'bg-slate-100 border-transparent opacity-50 cursor-not-allowed'
-                                : 'bg-slate-50 border-slate-200/80 hover:bg-slate-100/80'
-                            }`}
-                          >
-                            <div className="flex flex-col">
-                              <span className={`text-sm font-bold ${isSelected ? 'text-cyan-800' : 'text-slate-800'}`}>
-                                {slot.startTime} - {slot.endTime}
-                              </span>
-                              <span className="text-[11px] text-slate-500 mt-0.5">
-                                {isFull ? 'Đã hết chỗ' : `Còn ${remain} chỗ trống (Tổng ${slot.capacity})`}
-                              </span>
-                            </div>
-                            {isSelected && (
-                              <span className="material-symbols-outlined text-cyan-600 text-lg">check_circle</span>
-                            )}
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-
-                {/* Quantity */}
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-slate-800">Số lượng người</span>
-                    {activeSlot && (
-                      <span className="text-[11px] text-slate-500">Tối đa {maxCapacity} người</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setQty(Math.max(1, qty - 1))}
-                      disabled={qty <= 1}
-                      className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-700 flex items-center justify-center font-bold hover:bg-slate-100 transition-colors shadow-xs active:scale-95 disabled:opacity-40 cursor-pointer"
-                    >
-                      -
-                    </button>
-                    <span className="font-bold text-base text-slate-900 min-w-[20px] text-center">{qty}</span>
-                    <button
-                      type="button"
-                      onClick={() => setQty(Math.min(maxCapacity > 0 ? maxCapacity : 1, qty + 1))}
-                      disabled={!activeSlot || isSoldOut || qty >= maxCapacity}
-                      className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-700 flex items-center justify-center font-bold hover:bg-slate-100 transition-colors shadow-xs active:scale-95 disabled:opacity-40 cursor-pointer"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                {/* Waiver Checkbox */}
-                {service.waiverRequired && (
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col gap-2">
-                    <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={isWaiverChecked}
-                        onChange={(e) => setIsWaiverChecked(e.target.checked)}
-                        className="mt-1 w-4 h-4 rounded text-cyan-600 accent-cyan-600 cursor-pointer"
-                      />
-                      <span className="text-xs text-slate-700 leading-snug">
-                        Tôi đã đọc, hiểu rõ và đồng ý với{' '}
-                        <strong className="text-slate-900">Điều khoản an toàn &amp; miễn trừ trách nhiệm</strong> khi tham gia hoạt động biển.
-                      </span>
-                    </label>
-                  </div>
-                )}
-
-                {/* Total Price */}
-                <div className="flex flex-col gap-1 pt-3 border-t border-slate-100">
+                {/* Lower Summary & Actions (Anchored to Bottom to Perfectly Balance with Left Gallery) */}
+                <div className="flex flex-col gap-3 pt-4 border-t border-slate-100 mt-2">
+                  {/* Total Price */}
                   <div className="flex items-baseline justify-between">
                     <span className="text-sm font-semibold text-slate-600">Tổng tạm tính:</span>
                     <span className="text-2xl font-extrabold text-cyan-700">
                       {totalPrice.toLocaleString('vi-VN')}₫
                     </span>
                   </div>
-                </div>
 
-                {/* Actions */}
-                <div className="flex flex-col gap-2 pt-1">
+                  {/* Actions */}
                   <button
                     type="button"
                     onClick={handleAddToCart}
