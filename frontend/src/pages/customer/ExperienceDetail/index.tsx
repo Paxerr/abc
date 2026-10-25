@@ -26,6 +26,10 @@ export function ExperienceDetail() {
   const addItem = useCartStore((state) => state.addItem);
   const { toggleWishlist, isInWishlist } = useWishlistStore();
 
+  // Gallery slider state for the large main image
+  const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
+  const [isHoveringGallery, setIsHoveringGallery] = useState<boolean>(false);
+
   // Fetch Service Detail from Backend API (with graceful fallback to mock if legacy ID)
   useEffect(() => {
     if (!id) {
@@ -268,12 +272,34 @@ export function ExperienceDetail() {
     );
   }
 
-  const primaryImage = (service.imageUrls && service.imageUrls.length > 0)
-    ? service.imageUrls[0]
-    : 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=800';
-  const secondaryImages = (service.imageUrls && service.imageUrls.length > 1)
-    ? service.imageUrls.slice(1, 5)
-    : [primaryImage];
+  const allImages: string[] = useMemo(() => {
+    if (service?.imageUrls && service.imageUrls.length > 0) {
+      return service.imageUrls;
+    }
+    return ['https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=800'];
+  }, [service?.imageUrls]);
+
+  // Auto-play loop every 3.5 seconds in circular cycle (pauses when hovering)
+  useEffect(() => {
+    if (allImages.length <= 1 || isHoveringGallery) return;
+
+    const timer = setInterval(() => {
+      setActiveImageIndex((prev) => (prev + 1) % allImages.length);
+    }, 3500);
+
+    return () => clearInterval(timer);
+  }, [allImages.length, isHoveringGallery]);
+
+  const handlePrevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
+
+  const handleNextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveImageIndex((prev) => (prev + 1) % allImages.length);
+  };
+
   const isSaved = isInWishlist(service.id);
 
   return (
@@ -375,23 +401,97 @@ export function ExperienceDetail() {
           {/* Editorial Gallery Grid */}
           <section className="w-full">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 rounded-2xl overflow-hidden shadow-md bg-white border border-slate-200/80 p-2">
-              <div className="lg:col-span-7 relative group cursor-pointer overflow-hidden rounded-xl min-h-[300px] sm:min-h-[420px]">
+              {/* Large Main Carousel Image with Auto-play & Prev/Next Navigation */}
+              <div
+                className="lg:col-span-7 relative group overflow-hidden rounded-xl min-h-[300px] sm:min-h-[420px] bg-slate-900 select-none cursor-pointer"
+                onMouseEnter={() => setIsHoveringGallery(true)}
+                onMouseLeave={() => setIsHoveringGallery(false)}
+              >
                 <img
-                  src={primaryImage}
-                  alt={service.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                  key={activeImageIndex}
+                  src={allImages[activeImageIndex] || allImages[0]}
+                  alt={`${service.name} - ${activeImageIndex + 1}`}
+                  className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105"
                 />
-              </div>
-              <div className="lg:col-span-5 grid grid-cols-2 gap-3">
-                {secondaryImages.map((imgUrl, idx) => (
-                  <div key={idx} className="relative group cursor-pointer overflow-hidden rounded-xl aspect-[4/3] bg-slate-100">
-                    <img
-                      src={imgUrl}
-                      alt={`${service.name} - ${idx + 2}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                    />
+
+                {/* Previous Button */}
+                {allImages.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={handlePrevImage}
+                    aria-label="Ảnh trước"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/40 hover:bg-slate-900/70 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 shadow-md cursor-pointer active:scale-90 z-10"
+                  >
+                    <span className="material-symbols-outlined text-[22px]">chevron_left</span>
+                  </button>
+                )}
+
+                {/* Next Button */}
+                {allImages.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleNextImage}
+                    aria-label="Ảnh sau"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/40 hover:bg-slate-900/70 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all opacity-90 sm:opacity-0 sm:group-hover:opacity-100 shadow-md cursor-pointer active:scale-90 z-10"
+                  >
+                    <span className="material-symbols-outlined text-[22px]">chevron_right</span>
+                  </button>
+                )}
+
+                {/* Counter Badge */}
+                {allImages.length > 1 && (
+                  <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-slate-900/60 backdrop-blur-md border border-white/20 text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-xs z-10">
+                    <span className="material-symbols-outlined text-[13px] text-cyan-300">photo_library</span>
+                    <span>{activeImageIndex + 1} / {allImages.length}</span>
                   </div>
-                ))}
+                )}
+
+                {/* Indicator Dots */}
+                {allImages.length > 1 && (
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+                    {allImages.map((_, dotIdx) => (
+                      <button
+                        key={dotIdx}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveImageIndex(dotIdx);
+                        }}
+                        className={`transition-all duration-300 rounded-full cursor-pointer ${
+                          activeImageIndex === dotIdx
+                            ? 'w-6 h-1.5 bg-white shadow-xs'
+                            : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/80'
+                        }`}
+                        aria-label={`Chuyển tới ảnh ${dotIdx + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Secondary Thumbnails */}
+              <div className="lg:col-span-5 grid grid-cols-2 gap-3">
+                {allImages.slice(0, 4).map((imgUrl, idx) => {
+                  const isCurrentActive = activeImageIndex === idx;
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => setActiveImageIndex(idx)}
+                      className={`relative group cursor-pointer overflow-hidden rounded-xl aspect-[4/3] bg-slate-100 transition-all ${
+                        isCurrentActive ? 'ring-2 ring-cyan-500 ring-offset-2' : 'hover:opacity-90'
+                      }`}
+                    >
+                      <img
+                        src={imgUrl}
+                        alt={`${service.name} - ${idx + 1}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                      />
+                      {isCurrentActive && (
+                        <div className="absolute inset-0 bg-cyan-900/10 pointer-events-none" />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </section>
