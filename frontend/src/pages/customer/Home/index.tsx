@@ -959,7 +959,7 @@ export function Home() {
           </div>
 
           {/* Real-time Marine Weather & Safety Pill */}
-          <div className="mt-4 flex justify-center w-full relative z-20">
+          <div className="animate-hero-5 mt-4 flex justify-center w-full relative z-20">
             <MarineWeatherPill />
           </div>
 
@@ -992,9 +992,9 @@ export function Home() {
             {/* Carousel SUP & Kayak Biển */}
             <CategoryExperienceCarousel
               title={t.sections.supKayakTitle}
-              subtitle={language === 'en'
-                ? 'Glide peacefully across mirrored morning waters and greet the sunrise'
-                : 'Lướt êm trên mặt biển phẳng lặng sớm mai, đón ánh bình minh rạng rỡ'}
+
+
+
               categorySlug="cheo-sup-kayak"
               experiences={supKayakList}
             />
@@ -1028,9 +1028,9 @@ export function Home() {
             {/* Carousel Lặn biển & San hô Sơn Trà */}
             <CategoryExperienceCarousel
               title={t.sections.divingTitle}
-              subtitle={language === 'en'
-                ? 'Immerse into rich coral biodiversity guided by certified master divers'
-                : 'Đắm mình trong làn nước pha lê và quần thể san hô đa dạng sắc màu'}
+
+
+
               categorySlug="lan-ngam-san-ho"
               experiences={divingList}
             />
@@ -1038,9 +1038,9 @@ export function Home() {
             {/* Carousel Combo Trọn Gói & Hoàng Hôn */}
             <CategoryExperienceCarousel
               title={t.sections.comboTitle}
-              subtitle={language === 'en'
-                ? 'All-inclusive marine days, sunset luxury yachts & beach camping'
-                : 'Trọn gói trải nghiệm 1 ngày, du thuyền ngắm hoàng hôn và cắm trại ven biển'}
+
+
+
               categorySlug="du-thuyen-ngam-hoang-hon"
               experiences={COMBO_SUNSET_EXPERIENCES}
             />
@@ -1074,9 +1074,9 @@ export function Home() {
             {/* Carousel Thể Thao Cảm Giác Mạnh & Cano */}
             <CategoryExperienceCarousel
               title={t.sections.thrillTitle}
-              subtitle={language === 'en'
-                ? 'Parasailing, jet skis and speedboat wave carving with maximum safety'
-                : 'Dù lượn ngắm vịnh biển, mô tô nước 1800cc và cano xé sóng cực phấn khích'}
+
+
+
               categorySlug="cano-du-bay"
               experiences={THRILL_EXPERIENCES}
             />
@@ -1113,140 +1113,85 @@ export function Home() {
                 <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] drop-shadow-[0_8px_20px_rgba(0,0,0,0.7)]">
                   {t.aiStudio.title}
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-100 mt-1 font-medium drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.95)] drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]">
-                  {language === 'en'
-                    ? 'Real-time wave, tide, and wind monitoring station paired with instant advisory intelligence.'
-                    : 'Trạm quan trắc thủy triều, độ cao sóng và trợ lý tư vấn lịch trình thể thao biển theo thời gian thực.'}
-                </p>
+                
               </div>
 
-              {/* Beach Selector Pills */}
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-white/20">
-                <div className="flex items-center gap-2 text-xs font-semibold text-white drop-shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>{language === 'en' ? 'Radar Station:' : 'Trạm quan trắc:'}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {['Mỹ Khê', 'Sơn Trà', 'Non Nước'].map((beach) => (
-                    <button
-                      key={beach}
-                      type="button"
-                      onClick={() => { setActiveAIBeach(beach); setActiveCustomPrompt(null); setChatHistory([]); }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer backdrop-blur-md ${
-                        activeAIBeach === beach
-                          ? 'bg-cyan-600 text-white shadow-lg border border-cyan-400 font-bold'
-                          : 'bg-white/15 text-white hover:bg-white/25 border border-white/20 shadow-sm'
-                      }`}
-                    >
-                      {beach}
-                    </button>
+              {/* AI Assistant Unified Chat Container */}
+              <div className="max-w-4xl mx-auto bg-white/10 backdrop-blur-xl rounded-3xl p-5 sm:p-6 border border-white/20 shadow-2xl flex flex-col h-[380px]">
+                {/* Messages Scroll Area */}
+                <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-3.5 pr-2">
+                  {displayMessages.map((msg, idx) => (
+                    <div key={idx} className="space-y-2 animate-fadeIn">
+                      {/* User message */}
+                      <div className="flex justify-end">
+                        <div className="bg-cyan-600/90 backdrop-blur-sm text-white text-xs font-medium px-4 py-2.5 rounded-2xl rounded-br-none max-w-md shadow-md border border-cyan-400/30">
+                          {language === 'en' ? (msg.chatPromptEn || msg.chatPrompt) : msg.chatPrompt}
+                        </div>
+                      </div>
+
+                      {/* AI response */}
+                      {msg.chatReply && (
+                        <div className="flex justify-start">
+                          <div className="bg-white/15 backdrop-blur-xl text-white text-xs leading-relaxed px-4.5 py-3.5 rounded-2xl rounded-bl-none max-w-lg border border-white/25 shadow-xl">
+                            <div className="flex items-center gap-1.5 mb-1.5 text-cyan-300 font-bold text-[11px]">
+                              <span className="material-symbols-outlined text-[14px]">smart_toy</span>
+                              <span>DANASEA AI</span>
+                            </div>
+                            <p className="text-white/95">{language === 'en' ? (msg.chatReplyEn || msg.chatReply) : msg.chatReply}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   ))}
+                  {isChatLoading && (
+                    <div className="flex justify-start">
+                      <div className="bg-white/15 backdrop-blur-xl text-cyan-200 text-xs px-4 py-2.5 rounded-2xl border border-white/25 shadow-md animate-pulse">
+                        {language === 'en' ? 'DANASEA AI is analyzing marine data...' : 'DANASEA AI đang phân tích dữ liệu hải văn...'}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
 
-              {/* Active Radar Metrics Chips (Transparent Glass Background) */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 p-4 sm:p-5 rounded-2xl bg-white/10 backdrop-blur-md shadow-2xl border border-white/20">
-                <div className="flex flex-col">
-                  <span className="text-[11px] text-white/70 font-semibold uppercase tracking-wider">{language === 'en' ? 'Water Temp' : 'Nhiệt độ'}</span>
-                  <span className="text-lg sm:text-xl font-black text-white mt-0.5 drop-shadow-sm">{currentBeachData.temp.val}</span>
-                  <span className="text-[11px] text-cyan-300 font-medium">{language === 'en' ? currentBeachData.temp.descEn : currentBeachData.temp.desc}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[11px] text-white/70 font-semibold uppercase tracking-wider">{language === 'en' ? 'Wave Swell' : 'Độ cao sóng'}</span>
-                  <span className="text-lg sm:text-xl font-black text-cyan-300 mt-0.5 drop-shadow-sm">{currentBeachData.wave.val}</span>
-                  <span className="text-[11px] text-cyan-300 font-medium">{language === 'en' ? currentBeachData.wave.descEn : currentBeachData.wave.desc}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[11px] text-white/70 font-semibold uppercase tracking-wider">{language === 'en' ? 'Visibility' : 'Tầm nhìn nước'}</span>
-                  <span className="text-lg sm:text-xl font-black text-emerald-300 mt-0.5 drop-shadow-sm">{currentBeachData.visibility.val}</span>
-                  <span className="text-[11px] text-cyan-300 font-medium">{language === 'en' ? currentBeachData.visibility.descEn : currentBeachData.visibility.desc}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[11px] text-white/70 font-semibold uppercase tracking-wider">{language === 'en' ? 'Wind Speed' : 'Tốc độ gió'}</span>
-                  <span className="text-lg sm:text-xl font-black text-amber-300 mt-0.5 drop-shadow-sm">{currentBeachData.wind.val}</span>
-                  <span className="text-[11px] text-cyan-300 font-medium">{language === 'en' ? currentBeachData.wind.descEn : currentBeachData.wind.desc}</span>
-                </div>
-              </div>
-
-              {/* AI Assistant Chat Preview */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                {/* Left Column: Preset Questions */}
-                <div className="lg:col-span-4 space-y-2">
-                  <span className="text-xs font-bold text-white block mb-1 drop-shadow-sm">
-                    {language === 'en' ? 'Quick Questions' : 'Gợi ý câu hỏi nhanh'}
+                {/* Quick Suggestion Chips inside Chat */}
+                <div className="pt-3 pb-2 flex flex-wrap items-center gap-2 border-t border-white/15">
+                  <span className="text-[11px] font-bold text-white/70 uppercase tracking-wider shrink-0 mr-1">
+                    {language === 'en' ? 'Suggestions:' : 'Gợi ý nhanh:'}
                   </span>
                   {[
-                    { id: 'group', icon: 'group', label: language === 'en' ? 'Group of 6, half-day tour?' : 'Nhóm 6 người đi nửa ngày?' },
-                    { id: 'couple', icon: 'favorite', label: language === 'en' ? 'Romantic sunset for couples?' : 'Cặp đôi thư giãn hoàng hôn?' },
-                    { id: 'weather', icon: 'wb_sunny', label: language === 'en' ? 'Best timing for sunny day?' : 'Nắng nóng nên chơi giờ nào?' },
+                    { id: 'group', label: language === 'en' ? 'Group of 6, half-day tour?' : 'Nhóm 6 người đi nửa ngày?' },
+                    { id: 'couple', label: language === 'en' ? 'Romantic sunset for couples?' : 'Cặp đôi thư giãn hoàng hôn?' },
+                    { id: 'weather', label: language === 'en' ? 'Best timing for sunny day?' : 'Nắng nóng nên chơi giờ nào?' },
                   ].map((prompt) => (
                     <button
                       key={prompt.id}
                       type="button"
                       onClick={() => { setActiveCustomPrompt(prompt.id); }}
-                      className="w-full text-left p-3.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-md hover:border-cyan-300 hover:bg-white/20 text-xs font-semibold text-white flex items-center gap-2.5 transition-all cursor-pointer group"
+                      className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 hover:border-cyan-300 text-xs font-medium text-white transition-all cursor-pointer backdrop-blur-sm"
                     >
-                      <span className="material-symbols-outlined text-[18px] text-cyan-300 group-hover:scale-110 transition-transform">{prompt.icon}</span>
-                      <span className="drop-shadow-sm">{prompt.label}</span>
+                      {prompt.label}
                     </button>
                   ))}
                 </div>
 
-                {/* Right Column: Interactive Chat Box (Transparent Glass Background) */}
-                <div className="lg:col-span-8 bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/20 shadow-2xl flex flex-col h-[320px]">
-                  <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-3 pr-2">
-                    {displayMessages.map((msg, idx) => (
-                      <div key={idx} className="space-y-2 animate-fadeIn">
-                        {/* User message */}
-                        <div className="flex justify-end">
-                          <div className="bg-cyan-600/90 backdrop-blur-sm text-white text-xs font-medium px-4 py-2.5 rounded-2xl rounded-br-none max-w-md shadow-md border border-cyan-400/30">
-                            {language === 'en' ? (msg.chatPromptEn || msg.chatPrompt) : msg.chatPrompt}
-                          </div>
-                        </div>
-
-                        {/* AI response */}
-                        {msg.chatReply && (
-                          <div className="flex justify-start">
-                            <div className="bg-slate-950/70 backdrop-blur-md text-white text-xs leading-relaxed px-4 py-3 rounded-2xl rounded-bl-none max-w-lg border border-white/20 shadow-lg">
-                              <div className="flex items-center gap-1.5 mb-1.5 text-cyan-300 font-bold text-[11px]">
-                                <span className="material-symbols-outlined text-[14px]">smart_toy</span>
-                                <span>DANASEA AI</span>
-                              </div>
-                              <p className="text-white/95">{language === 'en' ? (msg.chatReplyEn || msg.chatReply) : msg.chatReply}</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    {isChatLoading && (
-                      <div className="flex justify-start">
-                        <div className="bg-slate-950/60 backdrop-blur-md text-cyan-300 text-xs px-4 py-2.5 rounded-2xl border border-white/20 animate-pulse">
-                          {language === 'en' ? 'DANASEA AI is analyzing marine data...' : 'DANASEA AI đang phân tích dữ liệu hải văn...'}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Input Bar */}
-                  <div className="pt-3 border-t border-white/20 flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={chatInputValue}
-                      onChange={(e) => setChatInputValue(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleChatSubmit()}
-                      placeholder={language === 'en' ? 'Ask anything about Da Nang beaches & activities...' : 'Hỏi bất kỳ điều gì về biển và hoạt động tại Đà Nẵng...'}
-                      className="flex-1 bg-white/10 backdrop-blur-sm border border-white/25 rounded-xl px-3.5 py-2 text-xs text-white placeholder-white/60 focus:outline-none focus:border-cyan-400 focus:bg-white/20 transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleChatSubmit}
-                      disabled={isChatLoading || !chatInputValue.trim()}
-                      className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-md transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1.5 shrink-0"
-                    >
-                      <span>{language === 'en' ? 'Send' : 'Gửi'}</span>
-                      <span className="material-symbols-outlined text-[14px]">send</span>
-                    </button>
-                  </div>
+                {/* Input Bar */}
+                <div className="pt-2 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={chatInputValue}
+                    onChange={(e) => setChatInputValue(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleChatSubmit()}
+                    placeholder={language === 'en' ? 'Ask anything about Da Nang beaches & activities...' : 'Hỏi bất kỳ điều gì về biển và hoạt động tại Đà Nẵng...'}
+                    className="flex-1 bg-white/10 backdrop-blur-sm border border-white/25 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-white/60 focus:outline-none focus:border-cyan-400 focus:bg-white/20 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleChatSubmit}
+                    disabled={isChatLoading || !chatInputValue.trim()}
+                    className="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-md transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1.5 shrink-0"
+                  >
+                    <span>{language === 'en' ? 'Send' : 'Gửi'}</span>
+                    <span className="material-symbols-outlined text-[14px]">send</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1338,12 +1283,12 @@ export function Home() {
             </div>
 
             {/* Final Call to Action */}
-            <div className="rounded-2xl p-6 sm:p-8 bg-gradient-to-r from-cyan-900 to-teal-900 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-lg">
+            <div className="rounded-3xl p-6 sm:p-8 bg-white/10 backdrop-blur-xl border border-white/20 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
               <div>
-                <h3 className="text-lg sm:text-xl font-bold mb-1">
+                <h3 className="text-lg sm:text-xl font-bold mb-1 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]">
                   {language === 'en' ? 'Ready to Touch Da Nang Waters?' : 'Sẵn sàng chạm sóng biển Đà Nẵng ngay hôm nay?'}
                 </h3>
-                <p className="text-xs sm:text-sm text-cyan-100 max-w-xl">
+                <p className="text-xs sm:text-sm text-white/90 max-w-xl font-medium drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.7)]">
                   {language === 'en'
                     ? 'Explore 20+ certified water sports and marine expeditions tailored for you.'
                     : 'Hơn 20+ trải nghiệm thể thao biển chuẩn quốc tế với đầy đủ bảo hiểm và thiết bị chuyên nghiệp.'}
@@ -1352,9 +1297,10 @@ export function Home() {
 
               <Link
                 to="/search"
-                className="px-6 py-3 rounded-xl bg-white text-cyan-900 hover:bg-cyan-50 font-bold text-xs shadow-md transition-all shrink-0 hover:scale-[1.02]"
+                className="px-6 py-3.5 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-cyan-600/30 transition-all shrink-0 hover:scale-[1.02] flex items-center gap-1.5"
               >
-                {language === 'en' ? 'Explore All Tours' : 'Xem toàn bộ tour'} →
+                <span>{language === 'en' ? 'Explore All Tours' : 'Xem toàn bộ tour'}</span>
+                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
               </Link>
             </div>
           </div>
