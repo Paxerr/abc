@@ -335,7 +335,7 @@ export function ExperienceDetail() {
           </div>
         </div>
 
-        <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-8 lg:px-12 pt-5 pb-16 flex flex-col gap-5">
+        <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-8 lg:px-12 pt-5 pb-8 flex flex-col gap-5">
           
           {/* Title & Quick Actions Header */}
           <section className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
