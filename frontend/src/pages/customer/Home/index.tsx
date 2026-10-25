@@ -134,7 +134,7 @@ export function Home() {
   useEffect(() => {
     let isMounted = true;
     serviceCatalogService
-      .getServices({ size: 20 })
+      .getServices({ size: 30 })
       .then((res) => {
         if (isMounted && res.content && res.content.length > 0) {
           setLiveServices(res.content);
@@ -218,6 +218,59 @@ export function Home() {
         imageUrl: s.primaryImageUrl || 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800',
       }))
     : DIVING_EXPERIENCES;
+
+  const sunsetYachtFiltered = liveServices.filter((s) => {
+    const n = s.name.toLowerCase();
+    return n.includes('du thuyền') || n.includes('yacht') || n.includes('catamaran') || n.includes('hoàng hôn');
+  });
+  const sunsetYachtList: ActivityCardData[] = sunsetYachtFiltered.length > 0
+    ? sunsetYachtFiltered.map((s) => ({
+        id: s.id,
+        title: s.name,
+        titleEn: s.name,
+        category: 'Du thuyền hoàng hôn',
+        categoryEn: 'Sunset Yacht',
+        location: s.address || 'Bến DHC Marina',
+        duration: '2 giờ',
+        durationEn: '2 hours',
+        price: Number(s.price),
+        rating: Number(s.averageRating) || 5.0,
+        reviewCount: s.reviewCount || 90,
+        badge: 'VIP Thượng lưu',
+        badgeEn: 'VIP Luxury',
+        imageUrl: s.primaryImageUrl || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
+      }))
+    : COMBO_SUNSET_EXPERIENCES;
+
+  const thrillFiltered = liveServices.filter((s) => {
+    const n = s.name.toLowerCase();
+    return (
+      n.includes('cano') ||
+      n.includes('dù') ||
+      n.includes('jetski') ||
+      n.includes('mô tô nước') ||
+      n.includes('phao chuối') ||
+      n.includes('flying fish')
+    );
+  });
+  const thrillList: ActivityCardData[] = thrillFiltered.length > 0
+    ? thrillFiltered.map((s) => ({
+        id: s.id,
+        title: s.name,
+        titleEn: s.name,
+        category: 'Cảm giác mạnh & Cano',
+        categoryEn: 'Thrill & Watersports',
+        location: s.address || 'Biển Mỹ Khê',
+        duration: '1 giờ',
+        durationEn: '1 hour',
+        price: Number(s.price),
+        rating: Number(s.averageRating) || 4.93,
+        reviewCount: s.reviewCount || 120,
+        badge: 'Cảm giác mạnh',
+        badgeEn: 'Adrenaline',
+        imageUrl: s.primaryImageUrl || 'https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?w=800',
+      }))
+    : THRILL_EXPERIENCES;
 
   const baseMessage = activeCustomPrompt ? CUSTOM_PROMPT_DATA[activeCustomPrompt] : AI_BEACH_DATA[activeAIBeach];
   const displayMessages = [baseMessage, ...chatHistory];
@@ -1042,7 +1095,7 @@ export function Home() {
 
 
               categorySlug="du-thuyen-ngam-hoang-hon"
-              experiences={COMBO_SUNSET_EXPERIENCES}
+              experiences={sunsetYachtList}
             />
           </div>
         </ScrollReveal>
@@ -1078,7 +1131,7 @@ export function Home() {
 
 
               categorySlug="cano-du-bay"
-              experiences={THRILL_EXPERIENCES}
+              experiences={thrillList}
             />
           </div>
         </ScrollReveal>
