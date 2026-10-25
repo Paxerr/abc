@@ -170,6 +170,25 @@ export function ExperienceDetail() {
   const maxCapacity = activeSlot ? activeSlot.availableCapacity : 10;
   const isSoldOut = activeSlot ? activeSlot.availableCapacity <= 0 : false;
 
+  // Pure Vietnamese normalizers for demo/seed data
+  const localizedSafetyRules = useMemo(() => {
+    const raw = service?.safetyRules || '';
+    if (raw.toLowerCase().includes('max wave') || raw.toLowerCase().includes('weather-sensitive')) {
+      const wave = raw.match(/max wave:\s*([\d.]+m)/i)?.[1] || '0.8m';
+      const wind = raw.match(/max wind:\s*([\d.]+\s*km\/h)/i)?.[1] || '5km/h';
+      return `Sóng biển ≤ ${wave}, gió ≤ ${wind}. Bắt buộc mặc áo phao và tuân thủ an toàn hàng hải.`;
+    }
+    return raw || 'Sóng biển ≤ 1.0m, gió ≤ 15km/h. Bắt buộc mặc áo phao và tuân thủ an toàn hàng hải.';
+  }, [service?.safetyRules]);
+
+  const localizedWaiverContent = useMemo(() => {
+    const raw = service?.waiverContent || '';
+    if (raw.toLowerCase().includes('participants must confirm') || !raw) {
+      return 'Khách hàng cam kết đủ sức khỏe tham gia, bắt buộc mặc áo phao trong suốt thời gian trên biển và tuân thủ chỉ dẫn an toàn của huấn luyện viên.';
+    }
+    return raw;
+  }, [service?.waiverContent]);
+
   const handleAddToCart = () => {
     if (!service) return;
     if (!activeSlot) {
@@ -384,14 +403,50 @@ export function ExperienceDetail() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* LEFT COLUMN: Detailed Experience Intel */}
-            <main className="lg:col-span-8 flex flex-col gap-6">
+            <main className="lg:col-span-8 flex flex-col gap-5">
               
-              {/* Description */}
-              <section className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
-                <h2 className="text-xl font-bold text-slate-900">Mô tả trải nghiệm</h2>
-                <p className="text-slate-700 leading-relaxed text-[15px] whitespace-pre-line">
-                  {service.description}
+              {/* 1. Quy định & Lưu ý an toàn biển (Đơn giản 1 dòng chú ý đặt đầu tiên) */}
+              <div className="flex items-start sm:items-center gap-2.5 p-3 sm:px-4 sm:py-2.5 rounded-xl bg-amber-50/90 border border-amber-200/80 text-amber-900 text-xs sm:text-sm">
+                <span className="material-symbols-outlined text-amber-600 text-[20px] shrink-0 mt-0.5 sm:mt-0">health_and_safety</span>
+                <p className="leading-snug">
+                  <strong className="font-semibold text-amber-950">Lưu ý an toàn &amp; hoàn hủy:</strong> Bắt buộc mặc áo phao, đủ sức khỏe tham gia và tuân thủ huấn luyện viên. Miễn phí đổi ngày hoặc hoàn tiền 100% nếu hủy trước 24h hoặc do biển động theo lệnh cảng vụ.
                 </p>
+              </div>
+
+              {/* 2. Mô tả trải nghiệm & Thông tin vận hành (Gộp vào 1 ô nội dung duy nhất) */}
+              <section className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 mb-2">Mô tả trải nghiệm</h2>
+                  <p className="text-slate-700 leading-relaxed text-[15px] whitespace-pre-line">
+                    {service.description}
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 space-y-3">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Thông tin vận hành</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-xs sm:text-sm">
+                    <div className="flex items-center gap-2 text-slate-700">
+                      <span className="material-symbols-outlined text-cyan-600 text-[18px] shrink-0">schedule</span>
+                      <span className="text-slate-500">Thời lượng:</span>
+                      <span className="font-semibold text-slate-900">{service.duration || 120} phút / ca</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-700">
+                      <span className="material-symbols-outlined text-cyan-600 text-[18px] shrink-0">group</span>
+                      <span className="text-slate-500">Sức chứa:</span>
+                      <span className="font-semibold text-slate-900">Tối đa {service.capacity || 15} người / ca</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-700">
+                      <span className="material-symbols-outlined text-cyan-600 text-[18px] shrink-0">waves</span>
+                      <span className="text-slate-500">Điều kiện thời tiết:</span>
+                      <span className="font-semibold text-slate-900">{localizedSafetyRules}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-700 min-w-0">
+                      <span className="material-symbols-outlined text-cyan-600 text-[18px] shrink-0">location_on</span>
+                      <span className="text-slate-500 shrink-0">Điểm tập trung:</span>
+                      <span className="font-semibold text-slate-900 truncate" title={service.address}>{service.address || 'Ven biển Đà Nẵng'}</span>
+                    </div>
+                  </div>
+                </div>
               </section>
 
               {/* Service Options (Gói dịch vụ) */}
@@ -440,62 +495,6 @@ export function ExperienceDetail() {
                 </section>
               )}
 
-              {/* Service Specs & Safety */}
-              <section className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-                <h2 className="text-xl font-bold text-slate-900">Thông tin vận hành &amp; Tiêu chuẩn an toàn biển</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-100 flex items-start gap-3">
-                    <span className="material-symbols-outlined text-cyan-700 text-2xl">schedule</span>
-                    <div>
-                      <span className="text-xs text-slate-500 font-medium block">Thời lượng hoạt động</span>
-                      <span className="text-sm font-semibold text-slate-800">{service.duration || 120} phút / ca</span>
-                    </div>
-                  </div>
-                  <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-100 flex items-start gap-3">
-                    <span className="material-symbols-outlined text-cyan-700 text-2xl">group</span>
-                    <div>
-                      <span className="text-xs text-slate-500 font-medium block">Sức chứa mỗi ca</span>
-                      <span className="text-sm font-semibold text-slate-800">Tối đa {service.capacity || 15} người / khung giờ</span>
-                    </div>
-                  </div>
-                  <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-100 flex items-start gap-3">
-                    <span className="material-symbols-outlined text-cyan-700 text-2xl">waves</span>
-                    <div>
-                      <span className="text-xs text-slate-500 font-medium block">Giới hạn thời tiết an toàn</span>
-                      <span className="text-sm font-semibold text-slate-800">
-                        {service.safetyRules || 'Sóng ≤ 1.2m, Gió ≤ 15km/h'}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-100 flex items-start gap-3">
-                    <span className="material-symbols-outlined text-cyan-700 text-2xl">location_on</span>
-                    <div>
-                      <span className="text-xs text-slate-500 font-medium block">Địa điểm tập trung</span>
-                      <span className="text-sm font-semibold text-slate-800">{service.address || 'Ven biển Đà Nẵng'}</span>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* Safety Rules & Waiver */}
-              <section className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-amber-600">health_and_safety</span>
-                  <h2 className="text-xl font-bold text-slate-900">Quy định miễn trừ trách nhiệm &amp; Hoàn hủy</h2>
-                </div>
-                <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
-                  {service.waiverContent ||
-                    'Khách hàng cam kết đủ sức khỏe tham gia, bắt buộc mặc áo phao trong suốt thời gian trên biển và tuyệt đối tuân thủ chỉ dẫn của huấn luyện viên an toàn.'}
-                </p>
-                <div className="p-3.5 bg-amber-50/80 rounded-xl border border-amber-200/70 text-xs text-amber-900 flex items-start gap-2.5 leading-relaxed">
-                  <span className="material-symbols-outlined text-amber-600 text-base shrink-0 mt-0.5">info</span>
-                  <span>
-                    {service.cancellationPolicy ||
-                      'Chính sách hoàn hủy: Hủy trước 24 giờ so với giờ khởi hành được hoàn tiền 100%. Trong trường hợp thời tiết biển động nguy hiểm vượt ngưỡng quy định, hệ thống sẽ tự động hoàn tiền 100% hoặc hỗ trợ đổi ngày theo yêu cầu.'}
-                  </span>
-                </div>
-              </section>
-
               {/* Verified Vendor Card */}
               <section className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -527,19 +526,21 @@ export function ExperienceDetail() {
               <div className="w-full p-6 rounded-2xl bg-white border border-slate-200/80 shadow-lg flex flex-col gap-5">
                 
                 {/* Price Display */}
-                <div className="flex items-baseline justify-between border-b border-slate-100 pb-4">
-                  <div className="flex items-baseline gap-1.5">
+                <div className="border-b border-slate-100 pb-4 flex flex-col gap-2">
+                  <div className="flex items-baseline gap-1.5 flex-wrap">
                     <span className="text-3xl font-extrabold text-cyan-700 tracking-tight">
                       {unitPrice.toLocaleString('vi-VN')}₫
                     </span>
-                    <span className="text-xs text-slate-500 font-medium">
+                    <span className="text-xs text-slate-500 font-medium whitespace-nowrap">
                       {selectedOption?.pricingUnit === 'PER_PACKAGE' ? '/ gói' : '/ người'}
                     </span>
                   </div>
                   {selectedOption && (
-                    <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
-                      {selectedOption.name}
-                    </span>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 border border-slate-200/80 px-2.5 py-1.5 rounded-lg w-full">
+                      <span className="material-symbols-outlined text-cyan-600 text-[15px] shrink-0">confirmation_number</span>
+                      <span className="text-slate-500 shrink-0">Đang chọn:</span>
+                      <span className="font-semibold text-slate-900 truncate">{selectedOption.name}</span>
+                    </div>
                   )}
                 </div>
 
