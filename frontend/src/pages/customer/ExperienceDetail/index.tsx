@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../../../store/useCartStore';
 import { useWishlistStore } from '../../../store/useWishlistStore';
@@ -29,6 +29,7 @@ export function ExperienceDetail() {
   // Gallery slider state for the large main image
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [isHoveringGallery, setIsHoveringGallery] = useState<boolean>(false);
+  const thumbStripRef = useRef<HTMLDivElement>(null);
 
   // Lightbox Modal state for full-screen image preview
   const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
@@ -539,14 +540,17 @@ export function ExperienceDetail() {
                   </div>
                 </div>
 
-                {/* Dải ảnh phụ nhỏ ngay bên dưới ảnh chính kèm 2 nút trái phải */}
-                <div className="relative flex items-center gap-1 w-full pt-1 px-0.5">
+                {/* Dải ảnh phụ nhỏ ngay bên dưới ảnh chính kèm 2 nút trái phải - Canh giữa cân đối và thanh thoát */}
+                <div className="flex items-center justify-center gap-2.5 w-full pt-1.5 pb-0.5">
                   {/* Nút mũi tên trái cho dải ảnh phụ - Bỏ nền, không viền, thanh thoát */}
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (allImages.length > 1) handlePrevImage(e);
+                      if (allImages.length > 1) {
+                        handlePrevImage(e);
+                        thumbStripRef.current?.scrollBy({ left: -100, behavior: 'smooth' });
+                      }
                     }}
                     aria-label="Dải ảnh trước"
                     className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center shrink-0 transition-all rounded-full ${
@@ -558,8 +562,11 @@ export function ExperienceDetail() {
                     <span className="material-symbols-outlined text-[20px]">chevron_left</span>
                   </button>
 
-                  {/* Dải các thẻ ảnh phụ nhỏ */}
-                  <div className="flex-1 flex items-center gap-2 overflow-x-auto py-1 scrollbar-none scroll-smooth">
+                  {/* Dải các thẻ ảnh phụ nhỏ - Canh giữa đối xứng với ảnh lớn, cuộn mượt khi nhiều ảnh */}
+                  <div
+                    ref={thumbStripRef}
+                    className="flex items-center gap-2.5 overflow-x-auto py-1 scrollbar-none scroll-smooth max-w-[calc(100%-80px)]"
+                  >
                     {allImages.map((imgUrl, idx) => {
                       const isCurrentActive = activeImageIndex === idx;
                       return (
@@ -590,7 +597,10 @@ export function ExperienceDetail() {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (allImages.length > 1) handleNextImage(e);
+                      if (allImages.length > 1) {
+                        handleNextImage(e);
+                        thumbStripRef.current?.scrollBy({ left: 100, behavior: 'smooth' });
+                      }
                     }}
                     aria-label="Dải ảnh sau"
                     className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center shrink-0 transition-all rounded-full ${
