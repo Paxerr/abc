@@ -108,6 +108,7 @@ class CatalogSlot {
   final String id, date, startTime, endTime;
   final String? optionId;
   final int? availableCapacity;
+  final int? maxPaxPerPackage;
   final num? price;
   final String? pricingUnit;
   final bool bookable;
@@ -118,6 +119,7 @@ class CatalogSlot {
     required this.startTime,
     required this.endTime,
     this.availableCapacity,
+    this.maxPaxPerPackage,
     this.price,
     this.pricingUnit,
     required this.bookable,

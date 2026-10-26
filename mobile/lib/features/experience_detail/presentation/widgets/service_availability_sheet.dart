@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/models/danasea_models.dart';
+import '../../../../core/data/catalog_repository.dart';
+import '../screens/booking_hold_screen.dart';
 
-/// Read-only availability. Booking submission is a separate integration.
+/// Availability with a separate hold flow; the existing detail layout is unchanged.
 class ServiceAvailabilitySheet extends StatefulWidget {
   const ServiceAvailabilitySheet({super.key, required this.service});
   final ServiceModel service;
@@ -15,16 +17,52 @@ class ServiceAvailabilitySheet extends StatefulWidget {
 
 class _ServiceAvailabilitySheetState extends State<ServiceAvailabilitySheet> {
   String? _optionId;
+  late List<CatalogSlot> _slots;
+  bool _refreshing = false;
+  String? _refreshError;
 
   @override
   void initState() {
     super.initState();
     _optionId = widget.service.options.firstOrNull?.id;
+    _slots = List.of(widget.service.catalogSlots);
+  }
+
+  Future<void> _refresh() async {
+    if (_refreshing) return;
+    final optionId = _optionId;
+    setState(() {
+      _refreshing = true;
+      _refreshError = null;
+      _slots.removeWhere(
+        (slot) => optionId == null || slot.optionId == optionId,
+      );
+    });
+    try {
+      final slots = await CatalogRepository().slots(
+        widget.service.id,
+        optionId: optionId,
+      );
+      if (mounted) setState(() => _slots.addAll(slots));
+    } catch (error) {
+      if (mounted) setState(() => _refreshError = error.toString());
+    } finally {
+      if (mounted) setState(() => _refreshing = false);
+    }
+  }
+
+  Future<void> _openHold(CatalogSlot slot) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => BookingHoldScreen(service: widget.service, slot: slot),
+      ),
+    );
+    if (mounted) await _refresh();
   }
 
   @override
   Widget build(BuildContext context) {
-    final slots = widget.service.catalogSlots
+    final slots = _slots
         .where((slot) => _optionId == null || slot.optionId == _optionId)
         .toList();
     return SafeArea(
@@ -72,11 +110,25 @@ class _ServiceAvailabilitySheetState extends State<ServiceAvailabilitySheet> {
                         ),
                       )
                       .toList(),
-                  onChanged: (id) => setState(() => _optionId = id),
+                  onChanged: _refreshing
+                      ? null
+                      : (id) => setState(() {
+                          _optionId = id;
+                          _refreshError = null;
+                        }),
                 ),
               const SizedBox(height: 12),
+              if (_refreshError != null) ...[
+                LocalizedText(_refreshError!),
+                TextButton(
+                  onPressed: _refresh,
+                  child: const LocalizedText('Thử lại'),
+                ),
+              ],
               Expanded(
-                child: slots.isEmpty
+                child: _refreshing
+                    ? const Center(child: CircularProgressIndicator())
+                    : slots.isEmpty
                     ? const Center(
                         child: LocalizedText(
                           'Chưa có khung giờ trong khoảng thời gian này.',
@@ -94,6 +146,15 @@ class _ServiceAvailabilitySheetState extends State<ServiceAvailabilitySheet> {
                             _ => '',
                           };
                           return ListTile(
+                            trailing:
+                                slot.bookable &&
+                                    slot.optionId != null &&
+                                    (slot.availableCapacity ?? 0) > 0
+                                ? TextButton(
+                                    onPressed: () => _openHold(slot),
+                                    child: const LocalizedText('Giữ chỗ'),
+                                  )
+                                : null,
                             contentPadding: EdgeInsets.zero,
                             leading: Icon(
                               slot.bookable
@@ -128,7 +189,7 @@ class _ServiceAvailabilitySheetState extends State<ServiceAvailabilitySheet> {
                       ),
               ),
               const SizedBox(height: 12),
-              const LocalizedText('Đặt chỗ hiện chưa khả dụng.'),
+              const LocalizedText('Chọn khung giờ để giữ chỗ.'),
             ],
           ),
         ),
