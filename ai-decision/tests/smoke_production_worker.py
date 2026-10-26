@@ -1,6 +1,6 @@
 """Run pinned CPU inference through the HTTP handler; no provider requests or mutations.
 
-Run from backend/ai-decision with its Python environment. This checks transport and
+Run from ai-decision with its Python environment. This checks transport and
 response contracts, not classification accuracy or production server capacity.
 """
 import json
