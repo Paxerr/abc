@@ -289,7 +289,10 @@ if name == 'docker':
         self.assertEqual(backend['depends_on']['quyet']['condition'], 'service_healthy')
         self.assertNotIn('ports', worker)
         self.assertTrue(worker['volumes'][0]['read_only'])
-        self.assertFalse(worker['volumes'][0]['bind']['create_host_path'])
+        source = (ROOT / 'docker-compose.prod.yml').read_text()
+        worker_source = source.split('\n  quyet:\n', 1)[1].split('\n  cli-proxy-api:\n', 1)[0]
+        self.assertIn('        bind:\n          create_host_path: false\n', worker_source)
+        self.assertIs(worker['volumes'][0].get('bind', {}).get('create_host_path', False), False)
         network = config['networks']['app']['ipam']['config'][0]
         self.assertEqual(network, {'subnet': '172.30.10.0/28', 'gateway': '172.30.10.1'})
         frontend = config['services']['frontend']['networks']['app']['ipv4_address']
