@@ -94,13 +94,6 @@ export const OceanSportsShowcase: React.FC = () => {
             {/* Gradient Scrim */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-transparent to-transparent pointer-events-none" />
 
-            {/* Top Badge */}
-            <div className="absolute top-4 left-4 z-10">
-              <span className="px-3 py-1 rounded-full bg-white/90 backdrop-blur-md border border-white/60 text-cyan-800 text-xs font-bold shadow-sm">
-                {language === 'en' ? activeSport.levelEn : activeSport.level}
-              </span>
-            </div>
-
             {/* Bottom Card Overlay */}
             <div className="absolute bottom-4 left-4 right-4 z-10 p-3.5 sm:p-4 rounded-xl bg-white/95 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.12)] text-slate-900">
               <div className="flex items-center justify-between">

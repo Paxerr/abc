@@ -67,8 +67,6 @@ export const ExpandingBaysSection: React.FC = () => {
         {COASTAL_BAYS.map((bay: CoastalBayData, idx: number) => {
           const displayName = language === 'en' ? bay.nameEn : bay.name;
           const displayTagline = language === 'en' ? bay.taglineEn : bay.tagline;
-          const displayBestTime = language === 'en' ? bay.bestTimeEn : bay.bestTime;
-          const displayTide = language === 'en' ? bay.tideConditionEn : bay.tideCondition;
 
           const isThisHovered = hoveredBayId === bay.id;
 
@@ -98,17 +96,6 @@ export const ExpandingBaysSection: React.FC = () => {
 
               {/* Gradient Scrim */}
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-950/15 to-transparent" />
-
-              {/* Top Floating Badge */}
-              <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-                <span className="px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm border border-white/60 text-cyan-800 font-bold text-[11px] font-medium flex items-center gap-1 shadow-xs">
-                  <span className="material-symbols-outlined text-[13px]">schedule</span>
-                  <span>{displayBestTime}</span>
-                </span>
-                <span className="px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-slate-800 text-[10px] font-semibold shadow-xs max-w-[120px] truncate">
-                  {displayTide}
-                </span>
-              </div>
 
               {/* Bottom Content Pod */}
               <div className="relative p-4 z-10 text-white flex flex-col justify-end">

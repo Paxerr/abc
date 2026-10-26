@@ -137,9 +137,6 @@ export function FlashSaleSection({ experiences = FLASH_SALE_EXPERIENCES }: Flash
                   <span className="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[11px] font-bold shadow-sm">
                     -{item.discountPercent}%
                   </span>
-                  <span className="px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-xs text-slate-800 text-[10px] font-semibold shadow-xs">
-                    {badge}
-                  </span>
                 </div>
 
                 {/* Wishlist Button */}

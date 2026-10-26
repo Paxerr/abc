@@ -167,8 +167,6 @@ export function Home() {
         reviewCount: s.reviewCount || 100,
         slotsLeft: 3 + (idx % 4),
         totalSlots: 15,
-        badge: 'Hot Deal',
-        badgeEn: 'Hot Deal',
         imageUrl: s.primaryImageUrl || 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=800',
       }))
     : FLASH_SALE_EXPERIENCES;
@@ -190,8 +188,6 @@ export function Home() {
         price: Number(s.price),
         rating: Number(s.averageRating) || 4.95,
         reviewCount: s.reviewCount || 50,
-        badge: 'Bán chạy',
-        badgeEn: 'Best Seller',
         imageUrl: s.primaryImageUrl || 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=800',
       }))
     : SUP_KAYAK_EXPERIENCES;
@@ -213,8 +209,6 @@ export function Home() {
         price: Number(s.price),
         rating: Number(s.averageRating) || 4.96,
         reviewCount: s.reviewCount || 80,
-        badge: 'Đặc sắc',
-        badgeEn: 'Featured',
         imageUrl: s.primaryImageUrl || 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800',
       }))
     : DIVING_EXPERIENCES;
@@ -236,8 +230,6 @@ export function Home() {
         price: Number(s.price),
         rating: Number(s.averageRating) || 5.0,
         reviewCount: s.reviewCount || 90,
-        badge: 'VIP Thượng lưu',
-        badgeEn: 'VIP Luxury',
         imageUrl: s.primaryImageUrl || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
       }))
     : COMBO_SUNSET_EXPERIENCES;
@@ -266,8 +258,6 @@ export function Home() {
         price: Number(s.price),
         rating: Number(s.averageRating) || 4.93,
         reviewCount: s.reviewCount || 120,
-        badge: 'Cảm giác mạnh',
-        badgeEn: 'Adrenaline',
         imageUrl: s.primaryImageUrl || 'https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?w=800',
       }))
     : THRILL_EXPERIENCES;

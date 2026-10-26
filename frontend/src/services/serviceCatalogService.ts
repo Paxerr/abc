@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import type { ServicePageResponse, ServiceSummaryDto } from '../types/service';
+import type { ServicePageResponse, ServiceDetailDto } from '../types/service';
 
 export interface ServiceQueryParams {
   page?: number;
@@ -26,18 +26,10 @@ export const serviceCatalogService = {
       ...(params.maxPrice !== undefined ? { maxPrice: params.maxPrice } : {}),
     };
 
-    console.groupCollapsed('%c[Services API] Lấy danh sách trải nghiệm biển...', 'color: #00646f; font-weight: bold;');
-    console.log('[Bước 1/3] Gửi yêu cầu GET /api/services với bộ lọc:', query);
-
     try {
       const response = await apiClient.get<ServicePageResponse>('/services', { params: query });
-      const data = response.data;
-      console.log(`[Bước 2/3] Nhận dữ liệu thành công: ${data.totalElements} dịch vụ (Trang ${data.page + 1})`, data.content);
-      console.log('[Bước 3/3] Xác thực và nạp dữ liệu trải nghiệm biển thành công');
-      console.groupEnd();
-      return data;
+      return response.data;
     } catch (err) {
-      console.groupEnd();
       console.warn('[serviceCatalogService] Không thể tải dữ liệu dịch vụ từ Backend, kích hoạt fallback:', err);
       return {
         content: [],
@@ -47,5 +39,14 @@ export const serviceCatalogService = {
         total: 0,
       };
     }
+  },
+
+  /**
+   * Fetch public service detail by ID from Backend
+   * Follows EPIC-03 Discovery R2 specification
+   */
+  async getServiceDetail(id: string): Promise<ServiceDetailDto> {
+    const response = await apiClient.get<ServiceDetailDto>(`/services/${encodeURIComponent(id)}`);
+    return response.data;
   },
 };

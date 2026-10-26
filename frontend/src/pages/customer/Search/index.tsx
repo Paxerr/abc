@@ -190,7 +190,6 @@ export function Search() {
               location: item.address ? item.address.split(',')[0] : 'Bãi biển Mỹ Khê',
               imageUrl: item.primaryImageUrl || 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=800&q=80',
               duration: '120 phút',
-              badge: idx === 0 ? 'Bán chạy nhất' : idx === 1 ? 'Khuyên dùng' : 'Chuẩn PADI',
               categoryId: matchedCategory?.id,
             }));
             setServices(mapped);
@@ -227,7 +226,6 @@ export function Search() {
                 location: item.locationName,
                 imageUrl: img,
                 duration: `${item.durationMinutes || 90} phút`,
-                badge: idx === 0 ? 'Phổ biến' : undefined,
                 categoryId: item.categoryId,
               };
             });
@@ -538,14 +536,7 @@ export function Search() {
                       {/* Optical subtle scrim on image bottom */}
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
 
-                      {/* Top Badges */}
-                      <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">
-                        {service.badge && (
-                          <span className="px-2.5 py-0.5 rounded-full bg-cyan-700 text-white text-[11px] font-bold shadow-md">
-                            {service.badge}
-                          </span>
-                        )}
-                      </div>
+
 
                       {/* Top Right Wishlist Heart */}
                       <button

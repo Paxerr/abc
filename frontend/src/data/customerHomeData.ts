@@ -15,8 +15,8 @@ export interface FlashSaleExperience {
   reviewCount: number;
   slotsLeft: number;
   totalSlots: number;
-  badge: string;
-  badgeEn: string;
+  badge?: string;
+  badgeEn?: string;
   imageUrl: string;
 }
 
@@ -70,7 +70,7 @@ export interface OceanSportShowcase {
 // 1. Flash Sale Items
 export const FLASH_SALE_EXPERIENCES: FlashSaleExperience[] = [
   {
-    id: 'fs-1',
+    id: 'd0000001-0000-0000-0000-000000000001',
     title: 'Chèo SUP Bình Minh Bãi Biển Mỹ Khê + Nhiếp Ảnh',
     titleEn: 'Sunrise SUP Paddleboarding at My Khe + Photoshoot',
     category: 'Chèo SUP',
@@ -86,12 +86,10 @@ export const FLASH_SALE_EXPERIENCES: FlashSaleExperience[] = [
     reviewCount: 324,
     slotsLeft: 3,
     totalSlots: 15,
-    badge: 'Chớp nhoáng -33%',
-    badgeEn: 'Flash Deal -33%',
     imageUrl: 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'fs-2',
+    id: 'd0000001-0000-0000-0000-000000000002',
     title: 'Lặn Bình Khí Khám Phá Rạn San Hô Hòn Sụp Bán Đảo Sơn Trà',
     titleEn: 'Scuba Diving at Hon Sup Coral Reefs - Son Tra Peninsula',
     category: 'Lặn biển Scuba',
@@ -107,12 +105,10 @@ export const FLASH_SALE_EXPERIENCES: FlashSaleExperience[] = [
     reviewCount: 188,
     slotsLeft: 2,
     totalSlots: 10,
-    badge: 'Bán chạy nhất',
-    badgeEn: 'Best Seller',
     imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'fs-3',
+    id: 'd0000001-0000-0000-0000-000000000003',
     title: 'Bay Dù Lượn Trên Vịnh Biển Ngắm Bán Đảo Sơn Trà',
     titleEn: 'Tandem Paragliding Over Da Nang Coastline & Son Tra',
     category: 'Thể thao cảm giác mạnh',
@@ -128,12 +124,10 @@ export const FLASH_SALE_EXPERIENCES: FlashSaleExperience[] = [
     reviewCount: 96,
     slotsLeft: 1,
     totalSlots: 6,
-    badge: 'Chỉ còn 1 suất',
-    badgeEn: 'Only 1 slot left',
     imageUrl: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'fs-4',
+    id: 'd0000001-0000-0000-0000-000000000004',
     title: 'Tour Cano Cao Tốc Lặn Ngắm San Hô Bãi Rạng & Câu Cá',
     titleEn: 'Speedboat Snorkeling & Island Fishing at Bai Rang',
     category: 'Cano & Lặn biển',
@@ -149,8 +143,6 @@ export const FLASH_SALE_EXPERIENCES: FlashSaleExperience[] = [
     reviewCount: 145,
     slotsLeft: 4,
     totalSlots: 12,
-    badge: 'Giờ vàng -26%',
-    badgeEn: 'Golden Hour -26%',
     imageUrl: 'https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?auto=format&fit=crop&w=800&q=80',
   },
 ];
@@ -160,7 +152,7 @@ export const FLASH_SALE_EXPERIENCES: FlashSaleExperience[] = [
 // Category A: Chèo SUP & Kayak
 export const SUP_KAYAK_EXPERIENCES: ActivityCardData[] = [
   {
-    id: 'sup-1',
+    id: 'd0000001-0000-0000-0000-000000000001',
     title: 'Chèo SUP đón bình minh rực rỡ tại biển Mỹ Khê cùng nhiếp ảnh gia',
     titleEn: 'Sunrise SUP Paddleboarding at My Khe with Professional Photographer',
     category: 'Chèo SUP',
@@ -171,12 +163,10 @@ export const SUP_KAYAK_EXPERIENCES: ActivityCardData[] = [
     price: 280000,
     rating: 4.98,
     reviewCount: 342,
-    badge: 'Được ưa chuộng',
-    badgeEn: 'Guest Favorite',
     imageUrl: 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'sup-2',
+    id: 'd0000001-0000-0000-0000-000000000011',
     title: 'Tour chèo Kayak xuyên rừng dừa nước & luồn lách vịnh Mân Thái',
     titleEn: 'Sea Kayaking Adventure Through Man Thai Coastal Waters',
     category: 'Kayak biển',
@@ -187,12 +177,10 @@ export const SUP_KAYAK_EXPERIENCES: ActivityCardData[] = [
     price: 320000,
     rating: 4.95,
     reviewCount: 178,
-    badge: 'Mới ra mắt',
-    badgeEn: 'New Release',
     imageUrl: 'https://images.unsplash.com/photo-1544551763-8dd44758c2dd?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'sup-3',
+    id: 'd0000001-0000-0000-0000-000000000012',
     title: 'Chèo SUP hoàng hôn thư giãn kèm mocktail & tiệc nhẹ bãi biển',
     titleEn: 'Sunset SUP Relaxation with Beach Mocktail & Light Snack',
     category: 'Chèo SUP',
@@ -203,12 +191,10 @@ export const SUP_KAYAK_EXPERIENCES: ActivityCardData[] = [
     price: 350000,
     rating: 5.0,
     reviewCount: 215,
-    badge: 'Được ưa chuộng',
-    badgeEn: 'Guest Favorite',
     imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'sup-4',
+    id: 'd0000001-0000-0000-0000-000000000001',
     title: 'Khóa học làm chủ kỹ thuật chèo SUP cơ bản & an toàn cứu sinh biển',
     titleEn: 'Beginner SUP Coaching & Marine Safety Fundamentals',
     category: 'Khóa học thể thao',
@@ -219,12 +205,10 @@ export const SUP_KAYAK_EXPERIENCES: ActivityCardData[] = [
     price: 250000,
     rating: 4.91,
     reviewCount: 88,
-    badge: 'Thân thiện gia đình',
-    badgeEn: 'Family Friendly',
     imageUrl: 'https://images.unsplash.com/photo-1517400508447-f8dd518b86db?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'sup-5',
+    id: 'd0000001-0000-0000-0000-000000000011',
     title: 'Kayak đôi khám phá vách đá Mũi Nghê và rạn san hô ngầm nguyên sinh',
     titleEn: 'Tandem Kayak to Mui Nghe Cliffs & Pristine Underwater Reefs',
     category: 'Kayak biển',
@@ -235,12 +219,10 @@ export const SUP_KAYAK_EXPERIENCES: ActivityCardData[] = [
     price: 450000,
     rating: 4.97,
     reviewCount: 129,
-    badge: 'Được ưa chuộng',
-    badgeEn: 'Guest Favorite',
     imageUrl: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'sup-6',
+    id: 'd0000001-0000-0000-0000-000000000012',
     title: 'Combo SUP Yoga buổi sớm trên mặt biển phẳng lặng Mỹ Khê',
     titleEn: 'Morning Ocean SUP Yoga on Calm Mirrored Waters',
     category: 'SUP Thư giãn',
@@ -251,8 +233,6 @@ export const SUP_KAYAK_EXPERIENCES: ActivityCardData[] = [
     price: 300000,
     rating: 4.99,
     reviewCount: 164,
-    badge: 'Sức khỏe & Thư giãn',
-    badgeEn: 'Wellness Pick',
     imageUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
   },
 ];
@@ -260,7 +240,7 @@ export const SUP_KAYAK_EXPERIENCES: ActivityCardData[] = [
 // Category B: Lặn biển & San hô Sơn Trà
 export const DIVING_EXPERIENCES: ActivityCardData[] = [
   {
-    id: 'div-1',
+    id: 'd0000001-0000-0000-0000-000000000002',
     title: 'Lặn ống thở Snorkeling ngắm san hô Bãi Sụp - Nước trong vắt 10m',
     titleEn: 'Hon Sup Snorkeling Adventure - 10m High Visibility Coral Waters',
     category: 'Lặn ống thở',
@@ -271,12 +251,10 @@ export const DIVING_EXPERIENCES: ActivityCardData[] = [
     price: 450000,
     rating: 4.96,
     reviewCount: 280,
-    badge: 'Được ưa chuộng',
-    badgeEn: 'Guest Favorite',
     imageUrl: 'https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'div-2',
+    id: 'd0000001-0000-0000-0000-000000000021',
     title: 'Lặn bình khí Scuba Diving cùng Master Dive PADI - Kèm video Go Pro 4K',
     titleEn: 'PADI Certified Scuba Dive with 4K Underwater GoPro Footage',
     category: 'Lặn bình khí',
@@ -287,12 +265,10 @@ export const DIVING_EXPERIENCES: ActivityCardData[] = [
     price: 890000,
     rating: 5.0,
     reviewCount: 156,
-    badge: 'Chứng chỉ quốc tế',
-    badgeEn: 'PADI Certified',
     imageUrl: 'https://images.unsplash.com/photo-1682687220063-4742bd7fd538?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'div-3',
+    id: 'd0000001-0000-0000-0000-000000000022',
     title: 'Tour đi bộ dưới đáy biển Sea Walker ngắm cá hề & sinh vật biển',
     titleEn: 'Underwater Sea Walker Tour - Feed Clownfish & Sea Life',
     category: 'Đi bộ dưới biển',
@@ -303,12 +279,10 @@ export const DIVING_EXPERIENCES: ActivityCardData[] = [
     price: 750000,
     rating: 4.93,
     reviewCount: 310,
-    badge: 'Không cần biết bơi',
-    badgeEn: 'No Swimming Needed',
     imageUrl: 'https://images.unsplash.com/photo-1582967788606-a171c1080cb0?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'div-4',
+    id: 'd0000001-0000-0000-0000-000000000002',
     title: 'Tour lặn tự do Freediving khám phá hang đá ngầm bí ẩn Sơn Trà',
     titleEn: 'Freediving Exploration of Son Tra Underwater Marine Caverns',
     category: 'Lặn tự do',
@@ -319,12 +293,10 @@ export const DIVING_EXPERIENCES: ActivityCardData[] = [
     price: 650000,
     rating: 4.97,
     reviewCount: 94,
-    badge: 'Thử thách lặn',
-    badgeEn: 'Advanced Dive',
     imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'div-5',
+    id: 'd0000001-0000-0000-0000-000000000021',
     title: 'Lặn ngắm hoàng hôn ngầm & trải nghiệm bắt ốc biển cùng ngư dân',
     titleEn: 'Dusk Reef Snorkeling & Coastal Shell Gathering with Fishermen',
     category: 'Văn hóa bản địa',
@@ -335,8 +307,6 @@ export const DIVING_EXPERIENCES: ActivityCardData[] = [
     price: 390000,
     rating: 4.92,
     reviewCount: 118,
-    badge: 'Trải nghiệm độc bản',
-    badgeEn: 'Unique Experience',
     imageUrl: 'https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=800&q=80',
   },
 ];
@@ -344,7 +314,7 @@ export const DIVING_EXPERIENCES: ActivityCardData[] = [
 // Category C: Thể thao mạo hiểm & Cảm giác mạnh
 export const THRILL_EXPERIENCES: ActivityCardData[] = [
   {
-    id: 'thrill-1',
+    id: 'd0000001-0000-0000-0000-000000000003',
     title: 'Bay dù lượn cano Parasailing đôi ngắm toàn cảnh thành phố biển',
     titleEn: 'Tandem Parasailing Flight with Panoramic Coastal City Views',
     category: 'Dù bay cano',
@@ -355,12 +325,10 @@ export const THRILL_EXPERIENCES: ActivityCardData[] = [
     price: 650000,
     rating: 4.97,
     reviewCount: 412,
-    badge: 'Được ưa chuộng',
-    badgeEn: 'Guest Favorite',
     imageUrl: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'thrill-2',
+    id: 'd0000001-0000-0000-0000-000000000004',
     title: 'Lái mô tô nước Jet Ski Yamaha 1800cc xé sóng tốc độ cao',
     titleEn: 'High-speed Yamaha 1800cc Jet Ski Wave Riding Adventure',
     category: 'Mô tô nước',
@@ -371,12 +339,10 @@ export const THRILL_EXPERIENCES: ActivityCardData[] = [
     price: 550000,
     rating: 4.94,
     reviewCount: 295,
-    badge: 'Cực đã',
-    badgeEn: 'Top Thrill',
     imageUrl: 'https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'thrill-3',
+    id: 'd0000001-0000-0000-0000-000000000005',
     title: 'Cano kéo phao chuối Banana Boat vui nhộn cho nhóm đông người',
     titleEn: 'Banana Boat Splash Ride for Friends & Corporate Groups',
     category: 'Phao chuối',
@@ -387,12 +353,10 @@ export const THRILL_EXPERIENCES: ActivityCardData[] = [
     price: 180000,
     rating: 4.91,
     reviewCount: 388,
-    badge: 'Siêu vui nhóm',
-    badgeEn: 'Best for Groups',
     imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'thrill-4',
+    id: 'd0000001-0000-0000-0000-000000000031',
     title: 'Lướt ván cano Wakeboarding trải nghiệm cảm giác thăng bằng trên sóng',
     titleEn: 'Speedboat Wakeboarding - Thrill Riding on Ocean Waves',
     category: 'Lướt ván',
@@ -403,12 +367,10 @@ export const THRILL_EXPERIENCES: ActivityCardData[] = [
     price: 590000,
     rating: 4.95,
     reviewCount: 142,
-    badge: 'Được ưa chuộng',
-    badgeEn: 'Guest Favorite',
     imageUrl: 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'thrill-5',
+    id: 'd0000001-0000-0000-0000-000000000051',
     title: 'Bay Flyboard lượn trên mặt biển cùng huấn luyện viên quốc tế',
     titleEn: 'Flyboard Hydroflight Session with International Instructor',
     category: 'Flyboard',
@@ -419,8 +381,6 @@ export const THRILL_EXPERIENCES: ActivityCardData[] = [
     price: 950000,
     rating: 4.98,
     reviewCount: 76,
-    badge: 'Đỉnh cao kỹ thuật',
-    badgeEn: 'Master Level',
     imageUrl: 'https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?auto=format&fit=crop&w=800&q=80',
   },
 ];
@@ -428,7 +388,7 @@ export const THRILL_EXPERIENCES: ActivityCardData[] = [
 // Category D: Combo & Trải nghiệm Hoàng Hôn
 export const COMBO_SUNSET_EXPERIENCES: ActivityCardData[] = [
   {
-    id: 'combo-1',
+    id: 'd0000001-0000-0000-0000-000000000006',
     title: 'Combo Cắm trại lều Glamping ngắm hoàng hôn + Tiệc BBQ hải sản bãi biển',
     titleEn: 'Sunset Glamping Tent + Fresh Seafood BBQ Beach Feast',
     category: 'Cắm trại & BBQ',
@@ -439,12 +399,10 @@ export const COMBO_SUNSET_EXPERIENCES: ActivityCardData[] = [
     price: 850000,
     rating: 4.99,
     reviewCount: 260,
-    badge: 'Lãng mạn cặp đôi',
-    badgeEn: 'Romantic Pick',
     imageUrl: 'https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'combo-2',
+    id: 'd0000001-0000-0000-0000-000000000061',
     title: 'Tour du thuyền buồm ngắm hoàng hôn vịnh Đà Nẵng kèm rượu vang',
     titleEn: 'Sunset Sailing Yacht Cruise Along Da Nang Bay with Wine',
     category: 'Du thuyền',
@@ -455,12 +413,10 @@ export const COMBO_SUNSET_EXPERIENCES: ActivityCardData[] = [
     price: 950000,
     rating: 4.97,
     reviewCount: 185,
-    badge: 'Sang trọng 5 sao',
-    badgeEn: '5-Star Luxury',
     imageUrl: 'https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'combo-3',
+    id: 'd0000001-0000-0000-0000-000000000062',
     title: 'Combo 1 ngày: Chèo SUP sớm + Lặn ngắm san hô + Thưởng thức hải sản bãi rạng',
     titleEn: 'Full Marine Day: Sunrise SUP + Coral Reef Dive + Seafood Lunch',
     category: 'Gói trọn gói',
@@ -471,12 +427,10 @@ export const COMBO_SUNSET_EXPERIENCES: ActivityCardData[] = [
     price: 1150000,
     rating: 5.0,
     reviewCount: 340,
-    badge: 'Được ưa chuộng',
-    badgeEn: 'Guest Favorite',
     imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
   },
   {
-    id: 'combo-4',
+    id: 'd0000001-0000-0000-0000-000000000032',
     title: 'Khám phá rạn Nam Ô: Chụp ảnh bãi đá rêu xanh + Chèo thuyền thúng cổ truyền',
     titleEn: 'Nam O Green Moss Reef Tour + Traditional Basket Boat Paddling',
     category: 'Văn hóa & Thể thao',
@@ -487,8 +441,6 @@ export const COMBO_SUNSET_EXPERIENCES: ActivityCardData[] = [
     price: 380000,
     rating: 4.92,
     reviewCount: 198,
-    badge: 'Bản sắc Đà Nẵng',
-    badgeEn: 'Heritage Pick',
     imageUrl: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=800&q=80',
   },
 ];
