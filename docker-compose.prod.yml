@@ -121,9 +121,9 @@ services:
       VNPAY_RETURN_URL: ${VNPAY_RETURN_URL:-http://localhost:3000/payment/vnpay-return}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      AI_QUYET_ENABLED: ${AI_QUYET_ENABLED:-false}
-      AI_QUYET_BASE_URL: ${AI_QUYET_BASE_URL}
-      AI_QUYET_API_KEY: ${AI_QUYET_API_KEY}
+      AI_QUYET_ENABLED: ${AI_QUYET_ENABLED:-true}
+      AI_QUYET_BASE_URL: ${AI_QUYET_BASE_URL:-http://quyet:8091}
+      AI_QUYET_API_KEY: ${AI_QUYET_API_KEY:-}
       AI_QUYET_CONNECT_TIMEOUT: ${AI_QUYET_CONNECT_TIMEOUT:-1s}
       AI_QUYET_READ_TIMEOUT: ${AI_QUYET_READ_TIMEOUT:-3s}
       AI_CLIPROXY_ENABLED: "true"
@@ -184,13 +184,13 @@ services:
     restart: unless-stopped
     logging: *logging
     environment:
-      AI_QUYET_API_KEY: ${AI_QUYET_API_KEY}
+      AI_QUYET_API_KEY: ${AI_QUYET_API_KEY:?Run production.py prepare}
       QUYET_MODEL_DIR: /models
       QUYET_HOST: 0.0.0.0
       QUYET_CPU_THREADS: ${QUYET_CPU_THREADS:-4}
     volumes:
       - type: bind
-        source: ${QUYET_MODEL_DIR}
+        source: ${QUYET_MODEL_DIR:?Set the verified Quyet Small model directory}
         target: /models
         read_only: true
         bind:

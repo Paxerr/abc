@@ -263,9 +263,24 @@ if name == 'docker':
             for key in ['POSTGRES_APP_PASSWORD', 'APP_CHECKIN_QR_SECRET', 'APP_PAYMENT_WEBHOOK_SECRET', 'SPRING_REDIS_PASSWORD', 'SPRING_RABBITMQ_PASSWORD', 'AI_CLIPROXY_API_KEY', 'AI_QUYET_API_KEY']:
                 text = text.replace(key + '=\n', key + '=' + secrets.token_hex(32) + '\n')
             text = text.replace('QUYET_MODEL_DIR=\n', 'QUYET_MODEL_DIR=/tmp/quyet-test-model\n')
+            # The example targets a backend on the host; this fixture targets Docker production.
+            text = text.replace('AI_QUYET_ENABLED=false\n', 'AI_QUYET_ENABLED=true\n')
+            text = text.replace('AI_QUYET_BASE_URL=http://127.0.0.1:8091\n',
+                                'AI_QUYET_BASE_URL=http://quyet:8091\n')
             envfile.write_text(text)
-            result = subprocess.run(['docker', 'compose', '--env-file', str(envfile), '-f', str(ROOT / 'docker-compose.prod.yml'), 'config', '--format', 'json'], capture_output=True, text=True, check=True)
+            environment = {key: value for key, value in os.environ.items()
+                           if key not in ['AI_QUYET_ENABLED', 'AI_QUYET_BASE_URL']}
+            command = ['docker', 'compose', '--env-file', str(envfile), '-f', str(ROOT / 'docker-compose.prod.yml'), 'config', '--format', 'json']
+            result = subprocess.run(command, env=environment, capture_output=True, text=True, check=True)
             config = json.loads(result.stdout)
+            # Explicit .env values must remain configurable, including disabling backend calls.
+            envfile.write_text(text.replace('AI_QUYET_ENABLED=true\n', 'AI_QUYET_ENABLED=false\n')
+                              .replace('AI_QUYET_BASE_URL=http://quyet:8091\n',
+                                       'AI_QUYET_BASE_URL=http://external-worker:8091\n'))
+            override = subprocess.run(command, env=environment, capture_output=True, text=True, check=True)
+            overridden = json.loads(override.stdout)['services']['backend']['environment']
+            self.assertEqual(overridden['AI_QUYET_ENABLED'], 'false')
+            self.assertEqual(overridden['AI_QUYET_BASE_URL'], 'http://external-worker:8091')
         worker = config['services']['quyet']
         backend = config['services']['backend']
         self.assertEqual(backend['environment']['AI_QUYET_ENABLED'], 'true')
