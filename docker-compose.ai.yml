@@ -2,7 +2,7 @@
 services:
   quyet:
     build:
-      context: ./backend/ai-decision
+      context: ./ai-decision
     restart: unless-stopped
     environment:
       AI_QUYET_API_KEY: ${AI_QUYET_API_KEY:?Set a private service key of at least 24 characters}

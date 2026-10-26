@@ -119,7 +119,7 @@ Trước lần phát hành đầu tiên, trên server:
 
 `AI_QUYET_CONNECT_TIMEOUT`/`AI_QUYET_READ_TIMEOUT` được truyền vào backend (mặc định 1s/3s). Chỉ điều chỉnh theo số đo trên server và tổng execution budget; tăng timeout quá lớn có thể khiến backend bỏ qua suy luận vì không đủ budget. Worker chỉ xử lý một request tại một thời điểm và trả 429 khi bận, nên cần nghiệm thu cả đồng thời và fallback.
 
-Kiểm thử local (từ `backend/ai-decision`, dùng Python environment đã cài dependencies):
+Kiểm thử local (từ `ai-decision`, dùng Python environment đã cài dependencies):
 
 ```bash
 python -m unittest discover -s tests -p test_service.py -v
