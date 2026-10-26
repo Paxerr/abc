@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/auth/auth_session.dart';
 import '../../../../core/data/booking_repository.dart';
+import '../../../../core/data/order_repository.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/models/danasea_models.dart';
+import '../../../orders/presentation/screens/order_detail_screen.dart';
 
 /// Separate booking flow; existing detail and legacy booking layouts stay intact.
 class BookingHoldScreen extends StatefulWidget {
@@ -22,30 +24,42 @@ class BookingHoldScreen extends StatefulWidget {
 
 class _BookingHoldScreenState extends State<BookingHoldScreen> {
   final _repository = BookingRepository();
+  final _orderRepository = OrderRepository();
   final _form = GlobalKey<FormState>();
   final _quantity = TextEditingController(text: '1');
   final _participants = TextEditingController(text: '1');
+  final _discount = TextEditingController();
   BookingHold? _hold;
+  MasterOrderModel? _createdOrder;
   Timer? _timer;
   bool _busy = false, _allowSplit = false, _cancelled = false;
-  bool _uncertain = false, _allowExit = false, _closing = false;
+  bool _uncertain = false, _orderUncertain = false, _allowExit = false;
+  bool _closing = false;
   String? _error;
+  late final String _orderIdempotencyKey =
+      OrderRepository.generateIdempotencyKey('ord');
 
   bool get _package => widget.slot.pricingUnit == 'PER_PACKAGE';
   bool get _active =>
-      _hold != null && !_hold!.confirmed && !_hold!.expired && !_cancelled;
+      _hold != null &&
+      _createdOrder == null &&
+      !_hold!.confirmed &&
+      !_hold!.expired &&
+      !_cancelled;
 
   @override
   void dispose() {
     _timer?.cancel();
     _quantity.dispose();
     _participants.dispose();
+    _discount.dispose();
     super.dispose();
   }
 
   Future<void> _run(
     Future<void> Function() operation, {
     bool creating = false,
+    bool creatingOrder = false,
   }) async {
     if (_busy) return;
     setState(() {
@@ -61,12 +75,15 @@ class _BookingHoldScreenState extends State<BookingHoldScreen> {
           // A missing response does not prove that the server rejected a POST.
           if (creating && (error.status == 0 || error.status >= 500))
             _uncertain = true;
+          if (creatingOrder && (error.status == 0 || error.status >= 500))
+            _orderUncertain = true;
         });
     } catch (_) {
       if (mounted)
         setState(() {
           _error = 'Không thể thực hiện yêu cầu. Vui lòng thử lại.';
           if (creating) _uncertain = true;
+          if (creatingOrder) _orderUncertain = true;
         });
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -93,9 +110,34 @@ class _BookingHoldScreenState extends State<BookingHoldScreen> {
           return;
         }
         setState(() {});
-        if (_hold!.expired || _hold!.confirmed || _cancelled) timer.cancel();
+        if (_hold!.expired ||
+            _hold!.confirmed ||
+            _cancelled ||
+            _createdOrder != null) {
+          timer.cancel();
+        }
       });
     }, creating: true);
+  }
+
+  Future<void> _createOrder() async {
+    if (!_active || _orderUncertain) return;
+    await _run(() async {
+      final order = await _orderRepository.createOrder(
+        bookingId: _hold!.id,
+        idempotencyKey: _orderIdempotencyKey,
+        discountCode: _discount.text.trim(),
+      );
+      if (!mounted) return;
+      _timer?.cancel();
+      setState(() => _createdOrder = order);
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OrderDetailScreen(masterOrder: order),
+        ),
+      );
+    }, creatingOrder: true);
   }
 
   Future<void> _confirm() async {
@@ -111,7 +153,11 @@ class _BookingHoldScreenState extends State<BookingHoldScreen> {
   }
 
   Future<void> _cancel() async {
-    if (_hold == null || _hold!.confirmed || _cancelled) return;
+    if (_hold == null ||
+        _hold!.confirmed ||
+        _cancelled ||
+        _createdOrder != null)
+      return;
     await _run(() async {
       await _repository.cancel(_hold!.id);
       if (mounted) setState(() => _cancelled = true);
@@ -162,6 +208,7 @@ class _BookingHoldScreenState extends State<BookingHoldScreen> {
   @override
   Widget build(BuildContext context) {
     final hold = _hold;
+    final createdOrder = _createdOrder;
     final remaining =
         hold?.expiresAt?.difference(DateTime.now()).inSeconds ?? 0;
     final quantityLimit = (widget.slot.availableCapacity ?? 0)
@@ -248,10 +295,26 @@ class _BookingHoldScreenState extends State<BookingHoldScreen> {
             if (hold != null) ...[
               SelectableText(hold.id),
               Text(
-                '${NumberFormat.decimalPattern('vi').format(hold.totalAmount)} ₫',
+                '${NumberFormat.decimalPattern('vi').format(createdOrder?.totalAmount ?? hold.totalAmount)} ₫',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              if (_cancelled)
+              if (createdOrder != null) ...[
+                const SizedBox(height: 8),
+                LocalizedText('Đã tạo đơn hàng #${createdOrder.id}'),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            OrderDetailScreen(masterOrder: createdOrder),
+                      ),
+                    );
+                  },
+                  child: const LocalizedText('Chi tiết đơn'),
+                ),
+              ] else if (_cancelled)
                 const LocalizedText('Đã bỏ giữ chỗ.')
               else if (hold.confirmed)
                 const LocalizedText('Đặt chỗ đã được xác nhận.')
@@ -262,16 +325,30 @@ class _BookingHoldScreenState extends State<BookingHoldScreen> {
                   'Thời gian còn lại: ${remaining ~/ 60}:${(remaining % 60).toString().padLeft(2, '0')}',
                 ),
                 const SizedBox(height: 12),
-                const LocalizedText(
-                  'Chỉ xác nhận được sau khi thanh toán thành công. Thanh toán trong app chưa khả dụng.',
+                TextField(
+                  controller: _discount,
+                  enabled: !_busy && !_orderUncertain,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Mã giảm giá (không bắt buộc)'),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 FilledButton(
+                  onPressed: _busy || _orderUncertain ? null : _createOrder,
+                  child: const LocalizedText('Tạo đơn hàng'),
+                ),
+                const SizedBox(height: 8),
+                const LocalizedText(
+                  'Chỉ xác nhận được sau khi thanh toán thành công. Thanh toán trong app chưa khả dụng.',
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton(
                   onPressed: _busy ? null : _confirm,
                   child: const LocalizedText('Xác nhận đặt chỗ'),
                 ),
               ],
-              if (!_cancelled && !hold.confirmed)
+              if (!_cancelled && !hold.confirmed && createdOrder == null)
                 OutlinedButton(
                   onPressed: _busy ? null : _cancel,
                   child: const LocalizedText('Bỏ giữ chỗ'),
@@ -292,6 +369,13 @@ class _BookingHoldScreenState extends State<BookingHoldScreen> {
                 padding: EdgeInsets.only(top: 12),
                 child: LocalizedText(
                   'Chưa xác định được kết quả giữ chỗ. Không gửi lại để tránh tạo giữ chỗ trùng.',
+                ),
+              ),
+            if (_orderUncertain)
+              const Padding(
+                padding: EdgeInsets.only(top: 12),
+                child: LocalizedText(
+                  'Chưa xác định được kết quả tạo đơn hàng. Không tự động gửi lại để tránh trùng lặp, vui lòng kiểm tra Đơn hàng của tôi.',
                 ),
               ),
           ],

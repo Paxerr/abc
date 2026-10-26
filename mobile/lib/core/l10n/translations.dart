@@ -24,6 +24,7 @@ const englishTranslations = <String, String>{
   "Khung giờ trong 30 ngày tới": "Time slots for the next 30 days",
   "Chưa có khung giờ trong khoảng thời gian này.": "No time slots in this period.",
   "Còn lại: {0}": "Remaining: {0}",
+  "Xem nhà cung cấp": "View provider",
   "Chưa có dịch vụ.": "No services yet.",
   "Không tải được danh sách yêu thích.": "Unable to load favorites.",
   "Chưa có trải nghiệm yêu thích.": "No favorite experiences yet.",
@@ -1387,4 +1388,54 @@ const englishTranslations = <String, String>{
       "Enter the 6-digit code sent to your email.",
   "Tạo mật khẩu an toàn để dùng cho lần đăng nhập tiếp theo.":
       "Create a secure password for the next time you log in.",
+  "Mã giảm giá (tùy chọn)": "Discount code (optional)",
+  "Nhập mã giảm giá nếu có": "Enter discount code if any",
+  "Đang tạo đơn hàng...": "Creating order...",
+  "Tạo đơn hàng từ giữ chỗ": "Create order from hold",
+  "Tạo đơn hàng": "Create order",
+  "Chưa xác định được kết quả tạo đơn hàng. Vui lòng kiểm tra mục Đơn hàng của tôi trước khi thử lại.":
+      "Order creation result is uncertain. Please check My Orders before trying again.",
+  "Đã tạo đơn hàng thành công.": "Order created successfully.",
+  "Không thể tạo đơn hàng.": "Unable to create order.",
+  "Bạn có thể nhập mã giảm giá (nếu có) trước khi tạo đơn hàng từ giữ chỗ này.":
+      "You can enter a discount code (if any) before creating an order from this hold.",
+  "Vui lòng đăng nhập để xem đơn hàng.": "Please sign in to view your orders.",
+  "Không tải được danh sách đơn hàng.": "Unable to load orders.",
+  "Tải thêm đơn hàng": "Load more orders",
+  "Chưa xác định được kết quả gửi yêu cầu hoàn tiền. Vui lòng kiểm tra mục Theo dõi hoàn tiền trước khi thử lại.":
+      "Refund request result is uncertain. Please check Refund Tracking before trying again.",
+  "Không thể tải thông tin xem trước hủy đơn.":
+      "Unable to load cancellation preview.",
+  "Không thể gửi yêu cầu hoàn tiền.": "Unable to submit refund request.",
+  "Tải lại chính sách hoàn tiền từ máy chủ":
+      "Reload refund policy from server",
+  "Đang xử lý yêu cầu...": "Processing request...",
+  "Không tải được chi tiết đơn hàng.": "Unable to load order details.",
+  "Không tải được biên nhận.": "Unable to load receipt.",
+  "Biên nhận PDF chưa khả dụng cho đơn hàng này.":
+      "PDF receipt is not available for this order.",
+  "Không tải được biên nhận PDF.": "Unable to load PDF receipt.",
+  "Tải biên nhận PDF": "Download PDF receipt",
+  "Đã tải biên nhận PDF ({0} KB) cho biên nhận #{1}.":
+      "Downloaded PDF receipt ({0} KB) for receipt #{1}.",
+  "Biên nhận điện tử": "Electronic receipt",
+  "Mã biên nhận": "Receipt number",
+  "Mã đơn hàng": "Order ID",
+  "Trạng thái đơn": "Order status",
+  "Trạng thái thanh toán": "Payment status",
+  "Mã giao dịch": "Transaction ID",
+  "Thời gian phát hành": "Issued at",
+  "Chi tiết hạng mục": "Line items",
+  "Tạm tính": "Subtotal",
+  "Giảm giá": "Discount",
+  "Tổng thanh toán": "Total paid",
+  "Hỗ trợ": "Support",
+  "Lịch sử giao dịch thanh toán": "Payment transaction history",
+  "Yêu cầu hoàn tiền": "Refund requests",
+  "Vui lòng đăng nhập để theo dõi hoàn tiền.":
+      "Please sign in to track refunds.",
+  "Không tải được dữ liệu hoàn tiền.": "Unable to load refund data.",
+  "Chưa có yêu cầu hoàn tiền nào trên hệ thống.":
+      "No refund requests found.",
+  "Danh sách yêu cầu hoàn tiền ({0})": "Refund requests ({0})",
 };
