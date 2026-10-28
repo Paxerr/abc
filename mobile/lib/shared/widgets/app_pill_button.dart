@@ -4,7 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_shapes.dart';
 import '../../core/theme/app_typography.dart';
 
-enum AppButtonVariant { primary, secondary, frosted, coral }
+enum AppButtonVariant { primary, secondary, frosted, coral, outline }
 
 class AppPillButton extends StatelessWidget {
   final String label;
@@ -15,6 +15,7 @@ class AppPillButton extends StatelessWidget {
   final double height;
   final double? width;
   final double fontSize;
+  final bool isLoading;
 
   const AppPillButton({
     super.key,
@@ -26,6 +27,7 @@ class AppPillButton extends StatelessWidget {
     this.height = 48.0,
     this.width,
     this.fontSize = 14.0,
+    this.isLoading = false,
   });
 
   @override
@@ -51,12 +53,17 @@ class AppPillButton extends StatelessWidget {
         bg = AppColors.primaryContainer;
         fg = AppColors.onPrimary;
         break;
+      case AppButtonVariant.outline:
+        bg = Colors.transparent;
+        fg = AppColors.secondary;
+        border = Border.all(color: AppColors.borderSubtle);
+        break;
     }
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onPressed,
+        onTap: isLoading ? null : onPressed,
         borderRadius: AppShapes.radiusFull,
         child: Ink(
           width: width,
@@ -81,7 +88,17 @@ class AppPillButton extends StatelessWidget {
               mainAxisSize: width == null ? MainAxisSize.min : MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (leadingIcon != null) ...[
+                if (isLoading) ...[
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: fg,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ] else if (leadingIcon != null) ...[
                   Icon(leadingIcon, size: 18, color: fg),
                   const SizedBox(width: 8),
                 ],
